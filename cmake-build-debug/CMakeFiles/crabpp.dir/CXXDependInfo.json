@@ -1,0 +1,18 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "Clang",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"dir-cur-bld" : "/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug",
+	"dir-cur-src" : "/home/bishan_/code/digipen/gam200/crabpp",
+	"dir-top-bld" : "/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug",
+	"dir-top-src" : "/home/bishan_/code/digipen/gam200/crabpp",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : [],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug/CMakeFiles/crabpp.dir"
+}

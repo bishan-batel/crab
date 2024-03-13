@@ -1,8 +1,0 @@
-[
-{
-  "directory": "/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug",
-  "command": "/bin/clang++ -Wall;-Wextra;-Wfloat-equal;-Wformat=2 -g -std=gnu++2b -fcolor-diagnostics @CMakeFiles/crabpp.dir/main.cpp.o.modmap -o CMakeFiles/crabpp.dir/main.cpp.o -c /home/bishan_/code/digipen/gam200/crabpp/main.cpp",
-  "file": "/home/bishan_/code/digipen/gam200/crabpp/main.cpp",
-  "output": "CMakeFiles/crabpp.dir/main.cpp.o"
-}
-]

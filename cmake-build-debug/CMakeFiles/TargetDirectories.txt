@@ -1,3 +1,0 @@
-/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug/CMakeFiles/crabpp.dir
-/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug/CMakeFiles/rebuild_cache.dir

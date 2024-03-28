@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/bishan_/code/digipen/gam200/crabpp/cmake-build-debug",
+  "command": "/bin/c++  -I/home/bishan_/code/digipen/gam200/crabpp/src -Wall -std=gnu++23 -o CMakeFiles/crabpp.dir/src/main.cpp.o -c /home/bishan_/code/digipen/gam200/crabpp/src/main.cpp",
+  "file": "/home/bishan_/code/digipen/gam200/crabpp/src/main.cpp",
+  "output": "CMakeFiles/crabpp.dir/src/main.cpp.o"
+}
+]

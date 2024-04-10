@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/home/bishan_/code/crabpp/build/Debug",
+  "command": "/usr/bin/c++  -I/home/bishan_/code/crabpp/src -Wall -g -std=gnu++23 -o CMakeFiles/crabpp.dir/src/main.cpp.o -c /home/bishan_/code/crabpp/src/main.cpp",
+  "file": "/home/bishan_/code/crabpp/src/main.cpp",
+  "output": "CMakeFiles/crabpp.dir/src/main.cpp.o"
+}
+]

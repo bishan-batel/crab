@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wall -g CMakeFiles/crabpp.dir/src/main.cpp.o -o crabpp

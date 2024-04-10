@@ -1,16 +1,9 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.2)
 project(crabpp)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
-set(CMAKE_CXX_FLAGS -Wall)
 set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_FLAGS -Wall)
 
-include_directories(src)
-
-add_executable(crabpp src/main.cpp
-        src/preamble.hpp
-        src/ref.hpp
-        src/range.hpp
-        src/option.hpp
-        src/box.hpp
-)
+add_library(${PROJECT_NAME} SHARED inc/preamble.hpp inc/option.hpp inc/box.hpp
+                                   inc/range.hpp inc/ref.hpp)

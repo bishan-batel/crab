@@ -31,7 +31,16 @@ add_library(${PROJECT_NAME} SHARED
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        PUBLIC_HEADER include/preamble.hpp
+        PUBLIC_HEADER  "include/preamble.hpp
+                        include/box.hpp
+                        include/box.hpp
+                        include/option.hpp
+                        include/preamble.hpp
+                        include/range.hpp
+                        include/rc.hpp
+                        include/range.hpp
+                        include/ref.hpp
+                        include/debug.hpp"
         LINKER_LANGUAGE CXX)
 
 configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)

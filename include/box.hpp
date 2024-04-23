@@ -92,9 +92,17 @@ public:
   Box(const Box &) = delete;
 
   Box(Box &&from) noexcept
-    : size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {
-    drop();
-    obj = std::exchange(from.obj, nullptr);
+    : obj(std::exchange(from.obj, nullptr)),
+      size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {
+    debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
+  }
+
+  // ReSharper disable once CppNonExplicitConvertingConstructor
+  template<typename Derived> requires std::is_base_of_v<T, Derived> and IS_SINGLE
+  Box(Box<Derived> &&from)
+    : obj(std::exchange(from.obj, nullptr)),
+      size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {
+    debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
   explicit Box(T val)

@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
-project(crabpp VERSION 0.2)
+project(crab VERSION 0.2)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_FLAGS -Wall)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror")
 
 cmake_minimum_required(VERSION 3.9)
 project(${PROJECT_NAME} VERSION 1.0.1 DESCRIPTION "${PROJECT_NAME} description")
@@ -31,16 +31,7 @@ add_library(${PROJECT_NAME} SHARED
 set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        PUBLIC_HEADER  "include/preamble.hpp
-                        include/box.hpp
-                        include/box.hpp
-                        include/option.hpp
-                        include/preamble.hpp
-                        include/range.hpp
-                        include/rc.hpp
-                        include/range.hpp
-                        include/ref.hpp
-                        include/debug.hpp"
+        PUBLIC_HEADER  "include/preamble.hpp"
         LINKER_LANGUAGE CXX)
 
 configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)

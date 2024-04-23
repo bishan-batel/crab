@@ -116,33 +116,26 @@ private:
 template<typename T>
 class Option;
 
-namespace crab {
+namespace crab::ref {
   template<typename T>
-  [[nodiscard]] Ref<T> ref(const T &from) {
-    return Ref(from);
-  }
-
-  template<typename T>
-  [[nodiscard]] RefMut<T> ref(T &from) {
-    return RefMut(from);
-  }
-
-  template<typename T>
-  [[nodiscard]] Ref<T> from_unchecked(const T *const from) {
+  [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
     return Ref<T>::from_unchecked(from);
   }
 
   template<typename T>
-  [[nodiscard]] RefMut<T> from_unchecked(T *const from) {
+  [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
     return RefMut<T>::from_unchecked(from);
   }
 }
 
 #include "option.hpp"
 
-namespace crab {
+namespace crab::ref {
+  /**
+   *
+   */
   template<typename T>
-  [[nodiscard]] constexpr Option<RefMut<T> > to_ref(T *const from) {
+  [[nodiscard]] constexpr Option<RefMut<T> > from_ptr(T *const from) {
     if (from) {
       return some(RefMut(from));
     }
@@ -150,7 +143,7 @@ namespace crab {
   }
 
   template<typename T>
-  [[nodiscard]] constexpr Option<Ref<T> > to_ref(const T *const from) {
+  [[nodiscard]] constexpr Option<Ref<T> > from_ptr(const T *const from) {
     if (from) {
       return some(Ref(from));
     }

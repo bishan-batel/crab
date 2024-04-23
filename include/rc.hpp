@@ -80,9 +80,7 @@ public:
 
   operator const Ref<T>() const { return as_ref(); }
 
-  [[nodiscard]] Ref<T> as_ref() const {
-    return crab::ref(*raw_ptr());
-  }
+  [[nodiscard]] Ref<T> as_ref() const { return *raw_ptr(); }
 
 private:
   const T *raw_ptr() const {
@@ -93,7 +91,7 @@ private:
 };
 
 namespace crab::rc {
-  template<typename T, typename... Args> requires std::is_constructible_v<T, Args>
+  template<typename T, typename... Args> requires std::is_constructible_v<T, Args...>
   Rc<T> make(Args... args) {
     return Rc<T>::from_owned_unchecked(new T{args...});
   }

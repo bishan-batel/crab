@@ -27,7 +27,6 @@ namespace crab::debug {
     return fmt.c_str();
   }
 
-  [[noreturn]]
   void dbg_assert(
     const bool succeeded,
     const StringView function,

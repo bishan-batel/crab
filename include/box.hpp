@@ -72,14 +72,14 @@ public:
     return Box(ref, length);
   };
 
-  static MutPtr unwrap(Box &&box)
+  static MutPtr unwrap(Box box)
     requires IS_SINGLE {
     const auto ptr = box.raw_ptr();
     box.obj = nullptr;
     return ptr;
   }
 
-  static std::pair<MutPtr, SizeType> unwrap(Box &&box)
+  static std::pair<MutPtr, SizeType> unwrap(Box box)
     requires IS_ARRAY {
     return std::make_pair(
       std::exchange(box.obj, nullptr),
@@ -99,7 +99,7 @@ public:
 
   // ReSharper disable once CppNonExplicitConvertingConstructor
   template<typename Derived> requires std::is_base_of_v<T, Derived> and IS_SINGLE
-  Box(Box<Derived> &&from)
+  Box(Box<Derived> from)
     : obj(std::exchange(from.obj, nullptr)),
       size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
@@ -208,13 +208,13 @@ namespace crab {
   }
 
   template<typename T> requires Box<T>::IS_SINGLE
-  static typename Box<T>::MutPtr release(Box<T> &&box) {
+  static typename Box<T>::MutPtr release(Box<T> box) {
     return Box<T>::unwrap(std::move(box));
   }
 
   template<typename T> requires Box<T>::IS_ARRAY
   static std::pair<typename Box<T>::MutPtr, typename Box<T>::SizeType>
-  unwrap(Box<T> &&box) {
+  unwrap(Box<T> box) {
     return Box<T>::unwrap(std::move(box));
   }
 }

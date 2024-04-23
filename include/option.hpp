@@ -36,6 +36,8 @@ class RefMut;
 template<typename T>
 class Option final {
 public:
+  Option(const T &from) noexcept : value(T{from}) {}
+
   Option(T &&from) noexcept : value(from) {}
 
   Option(crab::None) noexcept : Option() {}
@@ -106,6 +108,11 @@ namespace crab {
   template<typename T>
   Option<T> some(T &&from) noexcept {
     return Option<T>(std::forward<T>(from));
+  }
+
+  template<typename T>
+  Option<T> some(const T &from) noexcept {
+    return Option<T>(from);
   }
 
   inline constexpr None none = {};

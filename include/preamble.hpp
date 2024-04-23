@@ -2,13 +2,18 @@
  * Created by bishan_ on 3/3/2024
  */
 
+// ReSharper disable CppUnusedIncludeDirective
 #pragma once
 
 #include <cstdint>
 #include <numbers>
+#include <set>
 #include <span>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
+#include <utility>
 
 /**
  * \brief 32 Bit Floating Point Number
@@ -87,21 +92,49 @@ using imax = std::intmax_t;
  */
 using iptr = std::intptr_t;
 
+/**
+ * std::string, fat pointer to a heap allocated string
+ */
 using String = std::string;
 
+/**
+ * Abstraction over any contiguous sequence of characters, always prefer this
+ * over const String&
+ */
 using StringView = std::string_view;
 
-template <typename T, usize length = std::dynamic_extent>
+/**
+ * Abstraction over any contiguous sequence of elements
+ */
+template<typename T, usize length = std::dynamic_extent>
 using Span = std::span<T, length>;
 
-template <typename T> using Vec = std::vector<T>;
+/**
+ * Heap allocated, dynamically sized list
+ */
+template<typename T>
+using Vec = std::vector<T>;
+
+template<typename T, typename Hash = std::hash<T>,
+         typename Predicate = std::equal_to<T> >
+using Set = std::unordered_set<T, Hash, Predicate>;
+
+template<typename T, typename Hash = std::hash<T>,
+         typename Predicate = std::equal_to<T> >
+using OrderedSet = std::set<T, Hash, Predicate>;
+
+template<typename Key, typename Value, typename Hash = std::hash<Key>,
+         typename Predicate = std::equal_to<Key> >
+using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 
 /**
  * \brief 0 Sized Type, useful when want to treat 'nothing' as a type instead of
  * as 'void' (which is some strange magical thing that is builtinto the
  * language)
  */
-struct unit {};
+struct unit {
+  [[nodiscard]] bool operator==(const unit &) const { return true; }
+};
 
 constexpr f32 operator""_deg(const f64 literal) {
   return static_cast<f32>(literal * std::numbers::pi / 180.f);

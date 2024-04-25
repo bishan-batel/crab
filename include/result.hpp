@@ -58,9 +58,9 @@ class Result final {
   std::variant<T, E, unit> inner;
 
 public:
-  explicit Result(T from) : inner(from) {}
+  explicit Result(T from) : inner(std::move(from)) {}
 
-  explicit Result(E from) : inner(from) {}
+  explicit Result(E from) : inner(std::move(from)) {}
 
   Result(crab::result::Ok<T> &&from) : Result(std::move(from.value)) {}
 
@@ -172,12 +172,12 @@ namespace crab {
 
   template<typename T>
   result::Ok<T> ok(T value) {
-    return result::Ok{value};
+    return result::Ok{std::move(value)};
   }
 
   template<typename E>
   result::Err<E> err(E value) {
-    return result::Err{value};
+    return result::Err{std::move(value)};
   }
 
   template<typename T, typename E>

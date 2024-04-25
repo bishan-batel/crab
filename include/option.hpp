@@ -38,7 +38,7 @@ class Option final {
 public:
   Option(const T &from) noexcept : value(T{from}) {}
 
-  Option(T &&from) noexcept : value(from) {}
+  Option(T &&from) noexcept : value(std::move(from)) {}
 
   Option(crab::None) noexcept : Option() {}
 
@@ -106,8 +106,8 @@ private:
 
 namespace crab {
   template<typename T>
-  Option<T> some(T &&from) noexcept {
-    return Option<T>(std::forward<T>(from));
+  Option<T> some(T from) noexcept {
+    return Option<T>(std::move(from));
   }
 
   template<typename T>

@@ -11,7 +11,7 @@
  */
 template<typename T> requires crab::ref::is_valid_type<T>
 class Ref final {
-  explicit constexpr Ref(const T *pointer)
+  explicit __always_inline Ref(const T *pointer)
     : pointer(pointer) {
     debug_assert(pointer, "Invalid State: Cannot create a NULL Ref object");
   }
@@ -50,7 +50,7 @@ public:
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] const T &get_ref() const { return *pointer; }
+  [[nodiscard]] __always_inline const T &get_ref() const { return *pointer; }
 
 private:
   const T *pointer;
@@ -58,29 +58,29 @@ private:
 
 template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut final {
-  constexpr explicit RefMut(T *pointer)
+  __always_inline explicit RefMut(T *pointer)
     : pointer(pointer) {
     debug_assert(pointer, "Invalid State: Cannot create a NULL RefMut object");
   }
 
 public:
-  constexpr RefMut(T &ref) : RefMut(&ref) {}
+  __always_inline RefMut(T &ref) : RefMut(&ref) {}
 
-  [[nodiscard]] static RefMut from_unchecked(T *pointer) {
+  [[nodiscard]] __always_inline static RefMut from_unchecked(T *pointer) {
     return RefMut(pointer);
   }
 
-  [[nodiscard]] operator T &() const { return get_mut_ref(); };
+  [[nodiscard]] __always_inline operator T &() const { return get_mut_ref(); };
 
-  [[nodiscard]] operator T *() const {
+  [[nodiscard]] __always_inline operator T *() const {
     return as_ptr();
   };
 
-  [[nodiscard]] operator Ref<T>() const { return as_ref(); };
+  [[nodiscard]] __always_inline operator Ref<T>() const { return as_ref(); };
 
-  [[nodiscard]] T &operator*() const { return get_mut_ref(); }
+  [[nodiscard]] __always_inline T &operator*() const { return get_mut_ref(); }
 
-  [[nodiscard]] T *operator->() const {
+  [[nodiscard]] __always_inline T *operator->() const {
     return as_ptr();
   }
 
@@ -88,22 +88,22 @@ public:
    * Gets underlying pointer, this pointer is always non null
    *
    */
-  [[nodiscard]] constexpr T *as_ptr() const { return pointer; }
+  [[nodiscard]] __always_inline T *as_ptr() const { return pointer; }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] constexpr T &get_mut_ref() const { return *pointer; }
+  [[nodiscard]] __always_inline T &get_mut_ref() const { return *pointer; }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] constexpr const T &get_ref() const { return *pointer; }
+  [[nodiscard]] __always_inline const T &get_ref() const { return *pointer; }
 
   /**
    * Converts RefMut into a immutable reference
    */
-  [[nodiscard]] constexpr Ref<T> as_ref() const {
+  [[nodiscard]] __always_inline Ref<T> as_ref() const {
     return Ref<T>(get_mut_ref());
   }
 
@@ -116,12 +116,12 @@ class Option;
 
 namespace crab::ref {
   template<typename T>
-  [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
+  [[nodiscard]] __always_inline Ref<T> from_ptr_unchecked(const T *const from) {
     return Ref<T>::from_unchecked(from);
   }
 
   template<typename T>
-  [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
+  [[nodiscard]] __always_inline RefMut<T> from_ptr_unchecked(T *const from) {
     return RefMut<T>::from_unchecked(from);
   }
 }
@@ -133,7 +133,7 @@ namespace crab::ref {
    *
    */
   template<typename T>
-  [[nodiscard]] constexpr Option<RefMut<T> > from_ptr(T *const from) {
+  [[nodiscard]] Option<RefMut<T> > from_ptr(T *const from) {
     if (from) {
       return some(RefMut(from));
     }
@@ -141,7 +141,7 @@ namespace crab::ref {
   }
 
   template<typename T>
-  [[nodiscard]] constexpr Option<Ref<T> > from_ptr(const T *const from) {
+  [[nodiscard]] Option<Ref<T> > from_ptr(const T *const from) {
     if (from) {
       return some(Ref(from));
     }

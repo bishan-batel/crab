@@ -18,8 +18,17 @@ namespace crab::debug {
     StringView assertion_text,
     usize line,
     StringView msg
-
-  ) : fmt{std::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}", source, line, function, assertion_text, msg)} {}
+  )
+    : fmt{
+      std::format(
+        "Failed Assertion in:\n {}:{} in {} \n'{}'\n{}",
+        source,
+        line,
+        function,
+        assertion_text,
+        msg
+      )
+    } {}
 
   AssertionFailedError::~AssertionFailedError() = default;
 
@@ -27,22 +36,13 @@ namespace crab::debug {
     return fmt.c_str();
   }
 
-  void dbg_assert(
-    const bool succeeded,
-    const StringView function,
-    const StringView source,
-    const StringView assertion_line,
-    const usize line,
-    const StringView msg
+  unit dbg_assert(
+    [[maybe_unused]] const StringView function,
+    [[maybe_unused]] const StringView source,
+    [[maybe_unused]] const StringView assertion_line,
+    [[maybe_unused]] const usize line,
+    [[maybe_unused]] const StringView msg
   ) {
-    if (succeeded) return;
-
-    const AssertionFailedError error{function, source, assertion_line, line, msg};
-
-    #if DEBUG
-    throw error;
-    #else
-    std::std::cerr << error << std::endl;
-    #endif
+    throw AssertionFailedError{function, source, assertion_line, line, msg};;
   }
 }

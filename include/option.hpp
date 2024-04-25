@@ -7,24 +7,24 @@
 // ReSharper disable CppDFAUnreachableCode
 #pragma once
 
-#include "preamble.hpp"
 #include <type_traits>
 #include <utility>
 #include <variant>
 #include <iostream>
+#include <crab_type_traits.hpp>
 
 #include "debug.hpp"
 
 namespace crab {
-  using None = unit;
+  struct None {
+    [[nodiscard]] bool operator==(const None &) const { return true; }
+  };
 }
 
-template<typename T>
-  requires(not std::is_const_v<T> and not std::is_reference_v<T>)
+template<typename T> requires crab::ref::is_valid_type<T>
 class Ref;
 
-template<typename T>
-  requires(not std::is_const_v<T> and not std::is_reference_v<T>)
+template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut;
 
 /**
@@ -115,7 +115,7 @@ namespace crab {
     return Option<T>(from);
   }
 
-  inline constexpr None none = {};
+  inline constexpr None none{};
 
   /**
    * Consumes given option and returns the contained value, will throw if none found
@@ -125,63 +125,5 @@ namespace crab {
   template<typename T>
   T unwrap(Option<T> &&from) {
     return from.take_unchecked();
-  }
-
-  template<typename T = unit>
-  class Else {
-    T data;
-
-  public:
-    Else(T data) : data(std::move(data)) {}
-
-    /**
-     * 'Else' Branch for Conditional
-     */
-    void or_else(const auto &block) {
-      if (data) {
-        if constexpr (std::is_same_v<bool, T>) {
-          block();
-        } else
-          block(data.take());
-      }
-    }
-  };
-
-  /**
-   * Runs block if the given option is not null and will destructure the
-   * option, returns an optional else conditional
-   *
-   * Sample Use:
-   *
-   * Option<f32> o = 42.f;
-   *
-   * opt::if_some(std::move(o), [](auto some){
-   *   std::cout << "o = " << some << std::endl;
-   * });
-   *
-   * opt::if_some(std::move(o), [](auto some){
-   *   std::cout << "o is some";
-   * }).or_else([]{
-   *  std::cout << "o is none";
-   * });
-   */
-  template<typename T>
-  auto if_some(Option<T> &&from, const auto &block) {
-    if (from.is_none()) {
-      return Else(true);
-    }
-    block(crab::unwrap(std::forward<Option<T> >(from)));
-
-    return Else(false);
-  }
-
-  template<typename T>
-  Else<Option<T> > if_none(Option<T> &&from, const auto &block) {
-    if (from.is_none()) {
-      block();
-      return Else(std::forward<Option<T> >(from));
-    }
-
-    return Else<Option<T> >(None{});
   }
 } // namespace opt

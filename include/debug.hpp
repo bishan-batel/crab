@@ -25,8 +25,7 @@ namespace crab::debug {
     const char *what() const noexcept override;
   };
 
-  void dbg_assert(
-    bool succeeded,
+  unit dbg_assert(
     StringView function,
     StringView source,
     StringView assertion_line,
@@ -35,14 +34,12 @@ namespace crab::debug {
   );
 }
 
-#define debug_assert(condition, message) crab::debug::dbg_assert(\
-  static_cast<bool>(condition), \
+#define debug_assert(condition, message) if (!static_cast<bool>(condition)) crab::debug::dbg_assert(\
   __FUNCTION__, \
   __FILE__, \
   #condition, \
   __LINE__, \
-  message );
-
+  (message))
 #else
 
 #define debug_assert(x)

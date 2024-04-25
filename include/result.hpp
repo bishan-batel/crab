@@ -26,7 +26,7 @@ namespace crab {
 
     virtual ~Error() = default;
 
-    virtual StringView what() = 0;
+    virtual StringView what() const = 0;
   };
 }
 
@@ -118,7 +118,7 @@ public:
     #if DEBUG
     ensure_valid();
     #endif
-    debug_assert(is_ok(), std::format("Called unwrap on error\n{}", get_err_unchecked().what()));
+    debug_assert(is_ok(), std::format("Called unwrap on result with Error:\n{}", get_err_unchecked().what()));
     return std::get<T>(inner);
   }
 
@@ -131,9 +131,24 @@ public:
     return std::get<E>(inner);
   }
 
-  #if DEBUG
+  [[nodiscard]] const T &get_unchecked() const {
+    #if DEBUG
+    ensure_valid();
+    #endif
+    debug_assert(is_ok(), std::format("Called unwrap on result with Error:\n{}", get_err_unchecked().what()));
+    return std::get<T>(inner);
+  }
+
+  [[nodiscard]] const E &get_err_unchecked() const {
+    #if DEBUG
+    ensure_valid();
+    #endif
+    debug_assert(is_err(), std::format("Called unwrap on ok value"));
+
+    return std::get<E>(inner);
+  }
+
   void ensure_valid() const { debug_assert(!std::holds_alternative<unit>(inner), "Invalid use of moved result"); }
-  #endif
 
   friend std::ostream &operator<<(std::ostream &os, const Result &result) {
     #if DEBUG

@@ -2,13 +2,16 @@
 // Created by bishan_ on 4/23/24.
 //
 
-#include "result.hpp"
-
 #include <catch2/catch_test_macros.hpp>
+
+#include <result.hpp>
+#include <pattern_match.hpp>
+
+#include "ref.hpp"
 
 class Error final : public crab::Error {
 public:
-  StringView what() override {
+  StringView what() const override {
     return "huh";
   }
 };
@@ -45,5 +48,30 @@ TEST_CASE("Result", "[result]") {
 
     result = crab::ok<u32>(42);
     REQUIRE_NOTHROW(result.ensure_valid());
+  }
+
+  SECTION("Reference Pattern Matching") {
+    Result<i32, Error> result{10};
+
+    i32 v = 0;
+    REQUIRE_NOTHROW(
+      if_ok(result, [&](i32 value) {
+        v = value;
+        })
+    );
+
+    REQUIRE_NOTHROW(
+      if_err(result, [&](const Error&) { v = 51358; })
+    );
+
+    REQUIRE(v != 51358);
+
+    result = err(Error{});
+
+    REQUIRE_NOTHROW(
+      if_err(result, [&](const Error&) { v = 51358; })
+    );
+
+    REQUIRE(v == 51358);
   }
 }

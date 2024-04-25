@@ -1,7 +1,7 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
-#include <type_traits>
+#include <crab_type_traits.hpp>
 #include "preamble.hpp"
 #include "debug.hpp"
 
@@ -9,8 +9,7 @@
  * Reference to some type T that is always NON NULL, use in place of 'const T&'
  * when applicable (for ex. inside template parameters)
  */
-template<typename T>
-  requires(not std::is_const_v<T> and not std::is_reference_v<T>)
+template<typename T> requires crab::ref::is_valid_type<T>
 class Ref final {
   explicit constexpr Ref(const T *pointer)
     : pointer(pointer) {
@@ -18,25 +17,25 @@ class Ref final {
   }
 
 public:
-  [[nodiscard]] constexpr static Ref from_unchecked(T *pointer) {
+  [[nodiscard]] __always_inline static Ref from_unchecked(T *pointer) {
     return Ref(pointer);
   }
 
-  constexpr Ref(const T &ref) : Ref(&ref) {}
+  __always_inline Ref(const T &ref) : Ref(&ref) {}
 
-  [[nodiscard]] constexpr operator const T &() const {
+  [[nodiscard]] __always_inline operator const T &() const {
     return get_ref();
   };
 
-  [[nodiscard]] constexpr operator const T *() const {
+  [[nodiscard]] __always_inline operator const T *() const {
     return as_ptr();
   };
 
-  [[nodiscard]] constexpr const T &operator*() const {
+  [[nodiscard]] __always_inline const T &operator*() const {
     return get_ref();
   }
 
-  [[nodiscard]] constexpr const T *operator->() const {
+  [[nodiscard]] __always_inline const T *operator->() const {
     return as_ptr();
   }
 
@@ -44,7 +43,7 @@ public:
    * Gets underlying pointer, this pointer is always non null
    *
    */
-  [[nodiscard]] const T *as_ptr() const {
+  [[nodiscard]] __always_inline const T *as_ptr() const {
     return pointer;
   }
 
@@ -57,8 +56,7 @@ private:
   const T *pointer;
 };
 
-template<typename T>
-  requires(not std::is_const_v<T> and not std::is_reference_v<T>)
+template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut final {
   constexpr explicit RefMut(T *pointer)
     : pointer(pointer) {

@@ -1,16 +1,14 @@
 # Crab
-Ignore the 'pp' in the github title, mansilla working conditions did not like the original name. 
 
+Ignore the 'pp' in the github title, mansilla working conditions did not like the original name.
 
-
-## Why?
 This is a collection of utility template classes that replaces certain aspects of the STL.
 
+## All Features
 
-## All Features 
+### Preamble
 
-### Preamble 
-A [header file](include/preamble.hpp) for 
+A [header file](include/preamble.hpp) for
 type aliases to make code more readable.
 
 ```cpp
@@ -38,14 +36,28 @@ int main() {
 
 ### Ref
 
+(TODO)
+
 ### Box
 
-### Rc 
+(TODO)
 
-### Range 
+### Rc
 
-### Option 
+(TODO)
 
-### Result 
+### Range
+
+(TODO)
+
+### Option
+
+(TODO)
+
+### Result
+
+(TODO)
 
 ### Pattern Matching
+
+(TODO)

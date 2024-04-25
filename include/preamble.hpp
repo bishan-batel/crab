@@ -1,5 +1,5 @@
 /**
- * Created by bishan_ on 3/3/2024
+ * Created by Kishan Patel (bishan.batel@protonmail.com, kishan.patel@digipen.edu) on 3/3/2024
  */
 
 // ReSharper disable CppUnusedIncludeDirective
@@ -115,22 +115,22 @@ using Span = std::span<T, length>;
 template<typename T>
 using Vec = std::vector<T>;
 
+/**
+ * Unordered set of elements
+ */
 template<typename T, typename Hash = std::hash<T>,
          typename Predicate = std::equal_to<T> >
 using Set = std::unordered_set<T, Hash, Predicate>;
 
-template<typename T, typename Hash = std::hash<T>,
-         typename Predicate = std::equal_to<T> >
-using OrderedSet = std::set<T, Hash, Predicate>;
-
+/**
+ * Unordered key-value collection
+ */
 template<typename Key, typename Value, typename Hash = std::hash<Key>,
          typename Predicate = std::equal_to<Key> >
 using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 
 /**
- * \brief 0 Sized Type, useful when want to treat 'nothing' as a type instead of
- * as 'void' (which is some strange magical thing that is builtinto the
- * language)
+ * \brief 0 Sized Type
  */
 struct unit {
   [[nodiscard]] bool operator==(const unit &) const { return true; }

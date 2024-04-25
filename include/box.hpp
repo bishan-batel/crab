@@ -1,4 +1,6 @@
 #pragma once
+#include <iostream>
+
 #include "preamble.hpp"
 #include <type_traits>
 #include <utility>
@@ -72,15 +74,13 @@ public:
     return Box(ref, length);
   };
 
-  static MutPtr unwrap(Box box)
-    requires IS_SINGLE {
+  static MutPtr unwrap(Box box) requires IS_SINGLE {
     const auto ptr = box.raw_ptr();
     box.obj = nullptr;
     return ptr;
   }
 
-  static std::pair<MutPtr, SizeType> unwrap(Box box)
-    requires IS_ARRAY {
+  static std::pair<MutPtr, SizeType> unwrap(Box box) requires IS_ARRAY {
     return std::make_pair(
       std::exchange(box.obj, nullptr),
       std::exchange(box.size, crab::box::helper<T>::DEFAULT_SIZE)
@@ -93,9 +93,7 @@ public:
 
   Box(Box &&from) noexcept
     : obj(std::exchange(from.obj, nullptr)),
-      size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {
-    debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
-  }
+      size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {}
 
   // ReSharper disable once CppNonExplicitConvertingConstructor
   template<typename Derived> requires std::is_base_of_v<T, Derived> and IS_SINGLE

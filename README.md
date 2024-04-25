@@ -1,7 +1,5 @@
 # Crab
 
-Ignore the 'pp' in the github title, mansilla working conditions did not like the original name.
-
 This is a collection of utility template classes that replaces certain aspects of the STL.
 
 ## All Features

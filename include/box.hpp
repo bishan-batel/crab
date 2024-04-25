@@ -126,7 +126,7 @@ public:
   // ReSharper disable once CppNonExplicitConvertingConstructor
   template<typename Derived> requires std::is_base_of_v<T, Derived> and IS_SINGLE
   Box(Box<Derived> &&from)
-    : obj(uwnrap(from)), size(crab::box::helper<T>::DEFAULT_SIZE) {
+    : obj(unwrap(from)), size(crab::box::helper<T>::DEFAULT_SIZE) {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 

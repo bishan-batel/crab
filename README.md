@@ -10,7 +10,7 @@ A [header file](include/preamble.hpp) for
 type aliases to make code more readable.
 
 ```cpp
-#include <crabpp/preamble.hpp>
+#include <crab/preamble.hpp>
 
 int main() {
     u32 a = 42;

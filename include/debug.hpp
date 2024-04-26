@@ -42,6 +42,6 @@ namespace crab::debug {
   (message))
 #else
 
-#define debug_assert(x)
+#define debug_assert(...)
 
 #endif

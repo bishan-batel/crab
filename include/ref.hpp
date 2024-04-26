@@ -17,7 +17,7 @@ class Ref final {
   }
 
 public:
-  [[nodiscard]] static Ref from_unchecked(T *const pointer) {
+  [[nodiscard]] static Ref from_unchecked(const T *const pointer) {
     return Ref(pointer);
   }
 

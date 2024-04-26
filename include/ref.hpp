@@ -23,15 +23,15 @@ public:
 
   __always_inline Ref(const T &ref) : Ref(&ref) {}
 
-  [[nodiscard]] __always_inline operator const T &() const {
+  [[nodiscard]] __always_inline operator const T&() const {
     return get_ref();
   };
 
-  [[nodiscard]] __always_inline operator const T *() const {
+  [[nodiscard]] __always_inline operator const T*() const {
     return as_ptr();
   };
 
-  [[nodiscard]] __always_inline const T &operator*() const {
+  [[nodiscard]] __always_inline const T& operator*() const {
     return get_ref();
   }
 
@@ -50,7 +50,7 @@ public:
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] __always_inline const T &get_ref() const { return *pointer; }
+  [[nodiscard]] __always_inline const T& get_ref() const { return *pointer; }
 
 private:
   const T *pointer;
@@ -70,15 +70,15 @@ public:
     return RefMut(pointer);
   }
 
-  [[nodiscard]] __always_inline operator T &() const { return get_mut_ref(); };
+  [[nodiscard]] __always_inline operator T&() const { return get_mut_ref(); };
 
-  [[nodiscard]] __always_inline operator T *() const {
+  [[nodiscard]] __always_inline operator T*() const {
     return as_ptr();
   };
 
   [[nodiscard]] __always_inline operator Ref<T>() const { return as_ref(); };
 
-  [[nodiscard]] __always_inline T &operator*() const { return get_mut_ref(); }
+  [[nodiscard]] __always_inline T& operator*() const { return get_mut_ref(); }
 
   [[nodiscard]] __always_inline T *operator->() const {
     return as_ptr();
@@ -93,12 +93,12 @@ public:
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] __always_inline T &get_mut_ref() const { return *pointer; }
+  [[nodiscard]] __always_inline T& get_mut_ref() const { return *pointer; }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] __always_inline const T &get_ref() const { return *pointer; }
+  [[nodiscard]] __always_inline const T& get_ref() const { return *pointer; }
 
   /**
    * Converts RefMut into a immutable reference
@@ -133,17 +133,17 @@ namespace crab::ref {
    *
    */
   template<typename T>
-  [[nodiscard]] Option<RefMut<T> > from_ptr(T *const from) {
+  [[nodiscard]] Option<RefMut<T>> from_ptr(T *const from) {
     if (from) {
-      return some(RefMut(from));
+      return some(from_ptr_unchecked(from));
     }
     return none;
   }
 
   template<typename T>
-  [[nodiscard]] Option<Ref<T> > from_ptr(const T *const from) {
+  [[nodiscard]] Option<Ref<T>> from_ptr(const T *const from) {
     if (from) {
-      return some(Ref(from));
+      return some(from_ptr_unchecked(from));
     }
     return none;
   }
@@ -152,39 +152,39 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived> > cast(const Base &from) {
-    return from_ptr(dynamic_cast<const Derived *>(&from));
+  Option<Ref<Derived>> cast(const Base &from) {
+    return from_ptr(dynamic_cast<const Derived*>(&from));
   }
 
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived> > cast(Base &from) {
-    return from_ptr(dynamic_cast<Derived *>(&from));
+  Option<RefMut<Derived>> cast(Base &from) {
+    return from_ptr(dynamic_cast<Derived*>(&from));
   }
 
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived> > cast(const Base *from) {
-    return from_ptr(dynamic_cast<const Derived *>(from));
+  Option<Ref<Derived>> cast(const Base *from) {
+    return from_ptr(dynamic_cast<const Derived*>(from));
   }
 
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived> > cast(Base *from) {
-    return from_ptr(dynamic_cast<Derived *>(from));
+  Option<RefMut<Derived>> cast(Base *from) {
+    return from_ptr(dynamic_cast<Derived*>(from));
   }
 
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  __always_inline Option<Ref<Derived> > cast(Ref<Base> from) {
+  __always_inline Option<Ref<Derived>> cast(Ref<Base> from) {
     return cast(from.get_ref());
   }
 
@@ -192,7 +192,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  __always_inline Option<RefMut<Derived> > cast(RefMut<Base> from) {
+  __always_inline Option<RefMut<Derived>> cast(RefMut<Base> from) {
     return cast(from.get_ref());
   }
 }

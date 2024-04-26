@@ -20,5 +20,15 @@ namespace crab::utf8 {
   /**
    * \brief UTF-8 String Stream
    */
-  using Stream = std::stringstream<u8char>;
+  using StringStream = std::stringstream<u8char>;
+
+  /**
+   * \brief UTF-8 String Stream
+   */
+  using InFileStream = std::basic_ifstream<u8char>;
+
+  /**
+   * \brief UTF-8 String Stream
+   */
+  using OutFileStream = std::basic_ofstream<u8char>;
 }

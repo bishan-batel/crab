@@ -5,8 +5,6 @@
 #pragma once
 #include "preamble.hpp"
 
-#if DEBUG
-
 namespace crab::debug {
   class AssertionFailedError final : public std::exception {
     std::string fmt;
@@ -33,7 +31,7 @@ namespace crab::debug {
     StringView msg
   );
 }
-
+#if DEBUG
 #define debug_assert(condition, message) if (!static_cast<bool>(condition)) crab::debug::dbg_assert(\
   __FUNCTION__, \
   __FILE__, \

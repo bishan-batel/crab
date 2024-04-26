@@ -2,9 +2,8 @@
 // Created by bishan_ on 4/22/24.
 //
 #include "debug.hpp"
-#include "preamble.hpp"
 
-  #include <format>
+#include <format>
 
 namespace crab::debug {
   AssertionFailedError::AssertionFailedError(

@@ -116,12 +116,12 @@ class Option;
 
 namespace crab::ref {
   template<typename T>
-  [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
+  __always_inline [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
     return Ref<T>::from_unchecked(from);
   }
 
   template<typename T>
-  [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
+  __always_inline [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
     return RefMut<T>::from_unchecked(from);
   }
 }
@@ -133,7 +133,7 @@ namespace crab::ref {
    *
    */
   template<typename T>
-  [[nodiscard]] Option<RefMut<T>> from_ptr(T *const from) {
+  __always_inline [[nodiscard]] Option<RefMut<T>> from_ptr(T *const from) {
     if (from) {
       return some(from_ptr_unchecked(from));
     }
@@ -141,7 +141,7 @@ namespace crab::ref {
   }
 
   template<typename T>
-  [[nodiscard]] Option<Ref<T>> from_ptr(const T *const from) {
+  __always_inline [[nodiscard]] Option<Ref<T>> from_ptr(const T *const from) {
     if (from) {
       return some(from_ptr_unchecked(from));
     }

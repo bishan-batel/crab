@@ -17,7 +17,7 @@ class Ref final {
   }
 
 public:
-  [[nodiscard]] __always_inline static Ref from_unchecked(T *const pointer) {
+  [[nodiscard]] static Ref from_unchecked(T *const pointer) {
     return Ref(pointer);
   }
 
@@ -66,7 +66,7 @@ class RefMut final {
 public:
   __always_inline RefMut(T &ref) : RefMut(&ref) {}
 
-  [[nodiscard]] __always_inline static RefMut from_unchecked(T *const pointer) {
+  [[nodiscard]] static RefMut from_unchecked(T *const pointer) {
     return RefMut(pointer);
   }
 
@@ -116,12 +116,12 @@ class Option;
 
 namespace crab::ref {
   template<typename T>
-  [[nodiscard]] __always_inline Ref<T> from_ptr_unchecked(const T *const from) {
+  [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
     return Ref<T>::from_unchecked(from);
   }
 
   template<typename T>
-  [[nodiscard]] __always_inline RefMut<T> from_ptr_unchecked(T *const from) {
+  [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
     return RefMut<T>::from_unchecked(from);
   }
 }

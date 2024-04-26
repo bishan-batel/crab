@@ -2,14 +2,9 @@
 // Created by bishan_ on 4/22/24.
 //
 #include "debug.hpp"
-#include "box.hpp"
-#include "option.hpp"
 #include "preamble.hpp"
-#include "range.hpp"
-#include "rc.hpp"
-#include "ref.hpp"
 
-#include <format>
+  #include <format>
 
 namespace crab::debug {
   AssertionFailedError::AssertionFailedError(

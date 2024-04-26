@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 project(crab VERSION 0.2)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23 )
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -fexceptions")
 
 cmake_minimum_required(VERSION 3.9)

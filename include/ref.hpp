@@ -147,4 +147,24 @@ namespace crab::ref {
     }
     return none;
   }
+
+  template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
+  Option<Ref<Derived> > cast(const Base &from) {
+    return from_ptr(dynamic_cast<const Derived *>(&from));
+  }
+
+  template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
+  Option<RefMut<Derived> > cast(Base &from) {
+    return from_ptr(dynamic_cast<Derived *>(&from));
+  }
+
+  template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
+  Option<Ref<Derived> > cast(Ref<Base> from) {
+    return cast(from.get_ref());
+  }
+
+  template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
+  Option<RefMut<Derived> > cast(RefMut<Base> from) {
+    return cast(from.get_ref());
+  }
 }

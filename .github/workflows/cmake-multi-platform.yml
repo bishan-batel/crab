@@ -24,7 +24,7 @@ jobs:
       # To add more build types (Release, Debug, RelWithDebInfo, etc.) customize the build_type list.
       matrix:
         os: [ubuntu-latest, windows-latest]
-        build_type: [debug, release]
+        build_type: [Debug, Release]
         c_compiler: [clang]
         include:
           - os: windows-latest
@@ -53,13 +53,16 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
         cmake 
-        --preset ${{ matrix.build_type }}
         -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.built_type }}
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
+        -DCMAKE_CXX_FLAGS_INIT="-Wall -Wextra -Wpedantic -Werror"
         -S ${{ github.workspace }}
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }} --target tests
+      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --target tests
 
     # - name: Test
     #   working-directory: ${{ steps.strings.outputs.build-output-dir }}

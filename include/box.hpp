@@ -202,6 +202,8 @@ public:
 
   [[nodiscard]] ConstPtr as_ptr() const { return raw_ptr(); }
 
+  [[nodiscard]] MutPtr __release_for_derived() { return std::exchange(obj, nullptr); }
+
 private:
   MutPtr raw_ptr() {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
@@ -212,8 +214,6 @@ private:
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
     return obj;
   }
-
-  [[nodiscard]] MutPtr __release_for_derived() { return std::exchange(obj, nullptr); }
 };
 
 namespace crab {

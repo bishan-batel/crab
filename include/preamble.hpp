@@ -93,7 +93,22 @@ using imax = std::intmax_t;
 using iptr = std::intptr_t;
 
 /**
- * std::string, fat pointer to a heap allocated string
+ * \brief UTF-8 Encoded Character
+ */
+using u8char = char8_t;
+
+/**
+ * \brief UTF-16 Encoded Character
+ */
+using u16char = char16_t;
+
+/**
+ * \brief UTF-32 Encoded Character
+ */
+using u32char = char32_t;
+
+/**
+ * \brief std::string, fat pointer to a heap allocated string
  */
 using String = std::string;
 
@@ -119,14 +134,14 @@ using Vec = std::vector<T>;
  * Unordered set of elements
  */
 template<typename T, typename Hash = std::hash<T>,
-         typename Predicate = std::equal_to<T> >
+         typename Predicate = std::equal_to<T>>
 using Set = std::unordered_set<T, Hash, Predicate>;
 
 /**
  * Unordered key-value collection
  */
 template<typename Key, typename Value, typename Hash = std::hash<Key>,
-         typename Predicate = std::equal_to<Key> >
+         typename Predicate = std::equal_to<Key>>
 using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 
 /**

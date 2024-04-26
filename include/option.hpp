@@ -11,9 +11,9 @@
 #include <utility>
 #include <variant>
 #include <iostream>
-#include <crab_type_traits.hpp>
+#include <crab/type_traits.hpp>
 
-#include "debug.hpp"
+#include "crab/debug.hpp"
 
 namespace crab {
   struct None {

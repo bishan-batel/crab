@@ -3,7 +3,7 @@
 //
 
 #pragma once
-#include "preamble.hpp"
+#include "../preamble.hpp"
 
 namespace crab::debug {
   class AssertionFailedError final : public std::exception {

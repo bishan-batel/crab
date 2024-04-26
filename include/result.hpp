@@ -8,7 +8,7 @@
 #include <format>
 #include <variant>
 
-#include "debug.hpp"
+#include "crab/debug.hpp"
 #include "option.hpp"
 
 namespace crab {

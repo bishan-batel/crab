@@ -25,11 +25,12 @@ add_library(${PROJECT_NAME} SHARED
         include/rc.hpp
         include/range.hpp
         include/ref.hpp
-        include/debug.hpp
+        include/crab/debug.hpp
         include/result.hpp
         include/result.hpp
         include/pattern_match.hpp
-        include/crab_type_traits.hpp
+        include/crab/type_traits.hpp
+        include/crab/utf8.hpp
 )
 
 # Public API

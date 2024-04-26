@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "debug.hpp"
+#include "crab/debug.hpp"
 #include "ref.hpp"
 
 namespace crab::box {

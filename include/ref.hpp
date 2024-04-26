@@ -1,9 +1,8 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
-#include <crab_type_traits.hpp>
-#include "preamble.hpp"
-#include "debug.hpp"
+#include "crab/type_traits.hpp"
+#include "crab/debug.hpp"
 
 /**
  * Reference to some type T that is always NON NULL, use in place of 'const T&'
@@ -116,12 +115,12 @@ class Option;
 
 namespace crab::ref {
   template<typename T>
-  __always_inline [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
+  [[nodiscard]] __always_inline Ref<T> from_ptr_unchecked(const T *const from) {
     return Ref<T>::from_unchecked(from);
   }
 
   template<typename T>
-  __always_inline [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
+  [[nodiscard]] __always_inline RefMut<T> from_ptr_unchecked(T *const from) {
     return RefMut<T>::from_unchecked(from);
   }
 }
@@ -133,7 +132,7 @@ namespace crab::ref {
    *
    */
   template<typename T>
-  __always_inline [[nodiscard]] Option<RefMut<T>> from_ptr(T *const from) {
+  [[nodiscard]] __always_inline Option<RefMut<T>> from_ptr(T *const from) {
     if (from) {
       return some(from_ptr_unchecked(from));
     }
@@ -141,7 +140,7 @@ namespace crab::ref {
   }
 
   template<typename T>
-  __always_inline [[nodiscard]] Option<Ref<T>> from_ptr(const T *const from) {
+  [[nodiscard]] __always_inline Option<Ref<T>> from_ptr(const T *const from) {
     if (from) {
       return some(from_ptr_unchecked(from));
     }

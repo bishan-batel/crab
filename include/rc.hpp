@@ -114,6 +114,8 @@ public:
 
   operator const T *() const { return raw_ptr(); }
 
+  const T *operator ->() const { return raw_ptr(); }
+
   operator const Ref<T>() const { return as_ref(); }
 
   /**

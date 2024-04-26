@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.5)
 project(crab VERSION 0.2)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS true)
-set(CMAKE_CXX_STANDARD 23 )
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD 23)
+#set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -fexceptions")
 
 cmake_minimum_required(VERSION 3.9)
@@ -52,6 +52,9 @@ install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
 
 
 target_compile_definitions(${PROJECT_NAME}
-        PRIVATE "DEBUG=$<IF:$<CONFIG:Debug>,1,0>")
+        PRIVATE
+        "DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
+        "RELEASE=$<IF:$<CONFIG:Debug>,0,1>"
+)
 
 add_subdirectory(test)

@@ -148,23 +148,51 @@ namespace crab::ref {
     return none;
   }
 
+  /**
+   * @brief Attempts to cast input of type Base into a Derived instances
+   */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
   Option<Ref<Derived> > cast(const Base &from) {
     return from_ptr(dynamic_cast<const Derived *>(&from));
   }
 
+  /**
+   * @brief Attempts to cast input of type Base into a Derived instances
+   */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
   Option<RefMut<Derived> > cast(Base &from) {
     return from_ptr(dynamic_cast<Derived *>(&from));
   }
 
+  /**
+   * @brief Attempts to cast input of type Base into a Derived instances
+   */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived> > cast(Ref<Base> from) {
+  Option<Ref<Derived> > cast(const Base *from) {
+    return from_ptr(dynamic_cast<const Derived *>(from));
+  }
+
+  /**
+   * @brief Attempts to cast input of type Base into a Derived instances
+   */
+  template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
+  Option<RefMut<Derived> > cast(Base *from) {
+    return from_ptr(dynamic_cast<Derived *>(from));
+  }
+
+  /**
+   * @brief Attempts to cast input of type Base into a Derived instances
+   */
+  template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
+  __always_inline Option<Ref<Derived> > cast(Ref<Base> from) {
     return cast(from.get_ref());
   }
 
+  /**
+   * @brief Attempts to cast input of type Base into a Derived instances
+   */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived> > cast(RefMut<Base> from) {
+  __always_inline Option<RefMut<Derived> > cast(RefMut<Base> from) {
     return cast(from.get_ref());
   }
 }

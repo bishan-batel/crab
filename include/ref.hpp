@@ -11,13 +11,13 @@
  */
 template<typename T> requires crab::ref::is_valid_type<T>
 class Ref final {
-  explicit __always_inline Ref(const T *pointer)
+  explicit __always_inline Ref(const T *const pointer)
     : pointer(pointer) {
     debug_assert(pointer, "Invalid State: Cannot create a NULL Ref object");
   }
 
 public:
-  [[nodiscard]] __always_inline static Ref from_unchecked(T *pointer) {
+  [[nodiscard]] __always_inline static Ref from_unchecked(T *const pointer) {
     return Ref(pointer);
   }
 
@@ -58,7 +58,7 @@ private:
 
 template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut final {
-  __always_inline explicit RefMut(T *pointer)
+  __always_inline explicit RefMut(T *const pointer)
     : pointer(pointer) {
     debug_assert(pointer, "Invalid State: Cannot create a NULL RefMut object");
   }
@@ -66,7 +66,7 @@ class RefMut final {
 public:
   __always_inline RefMut(T &ref) : RefMut(&ref) {}
 
-  [[nodiscard]] __always_inline static RefMut from_unchecked(T *pointer) {
+  [[nodiscard]] __always_inline static RefMut from_unchecked(T *const pointer) {
     return RefMut(pointer);
   }
 

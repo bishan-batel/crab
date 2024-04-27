@@ -11,16 +11,16 @@
 namespace crab::box {
   template<typename T>
   struct helper {
-    using ty = T *;
-    using const_ty = const T *;
+    using ty = T*;
+    using const_ty = const T*;
     using SizeType = unit;
     static constexpr auto DEFAULT_SIZE = unit{};
   };
 
   template<typename T>
   struct helper<T[]> {
-    using ty = T *;
-    using const_ty = const T *;
+    using ty = T*;
+    using const_ty = const T*;
     using SizeType = usize;
     static constexpr SizeType DEFAULT_SIZE = 0;
   };
@@ -142,10 +142,10 @@ public:
   ~Box() { drop(); }
 
   // ReSharper disable once CppNonExplicitConversionOperator
-  __always_inline operator Contained &() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+  __always_inline operator Contained&() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
   // ReSharper disable once CppNonExplicitConversionOperator
-  __always_inline operator const Contained &() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+  __always_inline operator const Contained&() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
   // ReSharper disable once CppNonExplicitConversionOperator
   __always_inline operator Ref<Contained>() const {
@@ -176,21 +176,21 @@ public:
 
   [[nodiscard]] __always_inline ConstPtr operator->() const { return as_ptr(); }
 
-  [[nodiscard]] __always_inline Contained &operator*() { return *as_ptr(); }
+  [[nodiscard]] __always_inline Contained& operator*() { return *as_ptr(); }
 
-  __always_inline const Contained &operator*() const { return *as_ptr(); }
+  __always_inline const Contained& operator*() const { return *as_ptr(); }
 
-  friend std::ostream &operator<<(std::ostream &os, const Box &rhs) {
+  friend std::ostream& operator<<(std::ostream &os, const Box &rhs) {
     return os << *rhs;
   }
 
-  [[nodiscard]] const Contained &operator[](const usize index) const
+  [[nodiscard]] const Contained& operator[](const usize index) const
     requires IS_ARRAY {
     debug_assert(index < size, "Index out of Bounds");
     return as_ptr()[index];
   }
 
-  [[nodiscard]] Contained &operator[](const usize index)
+  [[nodiscard]] Contained& operator[](const usize index)
     requires IS_ARRAY {
     debug_assert(index < size, "Index out of Bounds");
     return as_ptr()[index];
@@ -222,7 +222,7 @@ namespace crab {
    */
   template<typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
-  static Box<T> make_box(Args... args) {
+  static Box<T> make_box(Args &&... args) {
     return Box<T>::wrap_unchecked(new T(args...));
   }
 

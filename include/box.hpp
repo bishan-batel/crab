@@ -223,7 +223,7 @@ namespace crab {
   template<typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
   static Box<T> make_box(Args &&... args) {
-    return Box<T>::wrap_unchecked(new T(args...));
+    return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});
   }
 
   /**

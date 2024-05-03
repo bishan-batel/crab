@@ -227,6 +227,15 @@ namespace crab {
   }
 
   /**
+   * @brief Makes a new instance of type T on the heap with given args
+   */
+  template<typename T, typename V>
+    requires std::is_convertible_v<T, V>
+  static Box<T> make_box(V &&from) {
+    return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
+  }
+
+  /**
    * @brief Creates a new array on the heap of 'count' size w/ default constructor for
    * each element
    */

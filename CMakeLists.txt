@@ -30,6 +30,8 @@ add_library(${PROJECT_NAME} SHARED
         include/result.hpp
         include/pattern_match.hpp
         include/crab/type_traits.hpp
+        include/error.hpp
+        src/error.cpp
 )
 
 # Public API

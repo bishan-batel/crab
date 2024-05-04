@@ -32,7 +32,7 @@ namespace crab {
 
 namespace crab::result {
   template<typename E>
-  concept is_error_type = std::is_move_constructible<E> and std::is_base_of_v<Error, E>;
+  concept is_error_type = std::is_move_constructible_v<E> and std::is_base_of_v<Error, E>;
 
   template<typename T>
   concept is_ok_type = std::is_move_constructible_v<T>;

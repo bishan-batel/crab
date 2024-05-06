@@ -12,7 +12,7 @@ TEST_CASE("Preamble", "[unit]") {
 }
 
 TEST_CASE("Range", "[range]") {
-  i32 counter = 0;
+  i32 counter = 0_i32;
   for (const auto i: crab::range(10)) {
     REQUIRE(counter == i);
     counter++;

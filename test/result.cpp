@@ -11,7 +11,7 @@
 
 class Error final : public crab::Error {
 public:
-  StringView what() const override {
+  String what() const override {
     return "huh";
   }
 };

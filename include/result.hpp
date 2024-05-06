@@ -26,7 +26,7 @@ namespace crab {
 
     virtual ~Error() = default;
 
-    virtual StringView what() const = 0;
+    virtual String what() const = 0;
   };
 }
 

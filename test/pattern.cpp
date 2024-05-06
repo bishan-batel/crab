@@ -11,7 +11,7 @@ class TestError final : public crab::Error {
 public:
   explicit TestError(const String &huh) : huh(huh) {}
 
-  StringView what() const override { return huh; }
+  String what() const override { return huh; }
 };
 
 TEST_CASE("Pattern Matchin", "[pattern]") {

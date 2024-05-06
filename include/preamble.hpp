@@ -112,32 +112,58 @@ using char32 = char32_t;
 using String = std::string;
 
 /**
- * Abstraction over any contiguous sequence of characters, always prefer this
+ * \brief UTF Encoded Character
+ */
+using widechar = wchar_t;
+
+/**
+ * \brief std::wstring, fat pointer to a heap allocated unicode string
+ */
+using WideString = std::wstring;
+
+/**
+ * \brief Abstraction over any contiguous sequence of characters, always prefer this
  * over const String&
  */
 using StringView = std::string_view;
 
 /**
- * Abstraction over any contiguous sequence of elements
+ * \brief Abstraction over any contiguous sequence of unicode characters, always prefer this
+ * over const WideString&
+ */
+using WideStringView = std::wstring_view;
+
+/**
+ * \brief std::stringstream
+ */
+using StringStream = std::stringstream;
+
+/**
+ * \brief std::wstringstream
+ */
+using WideStringStream = std::wstringstream;
+
+/**
+ * \brief Abstraction over any contiguous sequence of elements
  */
 template<typename T, usize length = std::dynamic_extent>
 using Span = std::span<T, length>;
 
 /**
- * Heap allocated, dynamically sized list
+ * \brief Heap allocated, dynamically sized list
  */
 template<typename T>
 using Vec = std::vector<T>;
 
 /**
- * Unordered set of elements
+ * \brief Unordered set of elements
  */
 template<typename T, typename Hash = std::hash<T>,
          typename Predicate = std::equal_to<T>>
 using Set = std::unordered_set<T, Hash, Predicate>;
 
 /**
- * Unordered key-value collection
+ * \brief Unordered key-value collection
  */
 template<typename Key, typename Value, typename Hash = std::hash<Key>,
          typename Predicate = std::equal_to<Key>>
@@ -151,7 +177,7 @@ struct unit {
 };
 
 /**
- * Literal for converting a degree literal -> radians
+ * \brief Literal for converting a degree literal -> radians
  */
 constexpr f32 operator""_deg(const f64 literal) {
   return static_cast<f32>(literal * std::numbers::pi / 180.f);
@@ -168,52 +194,52 @@ constexpr f64 operator""_f64(const f64 literal) {
 #define crab_impl_literal(n) constexpr n operator""_ ## n (const unsigned long long literal) { return static_cast<n>(literal); }
 
 /**
- * Converts literal to an i16
+ * \brief Converts literal to an i16
  */
 crab_impl_literal(i16)
 
 /**
- * Converts literal to an i32
+ * \brief Converts literal to an i32
  */
 crab_impl_literal(i32)
 
 /**
- * Converts literal to an i64
+ * \brief Converts literal to an i64
  */
 crab_impl_literal(i64)
 
 /**
- * Converts literal to an imax
+ * \brief Converts literal to an imax
  */
 crab_impl_literal(imax)
 
 /**
- * Converts literal to an iptr
+ * \brief Converts literal to an iptr
  */
 crab_impl_literal(iptr)
 
 /**
- * Converts literal to an u16
+ * \brief Converts literal to an u16
  */
 crab_impl_literal(u16)
 
 /**
- * Converts literal to an u32
+ * \brief Converts literal to an u32
  */
 crab_impl_literal(u32)
 
 /**
- * Converts literal to an u64
+ * \brief Converts literal to an u64
  */
 crab_impl_literal(u64)
 
 /**
- * Converts literal to an umax
+ * \brief Converts literal to an umax
  */
 crab_impl_literal(umax)
 
 /**
- * Converts literal to an uptr
+ * \brief Converts literal to an uptr
  */
 crab_impl_literal(uptr)
 

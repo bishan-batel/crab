@@ -43,7 +43,7 @@ using u32 = std::uint32_t;
 /**
  * \brief Unsigned 64 Bit Integer (cannot be negative)
  */
-using u64 = std::uint64_t;
+using u64 = unsigned long int;
 
 /**
  * \brief Biggest Unsigned Integer type that the current platform can use
@@ -56,7 +56,6 @@ using umax = std::uintmax_t;
  * offset (eg. an array length or index)
  */
 using usize = std::size_t;
-
 /**
  * \brief Unsigned Integer Pointer typically used for pointer arithmetic
  */
@@ -95,17 +94,17 @@ using iptr = std::intptr_t;
 /**
  * \brief UTF-8 Encoded Character
  */
-using u8char = char8_t;
+using char8 = char8_t;
 
 /**
  * \brief UTF-16 Encoded Character
  */
-using u16char = char16_t;
+using char16 = char16_t;
 
 /**
  * \brief UTF-32 Encoded Character
  */
-using u32char = char32_t;
+using char32 = char32_t;
 
 /**
  * \brief std::string, fat pointer to a heap allocated string
@@ -151,6 +150,71 @@ struct unit {
   [[nodiscard]] bool operator==(const unit &) const { return true; }
 };
 
+/**
+ * Literal for converting a degree literal -> radians
+ */
 constexpr f32 operator""_deg(const f64 literal) {
   return static_cast<f32>(literal * std::numbers::pi / 180.f);
 }
+
+constexpr f32 operator""_f32(const f64 literal) {
+  return static_cast<f32>(literal);
+}
+
+constexpr f64 operator""_f64(const f64 literal) {
+  return literal;
+}
+
+#define crab_impl_literal(n) constexpr n operator""_ ## n (const unsigned long long literal) { return static_cast<n>(literal); }
+
+/**
+ * Converts literal to an i16
+ */
+crab_impl_literal(i16)
+
+/**
+ * Converts literal to an i32
+ */
+crab_impl_literal(i32)
+
+/**
+ * Converts literal to an i64
+ */
+crab_impl_literal(i64)
+
+/**
+ * Converts literal to an imax
+ */
+crab_impl_literal(imax)
+
+/**
+ * Converts literal to an iptr
+ */
+crab_impl_literal(iptr)
+
+/**
+ * Converts literal to an u16
+ */
+crab_impl_literal(u16)
+
+/**
+ * Converts literal to an u32
+ */
+crab_impl_literal(u32)
+
+/**
+ * Converts literal to an u64
+ */
+crab_impl_literal(u64)
+
+/**
+ * Converts literal to an umax
+ */
+crab_impl_literal(umax)
+
+/**
+ * Converts literal to an uptr
+ */
+crab_impl_literal(uptr)
+
+#undef crab_impl_literal

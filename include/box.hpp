@@ -141,17 +141,17 @@ public:
   ~Box() { drop(); }
 
   // ReSharper disable once CppNonExplicitConversionOperator
-  __always_inline operator Contained&() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+  operator Contained&() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
   // ReSharper disable once CppNonExplicitConversionOperator
-  __always_inline operator const Contained&() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+  operator const Contained&() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
   // ReSharper disable once CppNonExplicitConversionOperator
-  __always_inline operator Ref<Contained>() const {
+  operator Ref<Contained>() const {
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
-  __always_inline operator RefMut<Contained>() {
+  operator RefMut<Contained>() {
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
@@ -161,7 +161,6 @@ public:
     drop();
     obj = std::exchange(rhs.obj, nullptr);
   }
-
 
   template<typename Derived> requires std::is_base_of_v<T, Derived> and (not std::is_same_v<T, Derived>)
   void operator=(Box<Derived> &&rhs) noexcept requires IS_SINGLE {
@@ -175,13 +174,13 @@ public:
     size = std::exchange(rhs.size, crab::box::helper<T>::DEFAULT_SIZE);
   }
 
-  [[nodiscard]] __always_inline MutPtr operator->() { return as_ptr(); }
+  [[nodiscard]] MutPtr operator->() { return as_ptr(); }
 
-  [[nodiscard]] __always_inline ConstPtr operator->() const { return as_ptr(); }
+  [[nodiscard]] ConstPtr operator->() const { return as_ptr(); }
 
-  [[nodiscard]] __always_inline Contained& operator*() { return *as_ptr(); }
+  [[nodiscard]] Contained& operator*() { return *as_ptr(); }
 
-  __always_inline const Contained& operator*() const { return *as_ptr(); }
+  const Contained& operator*() const { return *as_ptr(); }
 
   friend std::ostream& operator<<(std::ostream &os, const Box &rhs) {
     return os << *rhs;

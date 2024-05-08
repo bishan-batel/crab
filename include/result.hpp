@@ -20,9 +20,9 @@ namespace crab {
 
     Error(Error &&) = default;
 
-    Error &operator=(const Error &) = default;
+    Error& operator=(const Error &) = default;
 
-    Error &operator=(Error &&) = default;
+    Error& operator=(Error &&) = default;
 
     virtual ~Error() = default;
 
@@ -72,12 +72,12 @@ public:
 
   void operator=(const Result &) = delete;
 
-  Result &operator=(crab::result::Ok<T> &&from) {
+  Result& operator=(crab::result::Ok<T> &&from) {
     inner = from.value;
     return *this;
   }
 
-  Result &operator=(crab::result::Err<E> &&from) {
+  Result& operator=(crab::result::Err<E> &&from) {
     inner = from.value;
     return *this;
   }
@@ -87,7 +87,7 @@ public:
   operator bool() const { return is_ok(); }
 
   [[nodiscard]]
-  __always_inline bool is_ok() const {
+  bool is_ok() const {
     #if DEBUG
     ensure_valid();
     #endif
@@ -95,7 +95,7 @@ public:
   }
 
   [[nodiscard]]
-  __always_inline bool is_err() const {
+  bool is_err() const {
     #if DEBUG
     ensure_valid();
     #endif
@@ -114,7 +114,7 @@ public:
     return error;
   }
 
-  [[nodiscard]] T &get_unchecked() {
+  [[nodiscard]] T& get_unchecked() {
     #if DEBUG
     ensure_valid();
     #endif
@@ -122,7 +122,7 @@ public:
     return std::get<T>(inner);
   }
 
-  [[nodiscard]] E &get_err_unchecked() {
+  [[nodiscard]] E& get_err_unchecked() {
     #if DEBUG
     ensure_valid();
     #endif
@@ -131,7 +131,7 @@ public:
     return std::get<E>(inner);
   }
 
-  [[nodiscard]] const T &get_unchecked() const {
+  [[nodiscard]] const T& get_unchecked() const {
     #if DEBUG
     ensure_valid();
     #endif
@@ -139,7 +139,7 @@ public:
     return std::get<T>(inner);
   }
 
-  [[nodiscard]] const E &get_err_unchecked() const {
+  [[nodiscard]] const E& get_err_unchecked() const {
     #if DEBUG
     ensure_valid();
     #endif
@@ -150,7 +150,7 @@ public:
 
   void ensure_valid() const { debug_assert(!std::holds_alternative<unit>(inner), "Invalid use of moved result"); }
 
-  friend std::ostream &operator<<(std::ostream &os, const Result &result) {
+  friend std::ostream& operator<<(std::ostream &os, const Result &result) {
     #if DEBUG
     result.ensure_valid();
     #endif

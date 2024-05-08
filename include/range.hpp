@@ -19,28 +19,28 @@ public:
     using pointer = T;
     using reference = T;
 
-    __always_inline explicit Iterator(T pos) : pos(pos) {}
+     explicit Iterator(T pos) : pos(pos) {}
 
-    __always_inline reference operator*() const { return pos; }
+     reference operator*() const { return pos; }
 
-    __always_inline pointer operator->() { return pos; }
+     pointer operator->() { return pos; }
 
-    __always_inline Iterator &operator++() {
+     Iterator &operator++() {
       ++pos;
       return *this;
     }
 
-    __always_inline Iterator operator++(int) {
+     Iterator operator++(int) {
       Iterator tmp = *this;
       ++(*this);
       return tmp;
     }
 
-    __always_inline friend bool operator==(const Iterator &a, const Iterator &b) {
+     friend bool operator==(const Iterator &a, const Iterator &b) {
       return a.pos == b.pos;
     };
 
-    __always_inline friend bool operator!=(const Iterator &a, const Iterator &b) {
+     friend bool operator!=(const Iterator &a, const Iterator &b) {
       return a.pos != b.pos;
     };
 
@@ -48,18 +48,18 @@ public:
     T pos;
   };
 
-  __always_inline Range(T min, T max)
+   Range(T min, T max)
     : min(min), max(max) {
     assert(min <= max and "Invalid Range, max cannot be greater than min");
   }
 
-  [[nodiscard]] __always_inline T upper_bound() const { return max; }
+  [[nodiscard]]  T upper_bound() const { return max; }
 
-  [[nodiscard]] __always_inline T lower_bound() const { return min; }
+  [[nodiscard]]  T lower_bound() const { return min; }
 
-  [[nodiscard]] __always_inline Iterator begin() const { return Iterator(min); }
+  [[nodiscard]]  Iterator begin() const { return Iterator(min); }
 
-  [[nodiscard]] __always_inline Iterator end() const { return Iterator(max); }
+  [[nodiscard]]  Iterator end() const { return Iterator(max); }
 };
 
 namespace crab {
@@ -76,7 +76,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] __always_inline Range<T> range(T min, T max) {
+  [[nodiscard]]  Range<T> range(T min, T max) {
     return Range(min, max);
   }
 
@@ -93,7 +93,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] __always_inline Range<T> range(T max) {
+  [[nodiscard]]  Range<T> range(T max) {
     return Range(0, max);
   }
 
@@ -110,7 +110,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] __always_inline Range<T> range_inclusive(T min, T max) {
+  [[nodiscard]]  Range<T> range_inclusive(T min, T max) {
     return range(min, max + 1);
   }
 
@@ -127,7 +127,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] __always_inline Range<T> range_inclusive(T max) {
+  [[nodiscard]]  Range<T> range_inclusive(T max) {
     return range(max + 1);
   }
 }

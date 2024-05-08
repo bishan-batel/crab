@@ -166,7 +166,7 @@ public:
   template<typename Derived> requires std::is_base_of_v<T, Derived>
   void operator=(Box<Derived> rhs) noexcept requires IS_SINGLE {
     drop();
-    obj = static_cast<T>(Box<Derived>::unwrap(rhs));
+    obj = static_cast<T>(Box<Derived>::unwrap(std::move(rhs)));
   }
 
   void operator=(Box rhs) noexcept requires IS_ARRAY {

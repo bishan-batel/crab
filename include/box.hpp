@@ -157,17 +157,17 @@ public:
 
   void operator=(const Box &) = delete;
 
-  void operator=(Box rhs) noexcept requires IS_SINGLE {
+  void operator=(Box &&rhs) noexcept requires IS_SINGLE {
     drop();
     obj = std::exchange(rhs.obj, nullptr);
   }
 
 
-//template<typename Derived=T> requires std::is_base_of_v<T, Derived> 
-//void operator=(Box<Derived> rhs) noexcept requires IS_SINGLE {
-//  drop();
-//  obj = static_cast<T>(Box<Derived>::unwrap(std::move(rhs)));
-//}
+  template<typename Derived> requires std::is_base_of_v<T, Derived> and (not std::is_same_v<T, Derived>)
+  void operator=(Box<Derived> &&rhs) noexcept requires IS_SINGLE {
+    drop();
+    obj = static_cast<T>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
+  }
 
   void operator=(Box rhs) noexcept requires IS_ARRAY {
     drop();

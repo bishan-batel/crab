@@ -162,6 +162,13 @@ public:
     obj = std::exchange(rhs.obj, nullptr);
   }
 
+
+  template<typename Derived> requires std::is_base_of_v<T, Derived>
+  void operator=(Box<Derived> rhs) noexcept requires IS_SINGLE {
+    drop();
+    obj = static_cast<T>(Box<Derived>::unwrap(rhs));
+  }
+
   void operator=(Box rhs) noexcept requires IS_ARRAY {
     drop();
     obj = std::exchange(rhs.obj, nullptr);

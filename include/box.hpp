@@ -136,7 +136,6 @@ public:
 
   explicit Box(T &&val)
     requires std::is_move_constructible_v<T> and IS_SINGLE
-
     : Box(new Contained(std::move(val))) {}
 
   ~Box() { drop(); }
@@ -156,17 +155,14 @@ public:
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
-  // NOLINT(*-explicit-constructor)
   void operator=(const Box &) = delete;
 
-  void operator=(Box &&rhs) noexcept
-    requires std::is_move_constructible_v<Contained> and IS_SINGLE {
+  void operator=(Box rhs) noexcept requires IS_SINGLE {
     drop();
     obj = std::exchange(rhs.obj, nullptr);
   }
 
-  void operator=(Box &&rhs) noexcept
-    requires std::is_move_constructible_v<Contained> and IS_ARRAY {
+  void operator=(Box rhs) noexcept requires IS_ARRAY {
     drop();
     obj = std::exchange(rhs.obj, nullptr);
     size = std::exchange(rhs.size, crab::box::helper<T>::DEFAULT_SIZE);

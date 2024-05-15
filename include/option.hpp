@@ -45,7 +45,7 @@ public:
   Option() noexcept : value(crab::None{}) {}
 
   Option &operator=(T &&from) {
-    value = from;
+    value = std::forward<T>(from);
     return *this;
   }
 

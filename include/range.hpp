@@ -77,7 +77,7 @@ namespace crab {
   template<typename T>
     requires std::is_integral_v<T>
   [[nodiscard]]  Range<T> range(T min, T max) {
-    return Range(min, max);
+    return Range<T>(min, max);
   }
 
   /**
@@ -94,7 +94,7 @@ namespace crab {
   template<typename T>
     requires std::is_integral_v<T>
   [[nodiscard]]  Range<T> range(T max) {
-    return Range(0, max);
+    return Range<T>(0, max);
   }
 
   /**

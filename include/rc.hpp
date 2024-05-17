@@ -6,113 +6,44 @@
 
 #include "ref.hpp"
 
-namespace crab::rc::helper {}
+namespace crab::rc {
+  template<typename T>
+  class Rc;
 
+  namespace helper {
+    template<typename T>
+    class RcInterior {
+      friend class Rc<T>;
+      usize ref_count;
+      usize weak_ref_count;
+      T data;
+    };
+  }
+}
+
+/**
+ * @brief Reference Counting for a value of type T on the heap, equivalent to std::shared_ptr but with
+ * prevented interior mutability.
+ */
 template<typename T> requires (not std::is_array_v<T>)
 class Rc final {
-  T *data;
-  usize *ref_count;
+  using Interior = crab::rc::helper::RcInterior<T>;
 
-  explicit Rc(T *data, usize *ref_count)
-    : data(data), ref_count(ref_count) {
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr");
-    // ReSharper disable once CppDFANullDereference
-    *ref_count += 1;
-  }
+  Interior *interior;
 
-  // Stop the compiler from bitching before templates are instantiated
-  void release() {
-    if (ref_count) {
-      debug_assert(data != nullptr, "Corrupted Rc<T>, missing data but kept reference count");
-      *ref_count -= 1;
-
-      if (*ref_count == 0) {
-        delete data;
-        delete ref_count;
-      }
-      return;
-    }
-    debug_assert(data == nullptr, "Corrupted Rc<T>, missing reference count but kept data");
+  explicit Rc(Interior *interior) : interior{interior} {
+    debug_assert(interior != nullptr, "Corrupted Rc<T>: Cannot construct a NULL Rc");
   }
 
 public:
-  explicit Rc(T &&value) : Rc(new T{value}, new usize{0}) {}
-
   [[nodiscard]]
-  Rc from_owned_unchecked(const T *box) { return Rc(box, new usize{0}); }
-
-  Rc(const Rc &from)
-    : Rc(from.data, from.ref_count) {}
-
-  template<typename Derived> requires std::is_base_of_v<T, Derived>
-  Rc(const Rc<Derived> &from)
-    : Rc(static_cast<T *>(from.data), from.ref_count) {}
-
-  Rc(Rc &&from) noexcept
-    : Rc(
-      std::exchange(from.data, nullptr),
-      std::exchange(from.ref_count, nullptr)
-    ) {
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr while moved");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr while moved");
+  Rc from_owned_unchecked(const T *box) {
+    return Rc();
   }
 
-  template<typename Derived> requires std::is_base_of_v<T, Derived>
-  Rc(Rc<Derived> &&from) noexcept
-    : Rc(
-      static_cast<T *>(std::exchange(from.data, nullptr)),
-      std::exchange(from.ref_count, nullptr)
-    ) {
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr while moved");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr while moved");
-  }
+  operator const T&() const { return *raw_ptr(); }
 
-  Rc &operator=(const Rc &from) {
-    release();
-    data = from.data;
-    ref_count = from.ref_count;
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr while copied");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr while copied");
-    return *this;
-  }
-
-  Rc &operator=(Rc &&from) noexcept {
-    release();
-    data = std::exchange(from.data, nullptr);
-    ref_count = std::exchange(from.ref_count, nullptr);
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr while moved");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr while moved");
-    return *this;
-  }
-
-  template<typename Derived> requires std::is_base_of_v<T, Derived>
-  Rc &operator=(const Rc<Derived> &from) {
-    release();
-    data = static_cast<T *>(from.data);
-    ref_count = from.ref_count;
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr while copied");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr while copied");
-    return *this;
-  }
-
-  template<typename Derived> requires std::is_base_of_v<T, Derived>
-  Rc &operator=(Rc<Derived> &&from) noexcept {
-    release();
-    data = static_cast<T *>(std::exchange(from.data, nullptr));
-    ref_count = std::exchange(from.ref_count, nullptr);
-    debug_assert(data != nullptr, "Corrupted Rc<T>, data is nullptr while moved");
-    debug_assert(ref_count != nullptr, "Corrupted Rc<T>, ref_count is nullptr while moved");
-    return *this;
-  }
-
-  ~Rc() {
-    release();
-  }
-
-  operator const T &() const { return *raw_ptr(); }
-
-  operator const T *() const { return raw_ptr(); }
+  operator const T*() const { return raw_ptr(); }
 
   const T *operator ->() const { return raw_ptr(); }
 

@@ -21,26 +21,26 @@ public:
 
      explicit Iterator(T pos) : pos(pos) {}
 
-     reference operator*() const { return pos; }
+     auto operator*() const -> reference { return pos; }
 
-     pointer operator->() { return pos; }
+     auto operator->() -> pointer { return pos; }
 
-     Iterator &operator++() {
+     auto operator++() -> Iterator& {
       ++pos;
       return *this;
     }
 
-     Iterator operator++(int) {
+     auto operator++(int) -> Iterator {
       Iterator tmp = *this;
-      ++(*this);
+      ++*this;
       return tmp;
     }
 
-     friend bool operator==(const Iterator &a, const Iterator &b) {
+     friend auto operator==(const Iterator &a, const Iterator &b) -> bool {
       return a.pos == b.pos;
     };
 
-     friend bool operator!=(const Iterator &a, const Iterator &b) {
+     friend auto operator!=(const Iterator &a, const Iterator &b) -> bool {
       return a.pos != b.pos;
     };
 
@@ -53,13 +53,13 @@ public:
     assert(min <= max and "Invalid Range, max cannot be greater than min");
   }
 
-  [[nodiscard]]  T upper_bound() const { return max; }
+  [[nodiscard]] auto upper_bound() const -> T { return max; }
 
-  [[nodiscard]]  T lower_bound() const { return min; }
+  [[nodiscard]] auto lower_bound() const -> T { return min; }
 
-  [[nodiscard]]  Iterator begin() const { return Iterator(min); }
+  [[nodiscard]] auto begin() const -> Iterator { return Iterator(min); }
 
-  [[nodiscard]]  Iterator end() const { return Iterator(max); }
+  [[nodiscard]] auto end() const -> Iterator { return Iterator(max); }
 };
 
 namespace crab {
@@ -76,7 +76,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]]  Range<T> range(T min, T max) {
+  [[nodiscard]] auto range(T min, T max) -> Range<T> {
     return Range<T>(min, max);
   }
 
@@ -93,7 +93,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]]  Range<T> range(T max) {
+  [[nodiscard]] auto range(T max) -> Range<T> {
     return Range<T>(0, max);
   }
 
@@ -110,12 +110,12 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]]  Range<T> range_inclusive(T min, T max) {
+  [[nodiscard]] auto range_inclusive(T min, T max) -> Range<T> {
     return range(min, max + 1);
   }
 
   /**
-   * Range from 0 to max (inclusive)
+   * @brief Range from 0 to max (inclusive)
    *
    * doing
    *
@@ -127,7 +127,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]]  Range<T> range_inclusive(T max) {
+  [[nodiscard]] auto range_inclusive(T max) -> Range<T> {
     return range(max + 1);
   }
 }

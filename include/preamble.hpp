@@ -15,6 +15,8 @@
 #include <vector>
 #include <utility>
 
+#define nameof(x) #x
+
 /**
  * \brief 32 Bit Floating Point Number
  */

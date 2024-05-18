@@ -61,7 +61,7 @@ private:
     : obj(from), size(length) {}
 
   // ReSharper disable once CppMemberFunctionMayBeConst
-  void drop() {
+  auto drop() -> void {
     if constexpr (std::is_array_v<T>) {
       delete[] obj;
     } else {
@@ -77,8 +77,7 @@ public:
    * the heap or if something else has ownership, therefor 'unchecked' and it is
    * the responsibility of the caller to make sure.
    */
-  static Box wrap_unchecked(const MutPtr ref)
-    requires IS_SINGLE {
+  static auto wrap_unchecked(const MutPtr ref) -> Box requires IS_SINGLE {
     return Box(ref);
   };
 
@@ -89,8 +88,7 @@ public:
    * the heap or if something else has ownership, therefor 'unchecked' and it is
    * the responsibility of the caller to make sure.
    */
-  static Box wrap_unchecked(const MutPtr ref, const SizeType length)
-    requires IS_ARRAY {
+  static auto wrap_unchecked(const MutPtr ref, const SizeType length) -> Box requires IS_ARRAY {
     return Box(ref, length);
   };
 
@@ -98,7 +96,7 @@ public:
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  static MutPtr unwrap(Box box) requires IS_SINGLE {
+  static auto unwrap(Box box) -> MutPtr requires IS_SINGLE {
     const auto ptr = box.raw_ptr();
     box.obj = nullptr;
     return ptr;
@@ -108,7 +106,7 @@ public:
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  static std::pair<MutPtr, SizeType> unwrap(Box box) requires IS_ARRAY {
+  static auto unwrap(Box box) -> std::pair<MutPtr, SizeType> requires IS_ARRAY {
     return std::make_pair(
       std::exchange(box.obj, nullptr),
       std::exchange(box.size, crab::box::helper<T>::DEFAULT_SIZE)
@@ -151,68 +149,67 @@ public:
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
+  // ReSharper disable once CppNonExplicitConversionOperator
   operator RefMut<Contained>() {
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
-  void operator=(const Box &) = delete;
+  auto operator=(const Box &) -> void = delete;
 
-  void operator=(Box &&rhs) noexcept requires IS_SINGLE {
+  auto operator=(Box &&rhs) noexcept -> void requires IS_SINGLE {
     drop();
     obj = std::exchange(rhs.obj, nullptr);
   }
 
   template<typename Derived> requires std::is_base_of_v<T, Derived> and (not std::is_same_v<T, Derived>)
-  void operator=(Box<Derived> &&rhs) noexcept requires IS_SINGLE {
+  auto operator=(Box<Derived> &&rhs) noexcept -> void requires IS_SINGLE {
     drop();
     obj = static_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
   }
 
-  void operator=(Box rhs) noexcept requires IS_ARRAY {
+  auto operator=(Box rhs) noexcept -> void requires IS_ARRAY {
     drop();
     obj = std::exchange(rhs.obj, nullptr);
     size = std::exchange(rhs.size, crab::box::helper<T>::DEFAULT_SIZE);
   }
 
-  [[nodiscard]] MutPtr operator->() { return as_ptr(); }
+  [[nodiscard]] auto operator->() -> MutPtr { return as_ptr(); }
 
-  [[nodiscard]] ConstPtr operator->() const { return as_ptr(); }
+  [[nodiscard]] auto operator->() const -> ConstPtr { return as_ptr(); }
 
-  [[nodiscard]] Contained& operator*() { return *as_ptr(); }
+  [[nodiscard]] auto operator*() -> Contained& { return *as_ptr(); }
 
-  const Contained& operator*() const { return *as_ptr(); }
+  auto operator*() const -> const Contained& { return *as_ptr(); }
 
-  friend std::ostream& operator<<(std::ostream &os, const Box &rhs) {
+  friend auto operator<<(std::ostream &os, const Box &rhs) -> std::ostream& {
     return os << *rhs;
   }
 
-  [[nodiscard]] const Contained& operator[](const usize index) const
-    requires IS_ARRAY {
+  [[nodiscard]] auto operator[](const usize index) const -> const Contained& requires IS_ARRAY {
     debug_assert(index < size, "Index out of Bounds");
     return as_ptr()[index];
   }
 
-  [[nodiscard]] Contained& operator[](const usize index)
-    requires IS_ARRAY {
+  [[nodiscard]] auto operator[](const usize index) -> Contained& requires IS_ARRAY {
     debug_assert(index < size, "Index out of Bounds");
     return as_ptr()[index];
   }
 
-  [[nodiscard]] SizeType length() const { return size; }
+  [[nodiscard]] auto length() const -> SizeType { return size; }
 
-  [[nodiscard]] MutPtr as_ptr() { return raw_ptr(); }
+  [[nodiscard]] auto as_ptr() -> MutPtr { return raw_ptr(); }
 
-  [[nodiscard]] ConstPtr as_ptr() const { return raw_ptr(); }
+  [[nodiscard]] auto as_ptr() const -> ConstPtr { return raw_ptr(); }
 
-  [[nodiscard]] MutPtr __release_for_derived() { return std::exchange(obj, nullptr); }
+  [[nodiscard]] auto __release_for_derived() -> MutPtr { return std::exchange(obj, nullptr); }
 
 private:
-  MutPtr raw_ptr() {
+  auto raw_ptr() -> MutPtr {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
     return obj;
   }
 
-  ConstPtr raw_ptr() const {
+  auto raw_ptr() const -> ConstPtr {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
     return obj;
   }
@@ -224,7 +221,7 @@ namespace crab {
    */
   template<typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
-  static Box<T> make_box(Args &&... args) {
+  static auto make_box(Args &&... args) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});
   }
 
@@ -233,7 +230,7 @@ namespace crab {
    */
   template<typename T, typename V>
     requires std::is_convertible_v<T, V> and (std::is_integral_v<T> or std::is_floating_point_v<T>)
-  static Box<T> make_box(V &&from) {
+  static auto make_box(V &&from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }
 
@@ -242,8 +239,7 @@ namespace crab {
    * each element
    */
   template<typename T>
-  static Box<T[]> make_boxxed_array(const usize count)
-    requires std::is_default_constructible_v<T> {
+  static auto make_boxxed_array(const usize count) -> Box<T[]> requires std::is_default_constructible_v<T> {
     return Box<T[]>::wrap_unchecked(new T[count](), count);
   }
 
@@ -251,8 +247,8 @@ namespace crab {
    * @brief Creates a new array on the heap and copies 'from' to each element
    */
   template<typename T>
-  static Box<T[]> make_boxxed_array(const usize count, const T &from)
-    requires std::is_copy_constructible_v<T> and std::is_copy_assignable_v<T> {
+  static auto make_boxxed_array(const usize count, const T &from) -> Box<T[]> requires
+    std::is_copy_constructible_v<T> and std::is_copy_assignable_v<T> {
     auto box = Box<T[]>::wrap_unchecked(new T[count](), count);
     for (usize i = 0; i < count; i++) {
       box[i] = T(from);
@@ -265,7 +261,7 @@ namespace crab {
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
   template<typename T> requires Box<T>::IS_SINGLE
-  static typename Box<T>::MutPtr release(Box<T> box) {
+  static auto release(Box<T> box) -> typename Box<T>::MutPtr {
     return Box<T>::unwrap(std::move(box));
   }
 
@@ -274,8 +270,7 @@ namespace crab {
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
   template<typename T> requires Box<T>::IS_ARRAY
-  static std::pair<typename Box<T>::MutPtr, typename Box<T>::SizeType>
-  release(Box<T> box) {
+  static auto release(Box<T> box) -> std::pair<typename Box<T>::MutPtr, typename Box<T>::SizeType> {
     return Box<T>::unwrap(std::move(box));
   }
 }

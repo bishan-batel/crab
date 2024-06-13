@@ -502,7 +502,7 @@ namespace crab {
   }
 
   template<typename T, typename... Args> requires std::is_constructible_v<T, Args...>
-  auto make_rc_mut(Args... args) -> Rc<T> {
+  auto make_rc_mut(Args... args) -> RcMut<T> {
     return RcMut<T>::from_owned_unchecked(new T{args...});
   }
 }

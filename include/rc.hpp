@@ -77,12 +77,12 @@ namespace crab::rc {
       }
 
       template<typename Base> requires std::is_base_of_v<Base, Contained>
-      auto downcast() -> RcInterior<Base> * {
+      auto upcast() -> RcInterior<Base> * {
         return reinterpret_cast<RcInterior<Base>*>(this);
       }
 
       template<typename Derived> requires std::derived_from<Derived, Contained>
-      auto upcast() -> Option<RcInterior<Derived>*> {
+      auto downcast() -> Option<RcInterior<Derived>*> {
         if (dynamic_cast<Derived*>(this->data) == nullptr) {
           return none;
         }
@@ -157,13 +157,30 @@ public:
     );
   }
 
+  template<typename Derived> requires std::derived_from<Derived, Contained>
+  Rc(const Rc<Derived> &from)
+    : interior{
+      from.get_interior()->template upcast<Contained>()
+    } {
+    get_interior()->increment_ref_count();
+  }
+
+  template<typename Derived> requires std::derived_from<Derived, Contained>
+  Rc(Rc<Derived> &&from)
+    : interior{
+      std::exchange(from.get_interior()->template upcast<Contained>(), nullptr)
+    } {}
+
   ~Rc() {
     destruct();
   }
 
+  /**
+   * @brief Converts Rc<Derived> -> Rc<Base>
+   */
   template<typename Base> requires std::is_base_of_v<Base, Contained>
-  auto downcast() -> Rc<Base> {
-    crab::rc::helper::RcInterior<Base> *i = get_interior()->template downcast<Base>();
+  auto upcast() -> Rc<Base> {
+    crab::rc::helper::RcInterior<Base> *i = get_interior()->template upcast<Base>();
     Rc<Base> casted = Rc<Base>::from_rc_interior_unchecked(i);
 
     debug_assert(
@@ -176,9 +193,12 @@ public:
     return casted;
   }
 
+  /**
+   * @brief Attempts to convert Rc<Base> -> Rc<Derived>
+   */
   template<typename Derived> requires std::derived_from<Derived, Contained>
-  auto upcast() -> Option<Rc<Derived>> {
-    auto inner = get_interior()->template upcast<Derived>();
+  auto downcast() -> Option<Rc<Derived>> {
+    auto inner = get_interior()->template downcast<Derived>();
 
     if (inner.is_none()) {
       return crab::none;

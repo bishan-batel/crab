@@ -24,10 +24,10 @@ TEST_CASE("Rc") {
   SECTION("Downcast") {
     Rc<Bruh> original = crab::make_rc<Bruh>(42);
 
-    const Rc<Huh> huh = original.downcast<Huh>();
+    const Rc<Huh> huh = original.upcast<Huh>();
     const Rc<Huh> huh1 = original;
 
-    Option<Rc<Bruh>> returned = original.upcast<Bruh>();
+    Option<Rc<Bruh>> returned = original.downcast<Bruh>();
 
     REQUIRE(huh->v == 42);
 

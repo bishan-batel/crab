@@ -17,6 +17,9 @@
 
 #define nameof(x) #x
 
+template<typename T>
+using Raw = T*;
+
 /**
  * \brief 32 Bit Floating Point Number
  */

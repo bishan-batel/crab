@@ -25,13 +25,13 @@ namespace crab::rc {
 
     template<typename Contained, bool thread_safe = false>
     class RcInterior final {
-      friend class Rc<Contained>;
       using Counter = typename RcCounter<thread_safe>::type;
 
       Counter weak_ref_count;
       Counter ref_count;
       Contained *data;
 
+    public:
       RcInterior(const usize ref_count, const usize weak_ref_count, Contained *const data)
         : weak_ref_count{weak_ref_count}, ref_count{ref_count}, data{data} {}
 
@@ -41,8 +41,8 @@ namespace crab::rc {
       }
 
       auto decrement_ref_count() -> void {
-        debug_assert(weak_ref_count != 0, "Corrupted Rc<T>: weak_ref_count being decreased after reaching zero");
-        --weak_ref_count;
+        debug_assert(ref_count != 0, "Corrupted Rc<T>: ref_count being decreased after reaching zero");
+        --ref_count;
       }
 
       auto is_unique() const -> bool {
@@ -77,8 +77,16 @@ namespace crab::rc {
       }
 
       template<typename Base> requires std::is_base_of_v<Base, Contained>
-      auto downcast() -> RcInterior<Base>& {
-        return *reinterpret_cast<RcInterior<Base>*>(this);
+      auto downcast() -> RcInterior<Base> * {
+        return reinterpret_cast<RcInterior<Base>*>(this);
+      }
+
+      template<typename Derived> requires std::derived_from<Derived, Contained>
+      auto upcast() -> Option<RcInterior<Derived>*> {
+        if (dynamic_cast<Derived*>(this->data) == nullptr) {
+          return none;
+        }
+        return some(reinterpret_cast<RcInterior<Derived>*>(this));
       }
     };
   }
@@ -92,7 +100,7 @@ template<typename Contained> requires (not std::is_array_v<Contained>)
 class Rc final {
   using Interior = crab::rc::helper::RcInterior<Contained>;
 
-  Interior *interior;
+  Raw<Interior> interior;
 
   explicit Rc(Interior *interior)
     : interior{interior} {
@@ -102,6 +110,14 @@ class Rc final {
   auto destruct() -> void {
     if (interior) {
       interior->decrement_ref_count();
+
+      if (interior->should_free_data()) {
+        interior->free_data();
+      }
+
+      if (interior->should_free_self()) {
+        delete interior;
+      }
       interior = nullptr;
     }
   }
@@ -116,6 +132,11 @@ public:
         box
       }
     };
+  }
+
+  [[nodiscard]]
+  static auto from_rc_interior_unchecked(Interior *interior) -> Rc {
+    return Rc{interior};
   }
 
   Rc(const Rc &from)
@@ -142,7 +163,28 @@ public:
 
   template<typename Base> requires std::is_base_of_v<Base, Contained>
   auto downcast() -> Rc<Base> {
-    Rc<Base> casted{&get_interior()->template downcast<Base>()};
+    crab::rc::helper::RcInterior<Base> *i = get_interior()->template downcast<Base>();
+    Rc<Base> casted = Rc<Base>::from_rc_interior_unchecked(i);
+
+    debug_assert(
+      interior->is_data_valid(),
+      "Invalid use of Rc<T>, copied from an invalidated Rc, most likely a use-after-move"
+    );
+
+    casted.get_interior()->increment_ref_count();
+
+    return casted;
+  }
+
+  template<typename Derived> requires std::derived_from<Derived, Contained>
+  auto upcast() -> Option<Rc<Derived>> {
+    auto inner = get_interior()->template upcast<Derived>();
+
+    if (inner.is_none()) {
+      return crab::none;
+    }
+
+    Rc<Derived> casted = Rc<Derived>::from_rc_interior_unchecked(crab::unwrap(std::move(inner)));
 
     debug_assert(
       interior->is_data_valid(),
@@ -214,7 +256,6 @@ public:
     return get_interior()->raw_ptr();
   }
 
-private:
   auto get_interior() const -> Interior * {
     debug_assert(
       is_valid(),

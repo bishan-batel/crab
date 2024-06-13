@@ -168,7 +168,7 @@ public:
   template<typename Derived> requires std::derived_from<Derived, Contained>
   Rc(Rc<Derived> &&from)
     : interior{
-      std::exchange(from.get_interior()->template upcast<Contained>(), nullptr)
+      std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()
     } {}
 
   ~Rc() {
@@ -357,7 +357,7 @@ public:
   template<typename Derived> requires std::derived_from<Derived, Contained>
   RcMut(RcMut<Derived> &&from)
     : interior{
-      std::exchange(from.get_interior()->template upcast<Contained>(), nullptr)
+      std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()
     } {}
 
   ~RcMut() {

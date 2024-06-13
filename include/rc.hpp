@@ -494,7 +494,15 @@ public:
     return get_interior()->raw_ptr();
   }
 
-  auto get_interior() const -> Interior *& {
+  auto get_interior() const -> Interior * {
+    debug_assert(
+      is_valid(),
+      "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the result of a use-after-move."
+    );
+    return interior;
+  }
+
+  auto get_interior() -> Interior *& {
     debug_assert(
       is_valid(),
       "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the result of a use-after-move."

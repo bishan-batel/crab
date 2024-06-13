@@ -55,7 +55,7 @@ TEST_CASE("Result", "[result]") {
 
     i32 v = 0;
     REQUIRE_NOTHROW(
-      if_ok(result, [&](i32 value) {
+      if_ok(result, [&](const i32 value) {
         v = value;
         })
     );

@@ -168,7 +168,7 @@ public:
   template<typename Derived> requires std::derived_from<Derived, Contained>
   Rc(Rc<Derived> &&from)
     : interior{
-      std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()
+      std::exchange(from.interior, nullptr)->template upcast<Contained>()
     } {}
 
   ~Rc() {
@@ -276,7 +276,7 @@ public:
     return get_interior()->raw_ptr();
   }
 
-  auto get_interior() const -> Interior *& {
+  auto get_interior() const -> Interior * {
     debug_assert(
       is_valid(),
       "Invalid use of Rc<T>, Interior is nullptr - this is most likely the result of a use-after-move."
@@ -357,7 +357,7 @@ public:
   template<typename Derived> requires std::derived_from<Derived, Contained>
   RcMut(RcMut<Derived> &&from)
     : interior{
-      std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()
+      std::exchange(from.interior, nullptr)->template upcast<Contained>()
     } {}
 
   ~RcMut() {
@@ -486,7 +486,7 @@ public:
     return get_interior()->raw_ptr();
   }
 
-  auto get_interior() const -> Interior *& {
+  auto get_interior() const -> Interior * {
     debug_assert(
       is_valid(),
       "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the result of a use-after-move."

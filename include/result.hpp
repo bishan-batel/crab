@@ -46,9 +46,11 @@ namespace crab::result {
   auto error_to_string(const E &err) -> String {
     if constexpr (requires { std::cout << err.what() << std::endl; }) {
       return err.what();
+    } else if constexpr (requires { std::cout << err->what() << std::endl; }) {
+      return err->what();
+    } else {
+      return "";
     }
-
-    return err->what();
   }
 
   template<typename T>

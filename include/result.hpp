@@ -1,4 +1,5 @@
 //
+
 // Created by bishan_ on 4/23/24.
 //
 
@@ -40,6 +41,15 @@ namespace crab::result {
                                or requires(const E err) {
                                  std::cout << err.what() << std::endl;
                                });
+
+  template<typename E> requires is_error_type<E>
+  auto error_to_string(const E &err) -> String {
+    if constexpr (requires { std::cout << err.what() << std::endl; }) {
+      return err.what();
+    }
+
+    return err->what();
+  }
 
   template<typename T>
   concept is_ok_type = std::is_move_constructible_v<T>;
@@ -125,7 +135,13 @@ public:
     #if DEBUG
     ensure_valid();
     #endif
-    debug_assert(is_ok(), std::format("Called unwrap on result with Error:\n{}", get_err_unchecked().what()));
+    debug_assert(
+      is_ok(),
+      std::format(
+        "Called unwrap on result with Error:\n{}",
+        crab::result::error_to_string(get_err_unchecked())
+      )
+    );
     return std::get<T>(inner);
   }
 
@@ -142,7 +158,10 @@ public:
     #if DEBUG
     ensure_valid();
     #endif
-    debug_assert(is_ok(), std::format("Called unwrap on result with Error:\n{}", get_err_unchecked().what()));
+    debug_assert(
+      is_ok(),
+      std::format("Called unwrap on result with Error:\n{}", crab::result::error_to_string(get_err_unchecked()))
+    );
     return std::get<T>(inner);
   }
 

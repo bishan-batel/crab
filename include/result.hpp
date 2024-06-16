@@ -77,9 +77,9 @@ class Result final {
   std::variant<T, E, unit> inner;
 
 public:
-  explicit Result(T from) : inner(std::move(from)) {}
+  Result(T from) : inner(std::move(from)) {}
 
-  explicit Result(E from) : inner(std::move(from)) {}
+  Result(E from) : inner(std::move(from)) {}
 
   Result(crab::result::Ok<T> &&from) : Result(std::move(from.value)) {}
 

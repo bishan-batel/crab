@@ -5,7 +5,9 @@
 #pragma once
 #include <type_traits>
 
-namespace crab::ref {
-  template<typename T>
-  concept is_valid_type = not std::is_const_v<T> and not std::is_reference_v<T> and not std::is_volatile_v<T>;
+namespace crab {
+  namespace ref {
+    template<typename T>
+    concept is_valid_type = not std::is_const_v<T> and not std::is_reference_v<T> and not std::is_volatile_v<T>;
+  }
 }

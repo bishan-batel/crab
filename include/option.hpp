@@ -27,6 +27,33 @@ class Ref;
 template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut;
 
+namespace crab::ref {
+  template<typename T>
+  struct decay_type {
+    using type = T;
+    using underlying_type = T;
+    using identity = T;
+    static constexpr auto is_const_ref = false;
+    static constexpr auto is_ref = false;
+  };
+
+  template<typename T>
+  struct decay_type<T&> {
+    using type = RefMut<typename decay_type<T>::type>;
+    using underlying_type = T;
+    static constexpr auto is_const_ref = false;
+    static constexpr auto is_ref = true;
+  };
+
+  template<typename T>
+  struct decay_type<const T&> {
+    using type = Ref<typename decay_type<T>::type>;
+    using underlying_type = T;
+    static constexpr auto is_const_ref = true;
+    static constexpr auto is_ref = true;
+  };
+}
+
 /**
  * Represents a value that could be None, this is almost
  * always a better alternative to using nullptrs.
@@ -36,20 +63,40 @@ class RefMut;
 template<typename T>
 class Option final {
 public:
-  Option(const T &from) noexcept : value(T{from}) {}
+  // using decay = crab::ref::decay_type<T>;
+  // using Contained = typename decay::type;
+  // using UnderlyingType = typename decay::underlying_type;
+  using Contained = T;
 
-  Option(T &&from) noexcept : value(std::move(from)) {}
+  Option(const Contained &from) noexcept : value(Contained{from}) {}
+
+  // Option(UnderlyingType &from) noexcept requires (decay::is_const_ref)
+  //   : value(Contained{from}) {}
+  //
+  // Option(RefMut<UnderlyingType> from) noexcept requires (decay::is_const_ref)
+  //   : value(Contained{from}) {}
+  //
+  // Option(Option<UnderlyingType&> from) noexcept requires (decay::is_const_ref)
+  //   : value(unit{}) {
+  //   if (from) {
+  //     value = Contained{from.take_unchecked()};
+  //   } else {
+  //     value = crab::None{};
+  //   }
+  // }
+
+  Option(Contained &&from) noexcept : value(std::move(from)) {}
 
   Option(crab::None) noexcept : Option() {}
 
   Option() noexcept : value(crab::None{}) {}
 
-  Option &operator=(T &&from) {
-    value = std::forward<T>(from);
+  Option& operator=(Contained &&from) {
+    value = std::forward<Contained>(from);
     return *this;
   }
 
-  Option &operator=(crab::None) {
+  Option& operator=(crab::None) {
     value = crab::None{};
     return *this;
   }
@@ -64,7 +111,7 @@ public:
    * Whether this option contains a value
    */
   [[nodiscard]] bool is_some() const {
-    return std::holds_alternative<T>(value);
+    return std::holds_alternative<Contained>(value);
   }
 
   /**
@@ -77,31 +124,31 @@ public:
   /**
    * Takes value out of the option and returns it, will error if option is none
    */
-  [[nodiscard]] T take_unchecked() {
+  [[nodiscard]] Contained take_unchecked() {
     debug_assert(is_some(), "Cannot take value from a empty option.");
-    T some = std::move(get_unchecked());
+    Contained some = std::move(get_unchecked());
     value = crab::None{};
     return some;
   }
 
-  Option<Ref<T> > as_ref() const {
+  Option<const Contained&> as_ref() const {
     if (is_none())
       return crab::None{};
-    return Option(Ref<T>(get_unchecked()));
+    return Option(Ref<Contained>(get_unchecked()));
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const Option &opt) {
+  friend std::ostream& operator<<(std::ostream &os, const Option &opt) {
     if (opt.is_none())
       return os << "None";
     return os << opt.get_unchecked();
   }
 
-  [[nodiscard]] T &get_unchecked() { return std::get<T>(value); }
+  [[nodiscard]] Contained& get_unchecked() { return std::get<Contained>(value); }
 
-  [[nodiscard]] const T &get_unchecked() const { return std::get<T>(value); }
+  [[nodiscard]] const Contained& get_unchecked() const { return std::get<Contained>(value); }
 
 private:
-  std::variant<T, crab::None> value;
+  std::variant<Contained, crab::None> value;
 };
 
 namespace crab {

@@ -35,6 +35,22 @@ TEST_CASE("Option", "[option]") {
   REQUIRE(crab::unwrap(std::move(a)) == 42);
 
   REQUIRE_THROWS(a.take_unchecked());
+
+  a = crab::some(42);
+
+  SECTION("Type Decay") {
+    i32 value = 0;
+
+    // Option<const i32&> opt = crab::some<const i32&>(value);
+
+    // auto a = Ref{0}; {
+    //   Ref<i32> b{420};
+    //   a = b;
+    // }
+    // REQUIRE(*a == 420);
+    // Option<Ref<i32>>{};
+  }
+
   // REQUIRE(a.unwrap_or(420) == 420);
 }
 

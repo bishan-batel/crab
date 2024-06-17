@@ -82,7 +82,7 @@ namespace crab::rc {
       }
 
       template<typename Derived> requires std::derived_from<Derived, Contained>
-      auto downcast() const -> Option<RcInterior<Derived>*> {
+      auto downcast() -> Option<RcInterior<Derived>*> {
         if (dynamic_cast<Derived*>(this->data) == nullptr) {
           return none;
         }

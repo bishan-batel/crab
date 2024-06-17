@@ -82,7 +82,7 @@ namespace crab::rc {
       }
 
       template<typename Derived> requires std::derived_from<Derived, Contained>
-      auto downcast() -> Option<RcInterior<Derived>*> {
+      auto downcast() const -> Option<RcInterior<Derived>*> {
         if (dynamic_cast<Derived*>(this->data) == nullptr) {
           return none;
         }
@@ -197,7 +197,7 @@ public:
    * @brief Attempts to convert Rc<Base> -> Rc<Derived>
    */
   template<typename Derived> requires std::derived_from<Derived, Contained>
-  auto downcast() -> Option<Rc<Derived>> {
+  auto downcast() const -> Option<Rc<Derived>> {
     auto inner = get_interior()->template downcast<Derived>();
 
     if (inner.is_none()) {
@@ -394,7 +394,7 @@ public:
    * @brief Attempts to convert RcMut<Base> -> RcMut<Derived>
    */
   template<typename Derived> requires std::derived_from<Derived, Contained>
-  auto downcast() -> Option<RcMut<Derived>> {
+  auto downcast() const -> Option<RcMut<Derived>> {
     auto inner = get_interior()->template downcast<Derived>();
 
     if (inner.is_none()) {

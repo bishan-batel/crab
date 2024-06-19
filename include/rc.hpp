@@ -514,11 +514,11 @@ public:
 namespace crab {
   template<typename T, typename... Args> requires std::is_constructible_v<T, Args...>
   auto make_rc(Args... args) -> Rc<T> {
-    return Rc<T>::from_owned_unchecked(new T{args...});
+    return Rc<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 
   template<typename T, typename... Args> requires std::is_constructible_v<T, Args...>
   auto make_rc_mut(Args... args) -> RcMut<T> {
-    return RcMut<T>::from_owned_unchecked(new T{args...});
+    return RcMut<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 }

@@ -6,6 +6,7 @@
 #include <memory>
 #include <preamble.hpp>
 
+#include "box.hpp"
 #include "ref.hpp"
 
 namespace crab::rc {
@@ -171,6 +172,18 @@ public:
       std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()
     } {}
 
+  Rc(Box<Contained> from)
+    : interior{
+      new Interior{
+        1,
+        1,
+        Box<Contained>::unwrap(std::forward<Contained>(from))
+      }
+    } {}
+
+  template<typename Derived> requires std::derived_from<Derived, Contained>
+  Rc(Box<Derived> from) : Rc{Box<Contained>{std::forward<Box<Derived>>(from)}} {}
+
   ~Rc() {
     destruct();
   }
@@ -252,6 +265,7 @@ public:
   [[nodiscard]] auto as_ref() const -> Ref<Contained> { return *raw_ptr(); }
 
   [[nodiscard]] auto is_unique() const -> bool {
+    // ReSharper disable once CppDFAUnreachableCode
     return is_valid() and get_interior()->is_unique();
   }
 
@@ -367,6 +381,18 @@ public:
     : interior{
       std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()
     } {}
+
+  RcMut(Box<Contained> from)
+    : interior{
+      new Interior{
+        1,
+        1,
+        Box<Contained>::unwrap(std::forward<Contained>(from))
+      }
+    } {}
+
+  template<typename Derived> requires std::derived_from<Derived, Contained>
+  RcMut(Box<Derived> from) : RcMut{Box<Contained>{std::forward<Box<Derived>>(from)}} {}
 
   ~RcMut() {
     destruct();

@@ -72,8 +72,13 @@ namespace crab::result {
 }
 
 template<typename T, typename E>
-  requires crab::result::is_ok_type<E> and crab::result::is_error_type<E>
 class Result final {
+  static_assert(crab::result::is_ok_type<T>, "T is not a valid Ok type, must be move constructible.");
+  static_assert(crab::result::is_error_type<E>, "E is not a valid Err type.");
+};
+
+template<typename T, typename E> requires crab::result::is_ok_type<E> and crab::result::is_error_type<E>
+class Result<T, E> final {
   std::variant<T, E, unit> inner;
 
 public:

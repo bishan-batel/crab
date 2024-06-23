@@ -72,6 +72,9 @@ public:
   // using UnderlyingType = typename decay::underlying_type;
   using Contained = T;
 
+  using NestedContained = T;
+  static constexpr usize nested_depth{0};
+
   Option(const Contained &from) noexcept : value(Contained{from}) {}
 
   // Option(UnderlyingType &from) noexcept requires (decay::is_const_ref)
@@ -257,6 +260,28 @@ public:
     return error_generator();
   }
 
+  template<std::invocable<Contained> F>
+  auto map(const F mapper) -> Option<decltype(mapper(take_unchecked()))> {
+    if (is_some()) return mapper(take_unchecked());
+    return {};
+  }
+
+  template<std::invocable<Contained> F>
+  auto flat_map(const F mapper) -> Option<decltype(mapper(take_unchecked()).take_unchecked())> {
+    if (is_some()) {
+      return mapper(take_unchecked());
+    }
+    return crab::None{};
+  }
+
+  template<std::same_as<unit> = unit>
+  auto flatten() -> decltype(take_unchecked()) {
+    if (is_some()) {
+      return take_unchecked();
+    }
+    return decltype(take_unchecked()){};
+  }
+
 private:
   std::variant<Contained, crab::None> value;
 };
@@ -267,7 +292,7 @@ namespace crab {
    */
   template<typename T>
   auto some(T from) -> Option<T> {
-    return Option<T>(std::move(from));
+    return Option<T>{std::move(from)};
   }
 
   /**

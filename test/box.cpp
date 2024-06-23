@@ -38,20 +38,17 @@ TEST_CASE("Option", "[option]") {
 
   a = crab::some(42);
 
-  SECTION("Type Decay") {
-    i32 value = 0;
+  SECTION("Nested Options") {
+    Option<i32> nested = crab::some(10);
 
-    // Option<const i32&> opt = crab::some<const i32&>(value);
+    REQUIRE(nested.map([](auto x) { return 2 * x; }).take_unchecked() == 20);
+    REQUIRE(nested.map([](auto x) { return x; }).is_none());
 
-    // auto a = Ref{0}; {
-    //   Ref<i32> b{420};
-    //   a = b;
-    // }
-    // REQUIRE(*a == 420);
-    // Option<Ref<i32>>{};
+    nested = 420;
+
+    REQUIRE(nested.flat_map([](auto x) { return crab::some(x); }).take_unchecked() == 420);
+    REQUIRE(crab::some(crab::some(420)).flatten().take_unchecked() == 420);
   }
-
-  // REQUIRE(a.unwrap_or(420) == 420);
 }
 
 TEST_CASE("Box", "[box]") {

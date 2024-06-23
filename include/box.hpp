@@ -14,7 +14,7 @@ namespace crab::box {
     using ty = T*;
     using const_ty = const T*;
     using SizeType = unit;
-    static constexpr auto DEFAULT_SIZE = unit{};
+    static constexpr unit DEFAULT_SIZE{};
   };
 
   template<typename T>
@@ -46,7 +46,7 @@ public:
 
 private:
   MutPtr obj;
-  SizeType size;
+  [[no_unique_address]] SizeType size;
 
 public:
   using Contained = std::remove_reference_t<decltype(*obj)>;

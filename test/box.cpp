@@ -67,6 +67,9 @@ TEST_CASE("Box", "[box]") {
     REQUIRE(moved == 10);
   }
 
+  static_assert(sizeof(Box<u32>) == sizeof(u32*));
+  static_assert(sizeof(Box<u32[]>) == sizeof(u32*) + sizeof(std::nullptr_t));
+
   SECTION("Const Correctness") {
     const Box<u32> var = crab::make_box<u32>(42);
     const u32 *ptr = var.as_ptr();

@@ -44,13 +44,13 @@ namespace crab {
 
       Else(const Else &) = delete;
 
-      Else &operator=(Else &&) = default;
+      Else& operator=(Else &&) = default;
 
-      Else &operator=(const Else &) = delete;
+      Else& operator=(const Else &) = delete;
 
       ~Else() = default;
 
-      template<typename F> requires std::is_invocable_v<F, T> and std::is_same_v<decltype(value), Option<T> >
+      template<typename F> requires std::is_invocable_v<F, T> and std::is_same_v<decltype(value), Option<T>>
       void or_else(F block) {
         if (value.is_none()) return;
 
@@ -110,7 +110,7 @@ namespace crab {
     return pattern::Else<T>{};
   }
 
-  template<typename T, typename F> requires pattern::invocable_with<F, const T &>
+  template<typename T, typename F> requires pattern::invocable_with<F, const T&>
   pattern::Else<> if_some(const Option<T> &option, F block) {
     if (option.is_none()) {
       return pattern::Else{true};
@@ -122,35 +122,35 @@ namespace crab {
   }
 
   template<typename T, typename F> requires std::is_invocable_v<F>
-  pattern::Else<Ref<T> > if_none(const Option<T> &option, F block) {
+  pattern::Else<Ref<T>> if_none(const Option<T> &option, F block) {
     if (option.is_some()) {
-      return pattern::Else<Ref<T> >{Ref{option.get_unchecked()}};
+      return pattern::Else<Ref<T>>{Ref{option.get_unchecked()}};
     }
 
     block();
 
-    return pattern::Else<Ref<T> >{};
+    return pattern::Else<Ref<T>>{};
   }
 
-  template<typename T, typename E, typename F> requires pattern::invocable_with<F, const T &>
-  pattern::Else<Ref<E> > if_ok(const Result<T, E> &result, F block) {
+  template<typename T, typename E, typename F> requires pattern::invocable_with<F, const T&>
+  pattern::Else<Ref<E>> if_ok(const Result<T, E> &result, F block) {
     if (result.is_err()) {
-      return pattern::Else<Ref<E> >{Ref{result.get_err_unchecked()}};
+      return pattern::Else<Ref<E>>{Ref{result.get_err_unchecked()}};
     }
 
     block(result.get_unchecked());
 
-    return pattern::Else<Ref<E> >{};
+    return pattern::Else<Ref<E>>{};
   }
 
-  template<typename T, typename E, typename F> requires pattern::invocable_with<F, const E &>
-  pattern::Else<Ref<T> > if_err(const Result<T, E> &result, F block) {
+  template<typename T, typename E, typename F> requires pattern::invocable_with<F, const E&>
+  pattern::Else<Ref<T>> if_err(const Result<T, E> &result, F block) {
     if (result.is_ok()) {
-      return pattern::Else<Ref<T> >{Ref{result.get_unchecked()}};
+      return pattern::Else<Ref<T>>{Ref{result.get_unchecked()}};
     }
 
     block(result.get_err_unchecked());
 
-    return pattern::Else<Ref<T> >{};
+    return pattern::Else<Ref<T>>{};
   }
 }

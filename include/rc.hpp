@@ -538,11 +538,23 @@ public:
 };
 
 namespace crab {
+  /**
+   * Creates a new reference counted instance of T
+   * @tparam T The type to be heap allocated & reference counted
+   * @tparam Args Argument types to be passed to T's constructor
+   * @param args Arguments to be passed to T's constructor
+   */
   template<typename T, typename... Args> requires std::is_constructible_v<T, Args...>
   auto make_rc(Args... args) -> Rc<T> {
     return Rc<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 
+  /**
+   * Creates a new mutable reference counted instance of 'const T'
+   * @tparam T The type to be heap allocated & reference counted
+   * @tparam Args Argument types to be passed to T's constructor
+   * @param args Arguments to be passed to T's constructor
+   */
   template<typename T, typename... Args> requires std::is_constructible_v<T, Args...>
   auto make_rc_mut(Args... args) -> RcMut<T> {
     return RcMut<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});

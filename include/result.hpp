@@ -79,7 +79,9 @@ class Result final {
 
 template<typename T, typename E> requires crab::result::is_ok_type<E> and crab::result::is_error_type<E>
 class Result<T, E> final {
-  std::variant<T, E, unit> inner;
+  struct invalidated {};
+
+  std::variant<T, E, invalidated> inner;
 
 public:
   Result(T from) : inner(std::move(from)) {}
@@ -90,7 +92,7 @@ public:
 
   Result(crab::result::Err<E> &&from) : Result(std::move(from.value)) {}
 
-  Result(Result &&from) noexcept: inner(std::exchange(from.inner, unit{})) {}
+  Result(Result &&from) noexcept: inner(std::exchange(from.inner, invalidated{})) {}
 
   Result(const Result &) = delete;
 
@@ -128,13 +130,13 @@ public:
 
   [[nodiscard]] T take_unchecked() {
     T some = std::move(get_unchecked());
-    inner = unit{};
+    inner = invalidated{};
     return some;
   }
 
   [[nodiscard]] E take_err_unchecked() {
     E error = std::move(get_err_unchecked());
-    inner = unit{};
+    inner = invalidated{};
     return error;
   }
 
@@ -181,7 +183,9 @@ public:
     return std::get<E>(inner);
   }
 
-  void ensure_valid() const { debug_assert(!std::holds_alternative<unit>(inner), "Invalid use of moved result"); }
+  void ensure_valid() const {
+    debug_assert(!std::holds_alternative<invalidated>(inner), "Invalid use of moved result");
+  }
 
   friend std::ostream& operator<<(std::ostream &os, const Result &result) {
     #if DEBUG

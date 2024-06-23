@@ -48,6 +48,8 @@ TEST_CASE("Result", "[result]") {
 
     result = crab::ok<u32>(42);
     REQUIRE_NOTHROW(result.ensure_valid());
+
+    REQUIRE(Result<unit, Error>{unit{}}.is_ok());
   }
 
   SECTION("Reference Pattern Matching") {

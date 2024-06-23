@@ -192,7 +192,7 @@ public:
    * @brief Converts Rc<Derived> -> Rc<Base>
    */
   template<typename Base> requires std::is_base_of_v<Base, Contained>
-  auto upcast() -> Rc<Base> {
+  auto upcast() const -> Rc<Base> {
     crab::rc::helper::RcInterior<Base> *i = get_interior()->template upcast<Base>();
     Rc<Base> casted = Rc<Base>::from_rc_interior_unchecked(i);
 
@@ -402,7 +402,7 @@ public:
    * @brief Converts RcMut<Derived> -> RcMut<Base>
    */
   template<typename Base> requires std::is_base_of_v<Base, Contained>
-  auto upcast() -> RcMut<Base> {
+  auto upcast() const -> RcMut<Base> {
     crab::rc::helper::RcInterior<Base> *i = get_interior()->template upcast<Base>();
     RcMut<Base> casted = RcMut<Base>::from_rc_interior_unchecked(i);
 

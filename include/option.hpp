@@ -5,6 +5,7 @@
 // ReSharper disable  CppNonExplicitConvertingConstructor
 
 // ReSharper disable CppDFAUnreachableCode
+// ReSharper disable CppNonExplicitConversionOperator
 #pragma once
 
 #include <type_traits>
@@ -17,7 +18,7 @@
 
 namespace crab {
   struct None {
-    [[nodiscard]] bool operator==(const None &) const { return true; }
+    [[nodiscard]] auto operator==(const None &) const -> bool { return true; }
   };
 }
 
@@ -26,6 +27,9 @@ class Ref;
 
 template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut;
+
+template<typename T, typename E>
+class Result;
 
 namespace crab::ref {
   template<typename T>
@@ -85,87 +89,198 @@ public:
   //   }
   // }
 
-  Option(Contained &&from) noexcept : value(std::move(from)) {}
+  Option(Contained &&from) noexcept : value{std::move(from)} {}
 
-  Option(crab::None) noexcept : Option() {}
+  Option(crab::None none = {}) noexcept : value{none} {}
 
-  Option() noexcept : value(crab::None{}) {}
-
-  Option& operator=(Contained &&from) {
+  auto operator=(Contained &&from) -> Option& {
     value = std::forward<Contained>(from);
     return *this;
   }
 
-  Option& operator=(crab::None) {
+  auto operator=(crab::None) -> Option& {
     value = crab::None{};
     return *this;
   }
 
   /**
-   * Whether this option has a contained value or not (None)
+   * @brief Whether this option has a contained value or not (None)
    */
-  // ReSharper disable once CppNonExplicitConversionOperator
   [[nodiscard]] operator bool() const { return is_some(); }
 
   /**
-   * Whether this option contains a value
+   * @brief Whether this option contains a value
    */
-  [[nodiscard]] bool is_some() const {
+  [[nodiscard]] auto is_some() const -> bool {
     return std::holds_alternative<Contained>(value);
   }
 
   /**
-   * Whether this option does not contain a value
+   * @brief Whether this option does not contain a value
    */
-  [[nodiscard]] bool is_none() const {
+  [[nodiscard]] auto is_none() const -> bool {
     return std::holds_alternative<crab::None>(value);
   }
 
   /**
-   * Takes value out of the option and returns it, will error if option is none
+   * @brief Takes value out of the option and returns it, will error if option is none
    */
-  [[nodiscard]] Contained take_unchecked() {
+  [[nodiscard]] auto take_unchecked() -> Contained {
     debug_assert(is_some(), "Cannot take value from a empty option.");
-    Contained some = std::move(get_unchecked());
-    value = crab::None{};
-    return some;
+    return std::get<Contained>(std::exchange(value, crab::None{}));
   }
 
-  Option<const Contained&> as_ref() const {
+  /**
+   * @brief Converts a 'const Option<T>&' into a Option<Ref<T>>, to give optional access to the actual
+   * referenced value inside.
+   */
+  auto as_ref() const -> Option<Ref<Contained>> {
     if (is_none())
       return crab::None{};
-    return Option(Ref<Contained>(get_unchecked()));
+    return Option{Ref<Contained>{get_unchecked()}};
   }
 
-  friend std::ostream& operator<<(std::ostream &os, const Option &opt) {
-    if (opt.is_none())
-      return os << "None";
+  /**
+   * @brief Converts a 'const Option<T>&' or 'Option<T>&' into a Option<RefMut<T>>, to give optional access to the actual
+   * referenced value inside.
+   */
+  auto as_ref_mut() -> Option<RefMut<Contained>> {
+    if (is_none())
+      return crab::None{};
+    return Option{RefMut<Contained>{get_unchecked()}};
+  }
+
+  friend auto operator<<(std::ostream &os, const Option &opt) -> std::ostream& {
+    if (opt.is_none()) return os << "None";
     return os << opt.get_unchecked();
   }
 
-  [[nodiscard]] Contained& get_unchecked() { return std::get<Contained>(value); }
+  /**
+   * @brief Gets the contained value if exists, else returns a default value
+   * @param default_value
+   */
+  [[nodiscard]] auto get_or(
+    const Contained default_value
+  ) const -> Contained requires std::is_copy_constructible_v<Contained> {
+    return this->get_or([default_value] { return default_value; });
+  }
 
-  [[nodiscard]] const Contained& get_unchecked() const { return std::get<Contained>(value); }
+  /**
+   * @brief Gets the contained value if exists, else computes a default value with 'F' and returns
+   * @param default_generator Function to create the default value
+   */
+  template<std::invocable F>
+  [[nodiscard]] auto get_or(
+    const F default_generator
+  ) const -> Contained requires std::is_copy_constructible_v<Contained> and std::convertible_to<std::invoke_result_t<F>,
+                                  Contained> {
+    return is_some() ? Contained{get_unchecked()} : Contained{default_generator()};
+  }
+
+  /**
+   * @brief Takes the contained value (like Option<T>::take_unchecked()) if exists, else returns a default value
+   * @param default_value
+   */
+  [[nodiscard]] auto take_or(const Contained default_value) -> Contained {
+    return this->take_or([default_value] { return default_value; });
+  }
+
+  /**
+   * @brief Takes the contained value (like Option<T>::take_unchecked()) if exists, else uses 'F' to compute & create a default
+   * value
+   * @param default_generator Function to create the default value
+   */
+  template<std::invocable F>
+  [[nodiscard]] auto take_or(
+    const F default_generator
+  ) -> Contained requires std::is_copy_constructible_v<Contained> and std::convertible_to<std::invoke_result_t<F>,
+                            Contained> {
+    return is_some() ? Contained{get_unchecked()} : Contained{default_generator()};
+  }
+
+  [[nodiscard]] auto get_unchecked() -> Contained& { return std::get<Contained>(value); }
+
+  [[nodiscard]] auto get_unchecked() const -> const Contained& { return std::get<Contained>(value); }
+
+  /**
+   * @brief Creates a Result<T, E> from this given option, where "None" is expanded to some error given.
+   * @tparam E Error Type
+   * @param error Error to replace an instance of None
+   */
+  template<typename E>
+  auto ok_or(E error) const -> Result<Contained, E> requires std::copy_constructible<Contained> {
+    return this->ok_or([error] { return error; });
+  }
+
+  /**
+   * @brief Creates a Result<T, E> from this given option, where "None" is expanded to some error given.
+   * @tparam E Error Type
+   * @param error_generator Function to generate an error to replace "None".
+   */
+  template<typename E, std::invocable F>
+  auto ok_or(
+    F error_generator
+  ) const -> Result<Contained, E> requires
+    std::copy_constructible<Contained> and
+    std::convertible_to<std::invoke_result_t<F>, E> {
+    if (is_some()) {
+      return get_unchecked();
+    }
+    return error_generator();
+  }
+
+  /**
+   * @brief Converts this Result<T, E> from this given option, where "None" is expanded to some error given.
+   * This will invalidate the Option<T> after call, just like every other Option::take_* function.
+   * @tparam E Error Type
+   * @param error Error to replace an instance of None
+   */
+  template<typename E>
+  auto take_ok_or(E error) -> Result<Contained, E> {
+    return this->ok_or([error] { return error; });
+  }
+
+  /**
+   * @brief Creates a Result<T, E> from this given option, where "None" is expanded to some error given.
+   * @tparam E Error Type
+   * @param error_generator Function to generate an error to replace "None".
+   */
+  template<typename E, std::invocable F>
+  auto take_ok_or(
+    F error_generator
+  ) -> Result<Contained, E> requires
+    std::copy_constructible<Contained> and
+    std::convertible_to<std::invoke_result_t<F>, E> {
+    if (is_some()) {
+      return take_unchecked();
+    }
+    return error_generator();
+  }
 
 private:
   std::variant<Contained, crab::None> value;
 };
 
 namespace crab {
+  /**
+   * @brief Creates an Option<T> from some value T
+   */
   template<typename T>
-  Option<T> some(T from) noexcept {
+  auto some(T from) -> Option<T> {
     return Option<T>(std::move(from));
   }
 
+  /**
+   * @brief 'None' value type for use with Option<T>
+   */
   inline constexpr None none{};
 
   /**
-   * Consumes given option and returns the contained value, will throw if none found
+   * @brief Consumes given option and returns the contained value, will throw if none found
    * @param from Option to consume
-   * @return
    */
   template<typename T>
-  T unwrap(Option<T> &&from) {
+  auto unwrap(Option<T> &&from) -> T {
     return from.take_unchecked();
   }
 } // namespace opt

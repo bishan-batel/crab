@@ -9,6 +9,7 @@
 
 TEST_CASE("Preamble", "[unit]") {
   REQUIRE(unit{} == unit{});
+  REQUIRE(unit::val == unit{});
 }
 
 TEST_CASE("Range", "[range]") {

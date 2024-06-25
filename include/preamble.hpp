@@ -178,8 +178,14 @@ using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
  * \brief 0 Sized Type
  */
 struct unit {
-  [[nodiscard]] bool operator==(const unit &) const { return true; }
+  static const unit val;
+
+  constexpr unit() = default;
+
+  [[nodiscard]] constexpr auto operator==(const unit &) const -> bool { return true; }
 };
+
+constexpr unit unit::val{};
 
 /**
  * \brief Literal for converting a degree literal -> radians

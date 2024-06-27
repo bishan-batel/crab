@@ -276,7 +276,7 @@ public:
    * @tparam F
    * @return
    */
-  template<std::invocable<E> F, typename R=std::invoke_result_t<F, T>>
+  template<std::invocable<E> F, typename R=std::invoke_result_t<F, E>>
   [[nodiscard]] auto map_err(const F functor) -> Result<T, R> {
     ensure_valid();
 

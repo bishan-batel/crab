@@ -12,6 +12,7 @@
 
 #include "crab/debug.hpp"
 #include "option.hpp"
+#include "result.hpp"
 
 namespace crab {
   class Error {
@@ -382,12 +383,16 @@ namespace crab {
     struct decay_fallible<Result<T, E>> {
       using type = T;
     };
+
+    template<std::invocable F>
+    using decay_fallible_function = typename decay_fallible<std::invoke_result_t<F>>::type;
   }
 
   template<result::error_type E, std::invocable... F>
   auto fallible(
     const F... fallible
-  ) -> Result<std::tuple<typename result::decay_fallible<decltype(fallible())>::type...>, E> {
+    // ) -> Result<std::tuple<typename result::decay_fallible<decltype(fallible())>::type...>, E> {
+  ) -> Result<std::tuple<result::decay_fallible_function<F>...>, E> {
     constexpr static result::fallible<E> stateless{};
     return stateless(Result<std::tuple<>, E>{std::make_tuple()}, fallible...);
   }

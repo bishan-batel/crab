@@ -117,7 +117,7 @@ TEST_CASE("Result", "[result]") {
       REQUIRE(num2 == 22);
     }
 
-    auto a = crab::fallible<Error>(
+    Result<std::tuple<i32, i32, i32>, Error> a = crab::fallible<Error>(
       [] -> i32 { return 0; },
       [] -> Result<i32, Error> {
         return Error{};

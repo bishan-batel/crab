@@ -11,6 +11,8 @@
 
 class Error final : public crab::Error {
 public:
+  [[nodiscard]] auto operator==(const Error &) const -> bool { return true; }
+
   String what() const override {
     return "huh";
   }
@@ -75,5 +77,53 @@ TEST_CASE("Result", "[result]") {
     );
 
     REQUIRE(v == 51358);
+  }
+
+  SECTION("std::visit") {
+    Result<i32, Error> huh{10};
+    huh = huh.map([](const i32 a) { return a * 2; });
+    REQUIRE(huh.get_unchecked() == 20);
+
+    std::ignore = huh.map([](const i32 a) { return a * 2; });
+    REQUIRE_THROWS(huh.get_unchecked());
+
+    huh = Error{};
+    huh = huh.map([](const i32 a) { return a * 2; });
+    REQUIRE(huh.is_err());
+
+    std::ignore = huh.take_err_unchecked();
+    REQUIRE_THROWS(std::ignore = huh.map([](const i32 a) { return a * 2; }));
+  }
+
+  SECTION("fold") {
+    {
+      bool first = false, second = false;
+      Result<std::tuple<i32, i32>, Error> a = crab::fallible<Error>(
+        [&] {
+          first = true;
+          return 10;
+        },
+        [&] {
+          second = true;
+          return 22;
+        }
+      );
+      REQUIRE((first and second));
+      REQUIRE(a.is_ok());
+
+      auto [num1, num2] = a.take_unchecked();
+
+      REQUIRE(num1 == 10);
+      REQUIRE(num2 == 22);
+    }
+
+    auto a = crab::fallible<Error>(
+      [] -> i32 { return 0; },
+      [] -> Result<i32, Error> {
+        return Error{};
+      },
+      [] { return 0; }
+    );
+    REQUIRE(a.get_err_unchecked() == Error{});
   }
 }

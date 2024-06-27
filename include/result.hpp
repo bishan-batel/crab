@@ -73,6 +73,36 @@ namespace crab::result {
 
     explicit Err(E value) : value(std::move(value)) {}
   };
+
+  template<typename>
+  struct is_result_type {
+    static constexpr bool value = false;
+  };
+
+  template<typename T, typename E>
+  struct is_result_type<Result<T, E>> {
+    static constexpr bool value = true;
+  };
+
+  template<typename>
+  struct is_ok_type {
+    static constexpr bool value = false;
+  };
+
+  template<ok_type T>
+  struct is_ok_type<Ok<T>> {
+    static constexpr bool value = true;
+  };
+
+  template<typename>
+  struct is_err_type {
+    static constexpr bool value = false;
+  };
+
+  template<error_type E>
+  struct is_err_type<Err<E>> {
+    static constexpr bool value = true;
+  };
 }
 
 template<typename T, typename E>
@@ -261,40 +291,25 @@ public:
       std::exchange(inner, invalidated{})
     );
   }
+
+  /**
+   * @brief If result is Ok, run function on the ok value,
+   * If the mapped function is Ok(type M), it returns Result<M, Error>
+   */
+  template<std::invocable<T> F, typename R=std::invoke_result_t<F, T>>
+    requires crab::result::is_result_type<R>::value and std::same_as<typename R::ErrType, ErrType>
+  [[nodiscard]] auto and_then(const F functor) -> Result<typename R::OkType, ErrType> {
+    using TransformedResult = Result<typename R::OkType, ErrType>;
+    Result<TransformedResult, ErrType> res = this->map(functor);
+
+    if (res.is_err()) return res.take_err_unchecked();
+
+    return res.take_unchecked();
+  }
 };
 
 namespace crab {
   namespace result {
-    template<typename>
-    struct is_result_type {
-      static constexpr bool value = false;
-    };
-
-    template<typename T, typename E>
-    struct is_result_type<Result<T, E>> {
-      static constexpr bool value = true;
-    };
-
-    template<typename>
-    struct is_ok_type {
-      static constexpr bool value = false;
-    };
-
-    template<ok_type T>
-    struct is_ok_type<Ok<T>> {
-      static constexpr bool value = true;
-    };
-
-    template<typename>
-    struct is_err_type {
-      static constexpr bool value = false;
-    };
-
-    template<error_type E>
-    struct is_err_type<Err<E>> {
-      static constexpr bool value = true;
-    };
-
     template<error_type Error>
     struct fallible {
       constexpr fallible() = default;

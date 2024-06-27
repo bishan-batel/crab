@@ -126,4 +126,19 @@ TEST_CASE("Result", "[result]") {
     );
     REQUIRE(a.get_err_unchecked() == Error{});
   }
+
+  SECTION("and_then") {
+    auto transformed = Result<i32, Error>{10}.and_then(
+      [](const i32) { return Result<f32, Error>{10.f}; }
+    );
+    REQUIRE(transformed.is_ok());
+    REQUIRE(transformed.get_unchecked() == 10.f);
+
+    transformed = Result<i32, Error>{20}.and_then(
+      [](const i32) -> Result<f32, Error> { return Error{}; }
+    );
+
+    REQUIRE(transformed.is_err());
+    REQUIRE(transformed.get_err_unchecked() == Error{});
+  }
 }

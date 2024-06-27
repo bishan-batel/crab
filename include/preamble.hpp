@@ -255,3 +255,14 @@ crab_impl_literal(umax)
 crab_impl_literal(uptr)
 
 #undef crab_impl_literal
+
+// Pattern Matching
+namespace crab {
+  /**
+   * @brief Shows its use with std::visit
+   */
+  template<typename... Cases>
+  struct cases : Cases... {
+    using Cases::operator()...;
+  };
+}

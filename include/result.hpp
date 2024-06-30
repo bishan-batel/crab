@@ -261,19 +261,14 @@ public:
    */
   template<std::invocable<T> F, typename R=std::invoke_result_t<F, T>>
   [[nodiscard]] auto map(const F functor) -> Result<R, E> {
-    return std::visit(
-      crab::cases{
-        [functor](Ok ok) -> Result<R, E> { return Result<R, E>{functor(std::move(ok).value)}; },
-        [](Err err) -> Result<R, E> { return Result<R, E>{std::move(err).value}; },
+    ensure_valid();
 
-        // Unreachable
-        [this](invalidated) -> Result<R, E> {
-          ensure_valid();
-          return Result<R, E>{take_err_unchecked()};
-        }
-      },
-      std::exchange(inner, invalidated{})
-    );
+    // std::variant<Ok, Err, invalidated> inner = std::exchange(inner, invalidated{});
+    if (is_ok()) {
+      return Result<R, E>{functor(take_unchecked())};
+    }
+
+    return Result<R, E>{take_err_unchecked()};
   }
 
   /**
@@ -283,19 +278,13 @@ public:
    */
   template<std::invocable<E> F, typename R=std::invoke_result_t<F, E>>
   [[nodiscard]] auto map_err(const F functor) -> Result<T, R> {
-    return std::visit(
-      crab::cases{
-        [](Ok ok) -> Result<T, R> { return Result<T, R>{std::move(ok).value}; },
-        [functor](Err err) -> Result<T, R> { return Result<T, R>{functor(std::move(err).value)}; },
+    ensure_valid();
 
-        // Unreachable
-        [this](invalidated) -> Result<T, R> {
-          ensure_valid();
-          return Result<T, R>{take_unchecked()};
-        }
-      },
-      std::exchange(inner, invalidated{})
-    );
+    if (is_err()) {
+      return Result<T, R>{functor(take_err_unchecked())};
+    }
+
+    return Result<T, R>{take_unchecked()};
   }
 
   /**

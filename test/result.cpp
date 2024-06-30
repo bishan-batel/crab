@@ -4,8 +4,8 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <result.hpp>
 #include <pattern_match.hpp>
+#include <result.hpp>
 
 #include "ref.hpp"
 
@@ -13,9 +13,7 @@ class Error final : public crab::Error {
 public:
   [[nodiscard]] auto operator==(const Error &) const -> bool { return true; }
 
-  String what() const override {
-    return "huh";
-  }
+  String what() const override { return "huh"; }
 };
 
 TEST_CASE("Result", "[result]") {
@@ -34,7 +32,6 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_THROWS(result.take_err_unchecked());
 
     result = err(Error{});
-
     REQUIRE(result.is_err());
     REQUIRE_FALSE(result.is_ok());
     REQUIRE_THROWS(result.get_unchecked());
@@ -58,23 +55,15 @@ TEST_CASE("Result", "[result]") {
     Result<i32, Error> result{10};
 
     i32 v = 0;
-    REQUIRE_NOTHROW(
-      if_ok(result, [&](const i32 value) {
-        v = value;
-        })
-    );
+    REQUIRE_NOTHROW(if_ok(result, [&](const i32 value) { v = value; }));
 
-    REQUIRE_NOTHROW(
-      if_err(result, [&](const Error&) { v = 51358; })
-    );
+    REQUIRE_NOTHROW(if_err(result, [&](const Error &) { v = 51358; }));
 
     REQUIRE(v != 51358);
 
     result = err(Error{});
 
-    REQUIRE_NOTHROW(
-      if_err(result, [&](const Error&) { v = 51358; })
-    );
+    REQUIRE_NOTHROW(if_err(result, [&](const Error &) { v = 51358; }));
 
     REQUIRE(v == 51358);
   }
@@ -99,15 +88,14 @@ TEST_CASE("Result", "[result]") {
     {
       bool first = false, second = false;
       Result<std::tuple<i32, i32>, Error> a = crab::fallible<Error>(
-        [&] {
-          first = true;
-          return 10;
-        },
-        [&] {
-          second = true;
-          return 22;
-        }
-      );
+          [&] {
+            first = true;
+            return 10;
+          },
+          [&] {
+            second = true;
+            return 22;
+          });
       REQUIRE((first and second));
       REQUIRE(a.is_ok());
 
@@ -118,27 +106,24 @@ TEST_CASE("Result", "[result]") {
     }
 
     Result<std::tuple<i32, i32, i32>, Error> a = crab::fallible<Error>(
-      [] -> i32 { return 0; },
-      [] -> Result<i32, Error> {
-        return Error{};
-      },
-      [] { return 0; }
-    );
+        [] -> i32 { return 0; }, [] -> Result<i32, Error> { return Error{}; },
+        [] { return 0; });
     REQUIRE(a.get_err_unchecked() == Error{});
   }
 
   SECTION("and_then") {
     auto transformed = Result<i32, Error>{10}.and_then(
-      [](const i32) { return Result<f32, Error>{10.f}; }
-    );
+        [](const i32) { return Result<f32, Error>{10.f}; });
     REQUIRE(transformed.is_ok());
     REQUIRE(transformed.get_unchecked() == 10.f);
 
     transformed = Result<i32, Error>{20}.and_then(
-      [](const i32) -> Result<f32, Error> { return Error{}; }
-    );
+        [](const i32) -> Result<f32, Error> { return Error{}; });
 
     REQUIRE(transformed.is_err());
     REQUIRE(transformed.get_err_unchecked() == Error{});
   }
+
+  while (true)
+    ;
 }

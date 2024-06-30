@@ -10,31 +10,31 @@
  */
 template<typename T> requires crab::ref::is_valid_type<T>
 class Ref final {
-  explicit Ref(const T *const pointer)
+  constexpr explicit Ref(const T *const pointer)
     : pointer(pointer) {
     debug_assert(pointer, "Invalid State: Cannot create a NULL Ref object");
   }
 
 public:
-  [[nodiscard]] static Ref from_unchecked(const T *const pointer) {
+  [[nodiscard]] constexpr static Ref from_unchecked(const T *const pointer) {
     return Ref(pointer);
   }
 
-  Ref(const T &ref) : Ref(&ref) {}
+  constexpr Ref(const T &ref) : Ref(&ref) {}
 
-  [[nodiscard]] operator const T&() const {
+  [[nodiscard]] constexpr operator const T&() const {
     return get_ref();
   };
 
-  [[nodiscard]] operator const T*() const {
+  [[nodiscard]] constexpr operator const T*() const {
     return as_ptr();
   };
 
-  [[nodiscard]] const T& operator*() const {
+  [[nodiscard]] constexpr const T& operator*() const {
     return get_ref();
   }
 
-  [[nodiscard]] const T *operator->() const {
+  [[nodiscard]] constexpr const T *operator->() const {
     return as_ptr();
   }
 
@@ -42,14 +42,14 @@ public:
    * Gets underlying pointer, this pointer is always non null
    *
    */
-  [[nodiscard]] const T *as_ptr() const {
+  [[nodiscard]] constexpr const T *as_ptr() const {
     return pointer;
   }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] const T& get_ref() const { return *pointer; }
+  [[nodiscard]] constexpr const T& get_ref() const { return *pointer; }
 
 private:
   const T *pointer;
@@ -57,29 +57,29 @@ private:
 
 template<typename T> requires crab::ref::is_valid_type<T>
 class RefMut final {
-  explicit RefMut(T *const pointer)
+  constexpr explicit RefMut(T *const pointer)
     : pointer(pointer) {
     debug_assert(pointer, "Invalid State: Cannot create a NULL RefMut object");
   }
 
 public:
-  RefMut(T &ref) : RefMut(&ref) {}
+  constexpr RefMut(T &ref) : RefMut(&ref) {}
 
-  [[nodiscard]] static RefMut from_unchecked(T *const pointer) {
+  [[nodiscard]] constexpr static RefMut from_unchecked(T *const pointer) {
     return RefMut(pointer);
   }
 
-  [[nodiscard]] operator T&() const { return get_mut_ref(); };
+  [[nodiscard]] constexpr operator T&() const { return get_mut_ref(); };
 
-  [[nodiscard]] operator T*() const {
+  [[nodiscard]] constexpr operator T*() const {
     return as_ptr();
   };
 
-  [[nodiscard]] operator Ref<T>() const { return as_ref(); };
+  [[nodiscard]] constexpr operator Ref<T>() const { return as_ref(); };
 
-  [[nodiscard]] T& operator*() const { return get_mut_ref(); }
+  [[nodiscard]] constexpr T& operator*() const { return get_mut_ref(); }
 
-  [[nodiscard]] T *operator->() const {
+  [[nodiscard]] constexpr T *operator->() const {
     return as_ptr();
   }
 
@@ -87,22 +87,22 @@ public:
    * Gets underlying pointer, this pointer is always non null
    *
    */
-  [[nodiscard]] T *as_ptr() const { return pointer; }
+  [[nodiscard]] constexpr T *as_ptr() const { return pointer; }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] T& get_mut_ref() const { return *pointer; }
+  [[nodiscard]] constexpr T& get_mut_ref() const { return *pointer; }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] const T& get_ref() const { return *pointer; }
+  [[nodiscard]] constexpr const T& get_ref() const { return *pointer; }
 
   /**
    * Converts RefMut into a immutable reference
    */
-  [[nodiscard]] Ref<T> as_ref() const {
+  [[nodiscard]] constexpr Ref<T> as_ref() const {
     return Ref<T>(get_mut_ref());
   }
 
@@ -115,12 +115,12 @@ class Option;
 
 namespace crab::ref {
   template<typename T>
-  [[nodiscard]] Ref<T> from_ptr_unchecked(const T *const from) {
+  [[nodiscard]] constexpr Ref<T> from_ptr_unchecked(const T *const from) {
     return Ref<T>::from_unchecked(from);
   }
 
   template<typename T>
-  [[nodiscard]] RefMut<T> from_ptr_unchecked(T *const from) {
+  [[nodiscard]] constexpr RefMut<T> from_ptr_unchecked(T *const from) {
     return RefMut<T>::from_unchecked(from);
   }
 }
@@ -132,7 +132,7 @@ namespace crab::ref {
    *
    */
   template<typename T>
-  [[nodiscard]] Option<RefMut<T>> from_ptr(T *const from) {
+  [[nodiscard]] constexpr Option<RefMut<T>> from_ptr(T *const from) {
     if (from) {
       return some(from_ptr_unchecked(from));
     }
@@ -140,7 +140,7 @@ namespace crab::ref {
   }
 
   template<typename T>
-  [[nodiscard]] Option<Ref<T>> from_ptr(const T *const from) {
+  [[nodiscard]] constexpr Option<Ref<T>> from_ptr(const T *const from) {
     if (from) {
       return some(from_ptr_unchecked(from));
     }
@@ -151,7 +151,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived>> cast(const Base &from) {
+  Option<Ref<Derived>> constexpr cast(const Base &from) {
     return from_ptr(dynamic_cast<const Derived*>(&from));
   }
 
@@ -159,7 +159,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived>> cast(Base &from) {
+  Option<RefMut<Derived>> constexpr cast(Base &from) {
     return from_ptr(dynamic_cast<Derived*>(&from));
   }
 
@@ -167,7 +167,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived>> cast(const Base *from) {
+  constexpr Option<Ref<Derived>> cast(const Base *from) {
     return from_ptr(dynamic_cast<const Derived*>(from));
   }
 
@@ -175,7 +175,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived>> cast(Base *from) {
+  constexpr Option<RefMut<Derived>> cast(Base *from) {
     return from_ptr(dynamic_cast<Derived*>(from));
   }
 
@@ -183,7 +183,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived>> cast(Ref<Base> from) {
+  constexpr Option<Ref<Derived>> cast(Ref<Base> from) {
     return cast(from.get_ref());
   }
 
@@ -191,7 +191,7 @@ namespace crab::ref {
    * @brief Attempts to cast input of type Base into a Derived instances
    */
   template<typename Derived, typename Base> requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived>> cast(RefMut<Base> from) {
+  constexpr Option<RefMut<Derived>> cast(RefMut<Base> from) {
     return cast(from.get_ref());
   }
 }

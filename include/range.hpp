@@ -19,28 +19,28 @@ public:
     using pointer = T;
     using reference = T;
 
-     explicit Iterator(T pos) : pos(pos) {}
+    __always_inline constexpr explicit Iterator(T pos) : pos(pos) {}
 
-     auto operator*() const -> reference { return pos; }
+    __always_inline constexpr auto operator*() const -> reference { return pos; }
 
-     auto operator->() -> pointer { return pos; }
+    __always_inline constexpr auto operator->() -> pointer { return pos; }
 
-     auto operator++() -> Iterator& {
+    __always_inline constexpr auto operator++() -> Iterator& {
       ++pos;
       return *this;
     }
 
-     auto operator++(int) -> Iterator {
+    __always_inline constexpr auto operator++(int) -> Iterator {
       Iterator tmp = *this;
       ++*this;
       return tmp;
     }
 
-     friend auto operator==(const Iterator &a, const Iterator &b) -> bool {
+    __always_inline constexpr friend auto operator==(const Iterator &a, const Iterator &b) -> bool {
       return a.pos == b.pos;
     };
 
-     friend auto operator!=(const Iterator &a, const Iterator &b) -> bool {
+    __always_inline constexpr friend auto operator!=(const Iterator &a, const Iterator &b) -> bool {
       return a.pos != b.pos;
     };
 
@@ -48,18 +48,18 @@ public:
     T pos;
   };
 
-   Range(T min, T max)
+  Range(T min, T max)
     : min(min), max(max) {
     assert(min <= max and "Invalid Range, max cannot be greater than min");
   }
 
-  [[nodiscard]] auto upper_bound() const -> T { return max; }
+  [[nodiscard]] __always_inline constexpr auto upper_bound() const -> T { return max; }
 
-  [[nodiscard]] auto lower_bound() const -> T { return min; }
+  [[nodiscard]] __always_inline constexpr auto lower_bound() const -> T { return min; }
 
-  [[nodiscard]] auto begin() const -> Iterator { return Iterator(min); }
+  [[nodiscard]] __always_inline constexpr auto begin() const -> Iterator { return Iterator(min); }
 
-  [[nodiscard]] auto end() const -> Iterator { return Iterator(max); }
+  [[nodiscard]] __always_inline constexpr auto end() const -> Iterator { return Iterator(max); }
 };
 
 namespace crab {
@@ -76,7 +76,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] auto range(T min, T max) -> Range<T> {
+  [[nodiscard]]__always_inline constexpr auto range(T min, T max) -> Range<T> {
     return Range<T>(min, max);
   }
 
@@ -93,7 +93,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] auto range(T max) -> Range<T> {
+  [[nodiscard]]__always_inline constexpr auto range(T max) -> Range<T> {
     return Range<T>(0, max);
   }
 
@@ -110,7 +110,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] auto range_inclusive(T min, T max) -> Range<T> {
+  [[nodiscard]]__always_inline constexpr auto range_inclusive(T min, T max) -> Range<T> {
     return range(min, max + 1);
   }
 
@@ -127,7 +127,7 @@ namespace crab {
    */
   template<typename T>
     requires std::is_integral_v<T>
-  [[nodiscard]] auto range_inclusive(T max) -> Range<T> {
+  [[nodiscard]]__always_inline constexpr auto range_inclusive(T max) -> Range<T> {
     return range(max + 1);
   }
 }

@@ -18,7 +18,7 @@
 
 namespace crab {
   struct None {
-    [[nodiscard]] auto operator==(const None &) const -> bool { return true; }
+    [[nodiscard]] constexpr auto operator==(const None &) const -> bool { return true; }
   };
 }
 
@@ -129,7 +129,9 @@ public:
    * @brief Takes value out of the option and returns it, will error if option is none
    */
   [[nodiscard]] auto take_unchecked() -> Contained {
+    #if DEBUG
     debug_assert(is_some(), "Cannot take value from a empty option.");
+    #endif
     return std::get<Contained>(std::exchange(value, crab::None{}));
   }
 
@@ -138,8 +140,7 @@ public:
    * referenced value inside.
    */
   auto as_ref() const -> Option<Ref<Contained>> {
-    if (is_none())
-      return crab::None{};
+    if (is_none()) return crab::None{};
     return Option{Ref<Contained>{get_unchecked()}};
   }
 
@@ -148,8 +149,7 @@ public:
    * referenced value inside.
    */
   auto as_ref_mut() -> Option<RefMut<Contained>> {
-    if (is_none())
-      return crab::None{};
+    if (is_none()) return crab::None{};
     return Option{RefMut<Contained>{get_unchecked()}};
   }
 
@@ -175,8 +175,8 @@ public:
   template<std::invocable F>
   [[nodiscard]] auto get_or(
     const F default_generator
-  ) const -> Contained requires std::is_copy_constructible_v<Contained> and std::convertible_to<std::invoke_result_t<F>,
-                                  Contained> {
+  ) const -> Contained requires std::is_copy_constructible_v<Contained> and
+                                std::convertible_to<std::invoke_result_t<F>, Contained> {
     return is_some() ? Contained{get_unchecked()} : Contained{default_generator()};
   }
 
@@ -251,8 +251,7 @@ public:
   template<typename E, std::invocable F>
   auto take_ok_or(
     F error_generator
-  ) -> Result<Contained, E> requires
-    std::copy_constructible<Contained> and
+  ) -> Result<Contained, E> requires std::copy_constructible<Contained> and
     std::convertible_to<std::invoke_result_t<F>, E> {
     if (is_some()) {
       return take_unchecked();

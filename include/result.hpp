@@ -166,17 +166,17 @@ public:
 
   [[nodiscard]]
   auto is_ok() const -> bool {
-    #if DEBUG
-    ensure_valid();
-    #endif
+    // #if DEBUG
+    // ensure_valid();
+    // #endif
     return std::holds_alternative<Ok>(inner);
   }
 
   [[nodiscard]]
   auto is_err() const -> bool {
-    #if DEBUG
-    ensure_valid();
-    #endif
+    // #if DEBUG
+    // ensure_valid();
+    // #endif
     return std::holds_alternative<Err>(inner);
   }
 
@@ -193,9 +193,31 @@ public:
   }
 
   [[nodiscard]] auto get_unchecked() -> T& {
-    #if DEBUG
-    ensure_valid();
-    #endif
+    // #if DEBUG
+    // ensure_valid();
+    // #endif
+
+    debug_assert(
+      is_ok(),
+      std::format(
+        "Called unwrap on result with Error:\n{}",
+        crab::result::error_to_string(get_err_unchecked())
+      )
+    );
+
+    return std::get<Ok>(inner).value;
+  }
+
+  [[nodiscard]] auto get_err_unchecked() -> E& {
+    debug_assert(
+      is_err(),
+      std::format("Called unwrap on ok value")
+    );
+
+    return std::get<Err>(inner).value;
+  }
+
+  [[nodiscard]] auto get_unchecked() const -> const T& {
     debug_assert(
       is_ok(),
       std::format(
@@ -206,31 +228,13 @@ public:
     return std::get<Ok>(inner).value;
   }
 
-  [[nodiscard]] auto get_err_unchecked() -> E& {
-    #if DEBUG
-    ensure_valid();
-    #endif
-    debug_assert(is_err(), std::format("Called unwrap on ok value"));
-
-    return std::get<Err>(inner).value;
-  }
-
-  [[nodiscard]] auto get_unchecked() const -> const T& {
-    #if DEBUG
-    ensure_valid();
-    #endif
-    debug_assert(
-      is_ok(),
-      std::format("Called unwrap on result with Error:\n{}", crab::result::error_to_string(get_err_unchecked()))
-    );
-    return std::get<Ok>(inner).value;
-  }
-
   [[nodiscard]] auto get_err_unchecked() const -> const E& {
-    #if DEBUG
-    ensure_valid();
-    #endif
-    debug_assert(is_err(), std::format("Called unwrap on ok value"));
+    debug_assert(
+      is_err(),
+      std::format("Called unwrap on ok value{}",
+        [&]{ ensure_valid(); return ""; }()
+      )
+    );
 
     return std::get<Err>(inner).value;
   }
@@ -257,15 +261,16 @@ public:
    */
   template<std::invocable<T> F, typename R=std::invoke_result_t<F, T>>
   [[nodiscard]] auto map(const F functor) -> Result<R, E> {
-    ensure_valid();
-
     return std::visit(
       crab::cases{
         [functor](Ok ok) -> Result<R, E> { return Result<R, E>{functor(std::move(ok).value)}; },
         [](Err err) -> Result<R, E> { return Result<R, E>{std::move(err).value}; },
 
         // Unreachable
-        [this](invalidated) -> Result<R, E> { return Result<R, E>{take_err_unchecked()}; }
+        [this](invalidated) -> Result<R, E> {
+          ensure_valid();
+          return Result<R, E>{take_err_unchecked()};
+        }
       },
       std::exchange(inner, invalidated{})
     );
@@ -278,15 +283,16 @@ public:
    */
   template<std::invocable<E> F, typename R=std::invoke_result_t<F, E>>
   [[nodiscard]] auto map_err(const F functor) -> Result<T, R> {
-    ensure_valid();
-
     return std::visit(
       crab::cases{
         [](Ok ok) -> Result<T, R> { return Result<T, R>{std::move(ok).value}; },
         [functor](Err err) -> Result<T, R> { return Result<T, R>{functor(std::move(err).value)}; },
 
         // Unreachable
-        [this](invalidated) -> Result<T, R> { return Result<T, R>{take_unchecked()}; }
+        [this](invalidated) -> Result<T, R> {
+          ensure_valid();
+          return Result<T, R>{take_unchecked()};
+        }
       },
       std::exchange(inner, invalidated{})
     );
@@ -315,11 +321,11 @@ namespace crab {
       constexpr fallible() = default;
 
       // Identity
-      auto operator()(auto tuple) const { return tuple; }
+      __always_inline auto operator()(auto tuple) const { return tuple; }
 
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
-      auto operator()(
+      __always_inline auto operator()(
         // Tuple : Result<std:tuple<...>, Error>
         auto tuple,
         const F function,
@@ -355,7 +361,7 @@ namespace crab {
       }
 
       template<std::invocable F, std::invocable... Rest>
-      auto operator()(
+      __always_inline auto operator()(
         // Tuple : Result<std:tuple<...>, Error>
         auto tuple,
         const F function,

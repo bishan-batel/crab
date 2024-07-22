@@ -1,4 +1,4 @@
-CPMAddPackage("gh:catchorg/Catch2@3.5.4")
+CPMAddPackage("gh:catchorg/Catch2@3.6.0")
 
 # Tests
 add_executable(crab-tests

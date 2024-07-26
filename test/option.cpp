@@ -68,7 +68,7 @@ TEST_CASE("Option", "[option]") {
         }
       );
 
-      REQUIRE((first and not second));
+      REQUIRE((first and second));
       REQUIRE(a.is_none());
 
       first = false;
@@ -84,6 +84,9 @@ TEST_CASE("Option", "[option]") {
           return crab::none;
         }
       );
+
+      REQUIRE((first and not second));
+      REQUIRE(a.is_none());
     }
   }
 }

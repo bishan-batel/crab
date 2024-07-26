@@ -4,10 +4,10 @@ CPMAddPackage("gh:catchorg/Catch2@3.5.4")
 add_executable(crab-tests
         box.cpp
         result.cpp
-        pattern.cpp
+        option.cpp
         rc.cpp
+        pattern.cpp
 )
-
 target_link_libraries(crab-tests PRIVATE Catch2::Catch2WithMain crab)
 
 target_compile_definitions(crab-tests

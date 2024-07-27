@@ -1,0 +1,9 @@
+Started LSP
+Decoding Message:
+DECODE: Start
+DECODE: Getting Content Length
+DECODE: Tokenizing
+DECODE: Parsing
+DECODE: Intepreter
+DECODE: Coercing to Object
+ERROR: Malformed Request key-value pair.

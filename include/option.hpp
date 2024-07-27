@@ -256,6 +256,39 @@ public:
     return error_generator();
   }
 
+  template<std::invocable<Contained &> F>
+  auto if_some(const F clause) -> Option<Contained> & {
+    if (is_some()) {
+      clause(get_unchecked());
+    }
+
+    return *this;
+  }
+
+  template<std::invocable<const Contained &> F>
+  auto if_some(const F clause) const -> const Option<Contained> & {
+    if (is_some()) {
+      clause(get_unchecked());
+    }
+    return *this;
+  }
+
+  template<std::invocable F>
+  auto if_none(const F clause) -> Option<Contained> & {
+    if (is_none()) {
+      clause();
+    }
+    return *this;
+  }
+
+  template<std::invocable F>
+  auto if_none(const F clause) const -> const Option<Contained> & {
+    if (is_none()) {
+      clause();
+    }
+    return *this;
+  }
+
   template<std::invocable<Contained> F>
   auto map(const F mapper) -> Option<decltype(mapper(take_unchecked()))> {
     if (is_some())
@@ -328,10 +361,11 @@ namespace crab {
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
       __always_inline auto operator()(
-          // Tuple : Result<std:tuple<...>, Error>
-          auto tuple,
-          const F function,
-          const Rest... other_functions) const
+        // Tuple : Result<std:tuple<...>, Error>
+        auto tuple,
+        const F function,
+        const Rest... other_functions
+      ) const
         requires option_type<decltype(function())>
       {
         // tuple.take_unchecked();
@@ -346,8 +380,9 @@ namespace crab {
 
         // using Return = std::invoke_result_t<decltype(operator()), Result<ReturnOk, Error>, Rest...>;
         using Return = decltype(operator()(
-            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function().take_unchecked()))},
-            other_functions...));
+          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function().take_unchecked()))},
+          other_functions...
+        ));
 
         if (tuple.is_none())
           return Return{crab::none};
@@ -358,16 +393,18 @@ namespace crab {
           return Return{crab::none};
 
         return operator()(
-            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(result.take_unchecked()))},
-            other_functions...);
+          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(result.take_unchecked()))},
+          other_functions...
+        );
       }
 
       template<std::invocable F, std::invocable... Rest>
       __always_inline auto operator()(
-          // Tuple : Result<std:tuple<...>, Error>
-          auto tuple,
-          const F function,
-          const Rest... other_functions) const
+        // Tuple : Result<std:tuple<...>, Error>
+        auto tuple,
+        const F function,
+        const Rest... other_functions
+      ) const
         requires(not option_type<decltype(function())>)
       {
         // tuple.take_unchecked();
@@ -377,7 +414,8 @@ namespace crab {
         using ReturnOk = decltype(std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function())));
 
         using Return = decltype(operator()(
-            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))}, other_functions...));
+          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))}, other_functions...
+        ));
 
         if (tuple.is_none())
           return Return{crab::none};
@@ -385,8 +423,9 @@ namespace crab {
         O result = function();
 
         return operator()(
-            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(std::move(result)))},
-            other_functions...);
+          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(std::move(result)))},
+          other_functions...
+        );
       }
     };
 

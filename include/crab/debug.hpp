@@ -11,35 +11,20 @@ namespace crab::debug {
 
   public:
     explicit AssertionFailedError(
-      StringView function,
-      StringView source,
-      StringView assertion_text,
-      usize line,
-      StringView msg
-    );
+        StringView function, StringView source, StringView assertion_text, usize line, StringView msg);
 
     ~AssertionFailedError() override;
 
-    const char *what() const noexcept override;
+    [[nodiscard]] auto what() const noexcept -> const char * final;
   };
 
-  unit dbg_assert(
-    StringView function,
-    StringView source,
-    StringView assertion_line,
-    usize line,
-    StringView msg
-  );
-}
+  unit dbg_assert(StringView function, StringView source, StringView assertion_line, usize line, StringView msg);
+} // namespace crab::debug
 #if DEBUG
-#define debug_assert(condition, message) if (!static_cast<bool>(condition)) crab::debug::dbg_assert(\
-  __FUNCTION__, \
-  __FILE__, \
-  #condition, \
-  __LINE__, \
-  (message))
+  #define debug_assert(condition, message)                                                                             \
+    if (!static_cast<bool>(condition)) crab::debug::dbg_assert(__FUNCTION__, __FILE__, #condition, __LINE__, (message))
 #else
 
-#define debug_assert(...)
+  #define debug_assert(...)
 
 #endif

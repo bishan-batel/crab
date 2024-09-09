@@ -10,7 +10,7 @@ struct Huh {
   i32 v;
 
   // ReSharper disable once CppMemberFunctionMayBeStatic
-  auto num() -> i32 { return 42; }
+  auto num() -> i32 { return 42; } // NOLINT
 };
 
 struct Bruh : Huh {
@@ -18,9 +18,7 @@ struct Bruh : Huh {
 };
 
 TEST_CASE("Rc") {
-  SECTION("String") {
-    Rc<String> a = crab::make_rc<String>("what");
-  }
+  SECTION("String") { Rc<String> a = crab::make_rc<String>("what"); }
   SECTION("Downcast") {
     Rc<Bruh> original = crab::make_rc<Bruh>(42);
 
@@ -32,6 +30,6 @@ TEST_CASE("Rc") {
     REQUIRE(huh->v == 42);
 
     REQUIRE(returned.is_some());
-    REQUIRE(crab::unwrap(std::move(returned))->v == 42);
+    REQUIRE(returned.take_unchecked()->v == 42);
   }
 }

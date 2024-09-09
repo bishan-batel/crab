@@ -13,7 +13,7 @@ TEST_CASE("Option", "[option]") {
   REQUIRE_THROWS(a.take_unchecked());
 
   a = crab::some(42);
-  REQUIRE(crab::unwrap(std::move(a)) == 42);
+  REQUIRE(a.take_unchecked() == 42);
 
   REQUIRE_THROWS(a.take_unchecked());
 
@@ -36,15 +36,14 @@ TEST_CASE("Option", "[option]") {
       bool first = false, second = false;
 
       Option<std::tuple<i32, i32>> a = crab::fallible(
-        [&] {
-          first = true;
-          return 10;
-        },
-        [&] {
-          second = true;
-          return 22;
-        }
-      );
+          [&] {
+            first = true;
+            return 10;
+          },
+          [&] {
+            second = true;
+            return 22;
+          });
 
       REQUIRE((first and second));
       REQUIRE(a.is_some());
@@ -58,15 +57,14 @@ TEST_CASE("Option", "[option]") {
       bool first = false, second = false;
 
       Option<std::tuple<i32, i32>> a = crab::fallible(
-        [&] {
-          first = true;
-          return 420;
-        },
-        [&] -> Option<i32> {
-          second = true;
-          return crab::none;
-        }
-      );
+          [&] {
+            first = true;
+            return 420;
+          },
+          [&] -> Option<i32> {
+            second = true;
+            return crab::none;
+          });
 
       REQUIRE((first and second));
       REQUIRE(a.is_none());
@@ -75,15 +73,14 @@ TEST_CASE("Option", "[option]") {
       second = false;
 
       a = crab::fallible(
-        [&] -> Option<i32> {
-          first = true;
-          return crab::none;
-        },
-        [&] -> Option<i32> {
-          second = true;
-          return crab::none;
-        }
-      );
+          [&] -> Option<i32> {
+            first = true;
+            return crab::none;
+          },
+          [&] -> Option<i32> {
+            second = true;
+            return crab::none;
+          });
 
       REQUIRE((first and not second));
       REQUIRE(a.is_none());

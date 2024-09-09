@@ -77,7 +77,7 @@ public:
   using NestedContained = T;
   static constexpr usize nested_depth{0};
 
-  Option(const Contained &from) noexcept : value(Contained{from}) {}
+  Option(const Contained &from) noexcept : value(Contained{from}) {} // NOLINT
 
   // Option(UnderlyingType &from) noexcept requires (decay::is_const_ref)
   //   : value(Contained{from}) {}
@@ -94,9 +94,9 @@ public:
   //   }
   // }
 
-  Option(Contained &&from) noexcept : value{std::move(from)} {}
+  Option(Contained &&from) noexcept : value{std::move(from)} {} // NOLINT
 
-  Option(crab::None none = {}) noexcept : value{none} {}
+  Option(crab::None none = {}) noexcept : value{none} {} // NOLINT
 
   auto operator=(Contained &&from) -> Option & {
     value = std::forward<Contained>(from);
@@ -108,10 +108,10 @@ public:
     return *this;
   }
 
-  /**
-   * @brief Whether this option has a contained value or not (None)
-   */
-  [[nodiscard]] operator bool() const { return is_some(); }
+  // /**
+  //  * @brief Whether this option has a contained value or not (None)
+  //  */
+  // [[nodiscard]] operator bool() const { return is_some(); }
 
   /**
    * @brief Whether this option contains a value */
@@ -136,9 +136,8 @@ public:
    * @brief Converts a 'const Option<T>&' into a Option<Ref<T>>, to give optional access to the actual
    * referenced value inside.
    */
-  auto as_ref() const -> Option<Ref<Contained>> {
-    if (is_none())
-      return crab::None{};
+  [[nodiscard]] auto as_ref() const -> Option<Ref<Contained>> {
+    if (is_none()) return crab::None{};
     return Option{Ref<Contained>{get_unchecked()}};
   }
 
@@ -147,14 +146,12 @@ public:
    * actual referenced value inside.
    */
   auto as_ref_mut() -> Option<RefMut<Contained>> {
-    if (is_none())
-      return crab::None{};
+    if (is_none()) return crab::None{};
     return Option{RefMut<Contained>{get_unchecked()}};
   }
 
   friend auto operator<<(std::ostream &os, const Option &opt) -> std::ostream & {
-    if (opt.is_none())
-      return os << "None";
+    if (opt.is_none()) return os << "None";
     return os << opt.get_unchecked();
   }
 
@@ -291,8 +288,7 @@ public:
 
   template<std::invocable<Contained> F>
   auto map(const F mapper) -> Option<decltype(mapper(take_unchecked()))> {
-    if (is_some())
-      return mapper(take_unchecked());
+    if (is_some()) return mapper(take_unchecked());
     return {};
   }
 
@@ -347,7 +343,7 @@ namespace crab {
    * @param from Option to consume
    */
   template<typename T>
-  auto unwrap(Option<T> &&from) -> T {
+  [[deprecated("Prefer use of Option<T>::take_unchecked()")]] auto unwrap(Option<T> &&from) -> T {
     return from.take_unchecked();
   }
 
@@ -361,11 +357,10 @@ namespace crab {
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
       __always_inline auto operator()(
-        // Tuple : Result<std:tuple<...>, Error>
-        auto tuple,
-        const F function,
-        const Rest... other_functions
-      ) const
+          // Tuple : Result<std:tuple<...>, Error>
+          auto tuple,
+          const F function,
+          const Rest... other_functions) const
         requires option_type<decltype(function())>
       {
         // tuple.take_unchecked();
@@ -380,31 +375,26 @@ namespace crab {
 
         // using Return = std::invoke_result_t<decltype(operator()), Result<ReturnOk, Error>, Rest...>;
         using Return = decltype(operator()(
-          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function().take_unchecked()))},
-          other_functions...
-        ));
+            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function().take_unchecked()))},
+            other_functions...));
 
-        if (tuple.is_none())
-          return Return{crab::none};
+        if (tuple.is_none()) return Return{crab::none};
 
         Option<Contained> result = function();
 
-        if (result.is_none())
-          return Return{crab::none};
+        if (result.is_none()) return Return{crab::none};
 
         return operator()(
-          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(result.take_unchecked()))},
-          other_functions...
-        );
+            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(result.take_unchecked()))},
+            other_functions...);
       }
 
       template<std::invocable F, std::invocable... Rest>
       __always_inline auto operator()(
-        // Tuple : Result<std:tuple<...>, Error>
-        auto tuple,
-        const F function,
-        const Rest... other_functions
-      ) const
+          // Tuple : Result<std:tuple<...>, Error>
+          auto tuple,
+          const F function,
+          const Rest... other_functions) const
         requires(not option_type<decltype(function())>)
       {
         // tuple.take_unchecked();
@@ -414,18 +404,15 @@ namespace crab {
         using ReturnOk = decltype(std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function())));
 
         using Return = decltype(operator()(
-          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))}, other_functions...
-        ));
+            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))}, other_functions...));
 
-        if (tuple.is_none())
-          return Return{crab::none};
+        if (tuple.is_none()) return Return{crab::none};
 
         O result = function();
 
         return operator()(
-          Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(std::move(result)))},
-          other_functions...
-        );
+            Option<ReturnOk>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(std::move(result)))},
+            other_functions...);
       }
     };
 

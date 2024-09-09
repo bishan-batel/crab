@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 project(crab VERSION 0.2)
 
-# set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 23)
 
 if(CMAKE_EXPORT_COMPILE_COMMANDS)
   set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES 
@@ -23,14 +23,11 @@ add_library(${PROJECT_NAME} SHARED
         include/box.hpp
         include/option.hpp
         include/preamble.hpp
-        include/range.hpp
         include/rc.hpp
-        include/range.hpp
         include/ref.hpp
         include/crab/debug.hpp
         include/result.hpp
         include/result.hpp
-        include/pattern_match.hpp
         include/crab/type_traits.hpp
         include/error.hpp
         src/error.cpp

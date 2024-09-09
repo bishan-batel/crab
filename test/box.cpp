@@ -2,24 +2,11 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <preamble.hpp>
-#include <ranges>
 
-#include "option.hpp"
-#include "range.hpp"
 
 TEST_CASE("Preamble", "[unit]") {
   REQUIRE(unit{} == unit{});
   REQUIRE(unit::val == unit{});
-}
-
-TEST_CASE("Range", "[range]") {
-  i32 counter = 0_i32;
-  for (const auto i: crab::range(10)) {
-    REQUIRE(counter == i);
-    counter++;
-  }
-
-  REQUIRE(counter == 10);
 }
 
 TEST_CASE("Box", "[box]") {

@@ -5,7 +5,7 @@
       "name": "debug",
       "displayName": "Debug",
       "generator": "Ninja",
-      "binaryDir": "build/Debug",
+      "binaryDir": "build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -20,7 +20,7 @@
       "name": "release",
       "displayName": "Release",
       "generator": "Ninja",
-      "binaryDir": "build/Release",
+      "binaryDir": "build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_C_COMPILER": "clang",

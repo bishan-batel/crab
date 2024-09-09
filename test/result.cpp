@@ -4,16 +4,13 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <pattern_match.hpp>
 #include <result.hpp>
-
-#include "ref.hpp"
 
 class Error final : public crab::Error {
 public:
   [[nodiscard]] auto operator==(const Error &) const -> bool { return true; }
 
-  String what() const override { return "huh"; }
+  [[nodiscard]] String what() const override { return "huh"; }
 };
 
 TEST_CASE("Result", "[result]") {
@@ -92,7 +89,7 @@ TEST_CASE("Result", "[result]") {
     Result<std::tuple<i32, i32, i32>, Error> a = crab::fallible<Error>(
       [] -> i32 { return 0; },
       [] -> Result<i32, Error> { return Error{}; },
-      [] { return 0; }
+      [] -> i32 { return 0; }
     );
     REQUIRE(a.get_err_unchecked() == Error{});
   }

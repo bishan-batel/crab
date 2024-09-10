@@ -52,16 +52,16 @@ public:
   using Contained = std::remove_reference_t<decltype(*obj)>;
 
 private:
-  ALWAYS_INLINE explicit Box(const MutPtr from)
+   explicit Box(const MutPtr from)
     requires(not IS_ARRAY)
       : obj(from), size(crab::box::helper<T>::DEFAULT_SIZE) {}
 
-  ALWAYS_INLINE explicit Box(const MutPtr from, SizeType length)
+   explicit Box(const MutPtr from, SizeType length)
     requires IS_ARRAY
       : obj(from), size(length) {}
 
   // ReSharper disable once CppMemberFunctionMayBeConst
-  ALWAYS_INLINE auto drop() -> void {
+   auto drop() -> void {
     if constexpr (std::is_array_v<T>) {
       delete[] obj;
     } else {
@@ -77,7 +77,7 @@ public:
    * the heap or if something else has ownership, therefor 'unchecked' and it is
    * the responsibility of the caller to make sure.
    */
-  ALWAYS_INLINE static auto wrap_unchecked(const MutPtr ref) -> Box
+   static auto wrap_unchecked(const MutPtr ref) -> Box
     requires IS_SINGLE
   {
     return Box(ref);
@@ -90,7 +90,7 @@ public:
    * the heap or if something else has ownership, therefor 'unchecked' and it is
    * the responsibility of the caller to make sure.
    */
-  ALWAYS_INLINE static auto wrap_unchecked(const MutPtr ref, const SizeType length) -> Box
+   static auto wrap_unchecked(const MutPtr ref, const SizeType length) -> Box
     requires IS_ARRAY
   {
     return Box(ref, length);
@@ -100,7 +100,7 @@ public:
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  ALWAYS_INLINE static auto unwrap(Box box) -> MutPtr
+   static auto unwrap(Box box) -> MutPtr
     requires IS_SINGLE
   {
     const auto ptr = box.raw_ptr();
@@ -112,52 +112,52 @@ public:
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  ALWAYS_INLINE static auto unwrap(Box box) -> std::pair<MutPtr, SizeType>
+   static auto unwrap(Box box) -> std::pair<MutPtr, SizeType>
     requires IS_ARRAY
   {
     return std::make_pair(std::exchange(box.obj, nullptr), std::exchange(box.size, crab::box::helper<T>::DEFAULT_SIZE));
   }
 
-  ALWAYS_INLINE Box() = delete;
+   Box() = delete;
 
-  ALWAYS_INLINE Box(const Box &) = delete;
+   Box(const Box &) = delete;
 
-  ALWAYS_INLINE Box(Box &&from) noexcept :
+   Box(Box &&from) noexcept :
       obj(std::exchange(from.obj, nullptr)), size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE)) {}
 
   // ReSharper disable once CppNonExplicitConvertingConstructor
   template<typename Derived>
     requires std::is_base_of_v<T, Derived> and IS_SINGLE
-  ALWAYS_INLINE Box(Box<Derived> &&from) // NOLINT
+   Box(Box<Derived> &&from) // NOLINT
       : Box{Box<Derived>::unwrap(std::forward<Box<Derived>>(from))} {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
-  ALWAYS_INLINE explicit Box(T val)
+   explicit Box(T val)
     requires std::is_copy_constructible_v<T> and IS_SINGLE
       : Box(new Contained(val)) {}
 
-  ALWAYS_INLINE explicit Box(T &&val)
+   explicit Box(T &&val)
     requires std::is_move_constructible_v<T> and IS_SINGLE
       : Box(new Contained(std::move(val))) {}
 
-  ALWAYS_INLINE ~Box() { drop(); }
+   ~Box() { drop(); }
 
-  ALWAYS_INLINE operator Contained &() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+   operator Contained &() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
-  ALWAYS_INLINE operator const Contained &() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+   operator const Contained &() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
-  ALWAYS_INLINE operator Ref<Contained>() const { // NOLINT(*-explicit-constructor)
+   operator Ref<Contained>() const { // NOLINT(*-explicit-constructor)
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
-  ALWAYS_INLINE operator RefMut<Contained>() { // NOLINT(*-explicit-constructor)
+   operator RefMut<Contained>() { // NOLINT(*-explicit-constructor)
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
-  ALWAYS_INLINE auto operator=(const Box &) -> void = delete;
+   auto operator=(const Box &) -> void = delete;
 
-  ALWAYS_INLINE auto operator=(Box &&rhs) noexcept -> Box &
+   auto operator=(Box &&rhs) noexcept -> Box &
     requires IS_SINGLE
   {
     if (&rhs == this) return *this;
@@ -170,7 +170,7 @@ public:
 
   template<typename Derived>
     requires std::is_base_of_v<T, Derived> and (not std::is_same_v<T, Derived>)
-             ALWAYS_INLINE auto operator=(Box<Derived> &&rhs) noexcept -> Box &
+              auto operator=(Box<Derived> &&rhs) noexcept -> Box &
                requires IS_SINGLE
   {
     if (&rhs == this) return *this;
@@ -181,7 +181,7 @@ public:
     return *this;
   }
 
-  ALWAYS_INLINE auto operator=(Box rhs) noexcept -> Box &
+   auto operator=(Box rhs) noexcept -> Box &
     requires IS_ARRAY
   {
     if (&rhs == this) return *this;
@@ -192,45 +192,45 @@ public:
     return *this;
   }
 
-  [[nodiscard]] ALWAYS_INLINE auto operator->() -> MutPtr { return as_ptr(); }
+  [[nodiscard]]  auto operator->() -> MutPtr { return as_ptr(); }
 
-  [[nodiscard]] ALWAYS_INLINE auto operator->() const -> ConstPtr { return as_ptr(); }
+  [[nodiscard]]  auto operator->() const -> ConstPtr { return as_ptr(); }
 
-  [[nodiscard]] ALWAYS_INLINE auto operator*() -> Contained & { return *as_ptr(); }
+  [[nodiscard]]  auto operator*() -> Contained & { return *as_ptr(); }
 
-  ALWAYS_INLINE auto operator*() const -> const Contained & { return *as_ptr(); }
+   auto operator*() const -> const Contained & { return *as_ptr(); }
 
-  friend ALWAYS_INLINE auto operator<<(std::ostream &os, const Box &rhs) -> std::ostream & { return os << *rhs; }
+  friend  auto operator<<(std::ostream &os, const Box &rhs) -> std::ostream & { return os << *rhs; }
 
-  [[nodiscard]] ALWAYS_INLINE auto operator[](const usize index) const -> const Contained &
+  [[nodiscard]]  auto operator[](const usize index) const -> const Contained &
     requires IS_ARRAY
   {
     debug_assert(index < size, "Index out of Bounds");
     return as_ptr()[index];
   }
 
-  [[nodiscard]] ALWAYS_INLINE auto operator[](const usize index) -> Contained &
+  [[nodiscard]]  auto operator[](const usize index) -> Contained &
     requires IS_ARRAY
   {
     debug_assert(index < size, "Index out of Bounds");
     return as_ptr()[index];
   }
 
-  [[nodiscard]] ALWAYS_INLINE auto length() const -> SizeType { return size; }
+  [[nodiscard]]  auto length() const -> SizeType { return size; }
 
-  [[nodiscard]] ALWAYS_INLINE auto as_ptr() -> MutPtr { return raw_ptr(); }
+  [[nodiscard]]  auto as_ptr() -> MutPtr { return raw_ptr(); }
 
-  [[nodiscard]] ALWAYS_INLINE auto as_ptr() const -> ConstPtr { return raw_ptr(); }
+  [[nodiscard]]  auto as_ptr() const -> ConstPtr { return raw_ptr(); }
 
 private:
-  ALWAYS_INLINE auto raw_ptr() -> MutPtr {
+   auto raw_ptr() -> MutPtr {
 #if DEBUG
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
 #endif
     return obj;
   }
 
-  ALWAYS_INLINE auto raw_ptr() const -> ConstPtr {
+   auto raw_ptr() const -> ConstPtr {
 #if DEBUG
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
 #endif
@@ -244,7 +244,7 @@ namespace crab {
    */
   template<typename T, typename... Args>
     requires std::is_constructible_v<T, Args...>
-  ALWAYS_INLINE static auto make_box(Args &&...args) -> Box<T> {
+   static auto make_box(Args &&...args) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});
   }
 
@@ -253,7 +253,7 @@ namespace crab {
    */
   template<typename T, typename V>
     requires std::is_convertible_v<T, V> and (std::is_integral_v<T> or std::is_floating_point_v<T>)
-  ALWAYS_INLINE static auto make_box(V &&from) -> Box<T> {
+   static auto make_box(V &&from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }
 
@@ -262,7 +262,7 @@ namespace crab {
    * each element
    */
   template<typename T>
-  ALWAYS_INLINE static auto make_boxxed_array(const usize count) -> Box<T[]>
+   static auto make_boxxed_array(const usize count) -> Box<T[]>
     requires std::is_default_constructible_v<T>
   {
     return Box<T[]>::wrap_unchecked(new T[count](), count);
@@ -272,7 +272,7 @@ namespace crab {
    * @brief Creates a new array on the heap and copies 'from' to each element
    */
   template<typename T>
-  ALWAYS_INLINE static auto make_boxxed_array(const usize count, const T &from) -> Box<T[]>
+   static auto make_boxxed_array(const usize count, const T &from) -> Box<T[]>
     requires std::is_copy_constructible_v<T> and std::is_copy_assignable_v<T>
   {
     auto box = Box<T[]>::wrap_unchecked(new T[count](), count);
@@ -288,7 +288,7 @@ namespace crab {
    */
   template<typename T>
     requires Box<T>::IS_SINGLE
-  ALWAYS_INLINE static auto release(Box<T> box) -> typename Box<T>::MutPtr {
+   static auto release(Box<T> box) -> typename Box<T>::MutPtr {
     return Box<T>::unwrap(std::move(box));
   }
 
@@ -298,7 +298,7 @@ namespace crab {
    */
   template<typename T>
     requires Box<T>::IS_ARRAY
-  ALWAYS_INLINE static auto release(Box<T> box) -> std::pair<typename Box<T>::MutPtr, typename Box<T>::SizeType> {
+   static auto release(Box<T> box) -> std::pair<typename Box<T>::MutPtr, typename Box<T>::SizeType> {
     return Box<T>::unwrap(std::move(box));
   }
 } // namespace crab

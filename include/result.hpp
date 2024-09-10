@@ -326,11 +326,11 @@ namespace crab {
       constexpr fallible() = default;
 
       // Identity
-      __always_inline auto operator()(auto tuple) const { return tuple; }
+      inline auto operator()(auto tuple) const { return tuple; }
 
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
-      __always_inline auto operator()(auto tuple, const F function, const Rest... other_functions) const
+      inline auto operator()(auto tuple, const F function, const Rest... other_functions) const
         requires is_result_type<decltype(function())>::value
       {
         // tuple.take_unchecked();
@@ -359,7 +359,7 @@ namespace crab {
       }
 
       template<std::invocable F, std::invocable... Rest>
-      __always_inline auto operator()(
+      inline auto operator()(
           // Tuple : Result<std:tuple<...>, Error>
           auto tuple,
           const F function,

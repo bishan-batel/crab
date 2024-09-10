@@ -352,11 +352,11 @@ namespace crab {
       constexpr fallible() = default;
 
       // Identity
-      __always_inline auto operator()(auto tuple) const { return tuple; }
+      inline auto operator()(auto tuple) const { return tuple; }
 
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
-      __always_inline auto operator()(
+      inline auto operator()(
           // Tuple : Result<std:tuple<...>, Error>
           auto tuple,
           const F function,
@@ -390,7 +390,7 @@ namespace crab {
       }
 
       template<std::invocable F, std::invocable... Rest>
-      __always_inline auto operator()(
+      inline auto operator()(
           // Tuple : Result<std:tuple<...>, Error>
           auto tuple,
           const F function,

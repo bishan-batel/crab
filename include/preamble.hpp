@@ -17,9 +17,6 @@
 
 #define nameof(x) #x
 
-
-#define ALWAYS_INLINE inline
-
 template<typename T>
 using Raw = T*;
 

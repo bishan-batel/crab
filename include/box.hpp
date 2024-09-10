@@ -46,7 +46,7 @@ public:
 
 private:
   MutPtr obj;
-  [[no_unique_address]] SizeType size;
+  SizeType size;
 
 public:
   using Contained = std::remove_reference_t<decltype(*obj)>;

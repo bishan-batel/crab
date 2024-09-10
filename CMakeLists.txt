@@ -18,7 +18,6 @@ include(cmake/CPM.cmake)
 include(GNUInstallDirs)
 
 add_library(${PROJECT_NAME} SHARED
-        src/debug.cpp
         include/box.hpp
         include/box.hpp
         include/option.hpp
@@ -30,7 +29,6 @@ add_library(${PROJECT_NAME} SHARED
         include/result.hpp
         include/crab/type_traits.hpp
         include/error.hpp
-        src/error.cpp
 )
 
 # Public API

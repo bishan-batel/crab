@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include <format>
 #include "../preamble.hpp"
 
 namespace crab::debug {
@@ -11,15 +12,20 @@ namespace crab::debug {
 
   public:
     explicit AssertionFailedError(
-        StringView function, StringView source, StringView assertion_text, usize line, StringView msg);
+        StringView function, StringView source, StringView assertion_text, usize line, StringView msg) :
+        fmt{std::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}", source, line, function, assertion_text, msg)} {
+    }
 
-    ~AssertionFailedError() override;
+    ~AssertionFailedError() override = default;
 
-    [[nodiscard]] auto what() const noexcept -> const char * final;
+    [[nodiscard]] auto what() const noexcept -> const char * final { return fmt.c_str(); }
   };
 
-  unit dbg_assert(StringView function, StringView source, StringView assertion_line, usize line, StringView msg);
+  inline unit dbg_assert(StringView function, StringView source, StringView assertion_line, usize line, StringView msg) {
+    throw AssertionFailedError{function, source, assertion_line, line, msg};
+  }
 } // namespace crab::debug
+  //
 #if DEBUG
   #define debug_assert(condition, message)                                                                             \
     if (!static_cast<bool>(condition)) crab::debug::dbg_assert(__FUNCTION__, __FILE__, #condition, __LINE__, (message))

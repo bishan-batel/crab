@@ -4,7 +4,7 @@
 namespace crab {
   namespace error {
     class todo_exception final : public std::exception {
-      [[nodiscard]] auto what() const noexcept -> const char * final;
+      [[nodiscard]] auto what() const noexcept -> const char * final { return "This function is not implemented yet."; }
     };
   }; // namespace error
 

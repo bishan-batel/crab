@@ -91,7 +91,6 @@ namespace crab::rc {
  * prevented interior mutability.
  */
 template<typename Contained>
-  requires(not std::is_array_v<Contained>)
 class Rc final {
   using Interior = crab::rc::helper::RcInterior<Contained>;
 
@@ -272,7 +271,6 @@ public:
 };
 
 template<typename Contained>
-  requires(not std::is_array_v<Contained>)
 class RcMut final {
   using Interior = crab::rc::helper::RcInterior<Contained>;
 

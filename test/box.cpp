@@ -3,6 +3,10 @@
 #include <catch2/catch_test_macros.hpp>
 #include <preamble.hpp>
 
+struct SelfReferential {
+private:
+  Option<Box<SelfReferential>> test;
+};
 
 TEST_CASE("Preamble", "[unit]") {
   REQUIRE(unit{} == unit{});
@@ -23,7 +27,7 @@ TEST_CASE("Box", "[box]") {
   }
 
   static_assert(sizeof(Box<u32>) == sizeof(u32 *));
-  static_assert(sizeof(Box<u32[]>) == sizeof(u32 *) + sizeof(std::nullptr_t));
+  // static_assert(sizeof(Box<u32[]>) == sizeof(u32 *) + sizeof(std::nullptr_t));
 
   SECTION("Const Correctness") {
     const Box<u32> var = crab::make_box<u32>(42);

@@ -36,11 +36,11 @@ TEST_CASE("Option", "[option]") {
       bool first = false, second = false;
 
       Option<std::tuple<i32, i32>> a = crab::fallible(
-          [&] {
+          [&]() {
             first = true;
             return 10;
           },
-          [&] {
+          [&]() {
             second = true;
             return 22;
           });
@@ -57,11 +57,11 @@ TEST_CASE("Option", "[option]") {
       bool first = false, second = false;
 
       Option<std::tuple<i32, i32>> a = crab::fallible(
-          [&] {
+          [&]() {
             first = true;
             return 420;
           },
-          [&] -> Option<i32> {
+          [&]() -> Option<i32> {
             second = true;
             return crab::none;
           });
@@ -73,11 +73,11 @@ TEST_CASE("Option", "[option]") {
       second = false;
 
       a = crab::fallible(
-          [&] -> Option<i32> {
+          [&]() -> Option<i32> {
             first = true;
             return crab::none;
           },
-          [&] -> Option<i32> {
+          [&]() -> Option<i32> {
             second = true;
             return crab::none;
           });

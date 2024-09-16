@@ -12,7 +12,7 @@
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -Wpedantic -Werror",
-        "CMAKE_CXX_STANDARD": "23",
+        "CMAKE_CXX_STANDARD": "20",
         "CMAKE_CXX_STANDARD_REQUIRED": "ON"
       }
     },

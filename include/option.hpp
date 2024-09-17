@@ -17,6 +17,9 @@
 #include "crab/debug.hpp"
 
 namespace crab {
+  /**
+   * @brief 0-sized struct to give into Option<T> to create an empty Option
+   */
   struct None {
     [[nodiscard]] constexpr auto operator==(const None &) const -> bool { return true; }
   };
@@ -77,6 +80,9 @@ public:
   using NestedContained = T;
   static constexpr usize nested_depth{0};
 
+  /**
+   * @brief Create an option that wraps Some(T)
+   */
   Option(const Contained &from) noexcept : value(Contained{from}) {} // NOLINT
 
   // Option(UnderlyingType &from) noexcept requires (decay::is_const_ref)
@@ -94,15 +100,29 @@ public:
   //   }
   // }
 
+  /**
+   * @brief Create an option that wraps Some(T)
+   */
   Option(Contained &&from) noexcept : value{std::move(from)} {} // NOLINT
 
+  /**
+   * @brief Create an empty option
+   */
   Option(crab::None none = {}) noexcept : value{none} {} // NOLINT
 
+  /**
+   * @brief Reassign option to Some(T),
+   * If this option previously contained Some(K), the previous value is discarded and is replaced by Some(T)
+   */
   auto operator=(Contained &&from) -> Option & {
     value = std::forward<Contained>(from);
     return *this;
   }
 
+  /**
+   * @brief Reassign option to None,
+   * If this option previously contained Some(K), the previous value is discarded and is replaced by Some(T)
+   */
   auto operator=(crab::None) -> Option & {
     value = crab::None{};
     return *this;
@@ -114,7 +134,8 @@ public:
   // [[nodiscard]] operator bool() const { return is_some(); }
 
   /**
-   * @brief Whether this option contains a value */
+   * @brief Whether this option contains a value
+   */
   [[nodiscard]] auto is_some() const -> bool { return std::holds_alternative<Contained>(value); }
 
   /**
@@ -123,7 +144,9 @@ public:
   [[nodiscard]] auto is_none() const -> bool { return std::holds_alternative<crab::None>(value); }
 
   /**
-   * @brief Takes value out of the option and returns it, will error if option is none
+   * @brief Takes value out of the option and returns it, will error if option is none,
+   * After this, the value has been 'taken out' of this option, after this method is called this option
+   * is 'None'
    */
   [[nodiscard]] auto take_unchecked() -> Contained {
 #if DEBUG
@@ -133,7 +156,7 @@ public:
   }
 
   /**
-   * @brief Converts a 'const Option<T>&' into a Option<Ref<T>>, to give optional access to the actual
+   * @brief Converts a 'const Option<T>' into a Option<Ref<T>>, to give optional access to the actual
    * referenced value inside.
    */
   [[nodiscard]] auto as_ref() const -> Option<Ref<Contained>> {
@@ -142,7 +165,7 @@ public:
   }
 
   /**
-   * @brief Converts a 'const Option<T>&' or 'Option<T>&' into a Option<RefMut<T>>, to give optional access to the
+   * @brief Converts a 'const Option<T>' or 'Option<T>&' into a Option<RefMut<T>>, to give optional access to the
    * actual referenced value inside.
    */
   auto as_ref_mut() -> Option<RefMut<Contained>> {
@@ -152,7 +175,7 @@ public:
 
   friend auto operator<<(std::ostream &os, const Option &opt) -> std::ostream & {
     if (opt.is_none()) return os << "None";
-    return os << opt.get_unchecked();
+    return os << "Some(" << opt.get_unchecked() << ")";
   }
 
   /**
@@ -196,8 +219,16 @@ public:
     return is_some() ? Contained{get_unchecked()} : Contained{default_generator()};
   }
 
+  /**
+   * @brief Returns a mutable reference to the contained Some value inside, if this option is none this will panic &
+   * crash.
+   */
   [[nodiscard]] auto get_unchecked() -> Contained & { return std::get<Contained>(value); }
 
+  /**
+   * @brief Returns a const reference to the contained Some value inside, if this option is none this will panic &
+   * crash.
+   */
   [[nodiscard]] auto get_unchecked() const -> const Contained & { return std::get<Contained>(value); }
 
   /**
@@ -253,45 +284,33 @@ public:
     return error_generator();
   }
 
-  template<std::invocable<Contained &> F>
-  auto if_some(const F clause) -> Option<Contained> & {
-    if (is_some()) {
-      clause(get_unchecked());
-    }
-
-    return *this;
-  }
-
-  template<std::invocable<const Contained &> F>
-  auto if_some(const F clause) const -> const Option<Contained> & {
-    if (is_some()) {
-      clause(get_unchecked());
-    }
-    return *this;
-  }
-
-  template<std::invocable F>
-  auto if_none(const F clause) -> Option<Contained> & {
-    if (is_none()) {
-      clause();
-    }
-    return *this;
-  }
-
-  template<std::invocable F>
-  auto if_none(const F clause) const -> const Option<Contained> & {
-    if (is_none()) {
-      clause();
-    }
-    return *this;
-  }
-
+  /**
+   * @brief Transform function to an Option<T> -> Option<K>, if this option is None it will simply return None,
+   * but if it is Some(T), this will take the value out of this option and call the given 'mapper' function with it,
+   * the returned value is then wrapped and this function returns Some
+   *
+   * ex.
+   *
+   * assert( 
+   *  Option<f32>{crab::none}
+   *  .map([](f32 x) { return static_cast<i32>(x); }) // returns Option<i32>
+   *  .is_none() 
+   * );
+   *
+   * assert( Option<i32>{420}
+   *  .map([](i32 x) { return std::tostring(x); }) // returns a Option<String>
+   *  .take_unchecked() == "420"
+   * );
+   */
   template<std::invocable<Contained> F>
   auto map(const F mapper) -> Option<decltype(mapper(take_unchecked()))> {
     if (is_some()) return mapper(take_unchecked());
     return {};
   }
 
+  /**
+   * @brief Shorthand for calling .map(...).flatten()
+   */
   template<std::invocable<Contained> F>
   auto flat_map(const F mapper) -> Option<decltype(mapper(take_unchecked()).take_unchecked())> {
     if (is_some()) {
@@ -300,6 +319,9 @@ public:
     return crab::None{};
   }
 
+  /**
+   * @brief If this option is of some type Option<Option<T>>, this will flatten it to a single Option<T>
+   */
   template<std::same_as<unit> = unit>
   auto flatten() -> decltype(take_unchecked()) {
     if (is_some()) {

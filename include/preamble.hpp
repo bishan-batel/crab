@@ -12,13 +12,13 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #define nameof(x) #x
 
 template<typename T>
-using Raw = T*;
+using Raw = T *;
 
 /**
  * \brief 32 Bit Floating Point Number
@@ -163,15 +163,13 @@ using Vec = std::vector<T>;
 /**
  * \brief Unordered set of elements
  */
-template<typename T, typename Hash = std::hash<T>,
-         typename Predicate = std::equal_to<T>>
+template<typename T, typename Hash = std::hash<T>, typename Predicate = std::equal_to<T>>
 using Set = std::unordered_set<T, Hash, Predicate>;
 
 /**
  * \brief Unordered key-value collection
  */
-template<typename Key, typename Value, typename Hash = std::hash<Key>,
-         typename Predicate = std::equal_to<Key>>
+template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Predicate = std::equal_to<Key>>
 using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 
 /**
@@ -190,74 +188,69 @@ constexpr unit unit::val{};
 /**
  * \brief Literal for converting a degree literal -> radians
  */
-constexpr f32 operator""_deg(const f64 literal) {
-  return static_cast<f32>(literal * std::numbers::pi / 180.f);
-}
+constexpr f32 operator""_deg(const f64 literal) { return static_cast<f32>(literal * std::numbers::pi / 180.f); }
 
-constexpr f32 operator""_f32(const f64 literal) {
-  return static_cast<f32>(literal);
-}
+constexpr f32 operator""_f32(const f64 literal) { return static_cast<f32>(literal); }
 
-constexpr f64 operator""_f64(const f64 literal) {
-  return literal;
-}
+constexpr f64 operator""_f64(const f64 literal) { return literal; }
 
-#define crab_impl_literal(n) constexpr n operator""_ ## n (const unsigned long long literal) { return static_cast<n>(literal); }
+#define crab_impl_literal(n)                                                                                           \
+  constexpr n operator""_##n(const unsigned long long literal) { return static_cast<n>(literal); }
 
 /**
  * \brief Converts literal to an i16
  */
 crab_impl_literal(i16)
 
-/**
- * \brief Converts literal to an i32
- */
-crab_impl_literal(i32)
+    /**
+     * \brief Converts literal to an i32
+     */
+    crab_impl_literal(i32)
 
-/**
- * \brief Converts literal to an i64
- */
-crab_impl_literal(i64)
+    /**
+     * \brief Converts literal to an i64
+     */
+    crab_impl_literal(i64)
 
-/**
- * \brief Converts literal to an imax
- */
-crab_impl_literal(imax)
+    /**
+     * \brief Converts literal to an imax
+     */
+    crab_impl_literal(imax)
 
-/**
- * \brief Converts literal to an iptr
- */
-crab_impl_literal(iptr)
+    /**
+     * \brief Converts literal to an iptr
+     */
+    crab_impl_literal(iptr)
 
-/**
- * \brief Converts literal to an u16
- */
-crab_impl_literal(u16)
+    /**
+     * \brief Converts literal to an u16
+     */
+    crab_impl_literal(u16)
 
-/**
- * \brief Converts literal to an u32
- */
-crab_impl_literal(u32)
+    /**
+     * \brief Converts literal to an u32
+     */
+    crab_impl_literal(u32)
 
-/**
- * \brief Converts literal to an u64
- */
-crab_impl_literal(u64)
+    /**
+     * \brief Converts literal to an u64
+     */
+    crab_impl_literal(u64)
 
-/**
- * \brief Converts literal to an umax
- */
-crab_impl_literal(umax)
+    /**
+     * \brief Converts literal to an umax
+     */
+    crab_impl_literal(umax)
 
-/**
- * \brief Converts literal to an uptr
- */
-crab_impl_literal(uptr)
+    /**
+     * \brief Converts literal to an uptr
+     */
+    crab_impl_literal(uptr)
 
 #undef crab_impl_literal
 
-// Pattern Matching
-namespace crab {
+    // Pattern Matching
+    namespace crab {
   /**
    * @brief Shows its use with std::visit
    */

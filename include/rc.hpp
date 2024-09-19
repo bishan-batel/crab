@@ -332,12 +332,12 @@ public:
       interior{std::exchange(from.get_interior(), nullptr)->template upcast<Contained>()} {}
 
   RcMut(Box<Contained> from) : // NOLINT(*-explicit-constructor)
-      interior{new Interior{1, 1, Box<Contained>::unwrap(std::forward<Contained>(from))}} {}
+      interior{new Interior{1, 1, Box<Contained>::unwrap(std::move(from))}} {}
 
   template<typename Derived>
     requires std::derived_from<Derived, Contained>
   RcMut(Box<Derived> from) : // NOLINT(*-explicit-constructor)
-      RcMut{Box<Contained>{std::forward<Box<Derived>>(from)}} {}
+      RcMut<Contained>{Box<Contained>{std::move(from)}} {}
 
   ~RcMut() { destruct(); }
 

@@ -257,12 +257,18 @@ public:
    */
   auto raw_ptr() const -> const Contained * { return get_interior()->raw_ptr(); }
 
+  /**
+   * @brief Gets raw pointer to the RcInterior, do not use this unless you have a reason to fuck with Rc directly
+   */
   auto get_interior() const -> Interior * {
     debug_assert(
         is_valid(), "Invalid use of Rc<T>, Interior is nullptr - this is most likely the result of a use-after-move.");
     return interior;
   }
 
+  /**
+   * @brief Gets raw pointer to the RcInterior, do not use this unless you have a reason to fuck with Rc directly
+   */
   auto get_interior() -> Interior *& {
     debug_assert(
         is_valid(), "Invalid use of Rc<T>, Interior is nullptr - this is most likely the result of a use-after-move.");
@@ -458,6 +464,9 @@ public:
    */
   auto raw_ptr() const -> Contained * { return get_interior()->raw_ptr(); }
 
+  /**
+   * @brief Gets raw pointer to the RcInterior, do not use this unless you have a reason to fuck with Rc directly
+   */
   auto get_interior() const -> Interior * {
     debug_assert(
         is_valid(),
@@ -465,6 +474,9 @@ public:
     return interior;
   }
 
+  /**
+   * @brief Gets raw pointer to the RcInterior, do not use this unless you have a reason to fuck with Rc directly
+   */
   auto get_interior() -> Interior *& {
     debug_assert(
         is_valid(),

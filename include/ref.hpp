@@ -134,7 +134,7 @@ namespace crab::ref {
    */
   template<typename Derived, typename Base>
     requires std::is_base_of_v<Base, Derived>
-  Option<Ref<Derived>> constexpr cast(const Base &from) {
+  constexpr auto cast(const Base &from) -> Option<Ref<Derived>> {
     return from_ptr(dynamic_cast<const Derived *>(&from));
   }
 
@@ -143,7 +143,7 @@ namespace crab::ref {
    */
   template<typename Derived, typename Base>
     requires std::is_base_of_v<Base, Derived>
-  Option<RefMut<Derived>> constexpr cast(Base &from) {
+  constexpr auto cast(Base &from) -> Option<RefMut<Derived>> {
     return from_ptr(dynamic_cast<Derived *>(&from));
   }
 
@@ -152,7 +152,7 @@ namespace crab::ref {
    */
   template<typename Derived, typename Base>
     requires std::is_base_of_v<Base, Derived>
-  constexpr Option<Ref<Derived>> cast(const Base *from) {
+  constexpr auto cast(const Base *from) -> Option<Ref<Derived>> {
     return from_ptr(dynamic_cast<const Derived *>(from));
   }
 
@@ -161,7 +161,7 @@ namespace crab::ref {
    */
   template<typename Derived, typename Base>
     requires std::is_base_of_v<Base, Derived>
-  constexpr Option<RefMut<Derived>> cast(Base *from) {
+  constexpr auto cast(Base *from) -> Option<RefMut<Derived>> {
     return from_ptr(dynamic_cast<Derived *>(from));
   }
 

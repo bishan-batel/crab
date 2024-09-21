@@ -13,6 +13,9 @@
 #include "option.hpp"
 
 namespace crab {
+  /**
+   * @brief Base error type for use with Result<T, E>
+   */
   class Error {
   public:
     Error() = default;
@@ -27,11 +30,17 @@ namespace crab {
 
     virtual ~Error() = default;
 
+    /**
+     * @brief Stringified error message for logging purposes
+     */
     [[nodiscard]] virtual auto what() const -> String = 0;
   };
 } // namespace crab
 
 namespace crab::result {
+  /**
+   * @brief A valid error type.
+   */
   template<typename E>
   concept error_type = std::is_move_constructible_v<E>
                        and (std::is_base_of_v<Error, E>
@@ -42,6 +51,9 @@ namespace crab::result {
                               std::cout << err.what() << std::endl;
                             });
 
+  /**
+   * @brief Converts a given error to its stringified representation.
+   */
   template<typename E>
     requires error_type<E>
   auto error_to_string(const E &err) -> String {
@@ -54,9 +66,15 @@ namespace crab::result {
     }
   }
 
+  /**
+   * @brief Type constraint for a type that can be used with Result<T>
+   */
   template<typename T>
   concept ok_type = std::is_move_constructible_v<T>;
 
+  /**
+   * @brief Thin wrapper over a value to be given to Result<T,E>(Ok)'s constructor
+   */
   template<typename T>
     requires ok_type<T>
   struct Ok {
@@ -66,6 +84,9 @@ namespace crab::result {
     explicit Ok(T value) : value(std::move(value)) {}
   };
 
+  /**
+   * @brief Thin wrapper over a value to be given to Result<T,E>(Err)'s constructor
+   */
   template<typename E>
     requires error_type<E>
   struct Err {
@@ -85,25 +106,44 @@ namespace crab::result {
     static constexpr bool value = true;
   };
 
+  /**
+   * @brief Whether type T is a Result<>
+   */
+  template<typename T>
+  constexpr bool is_result_type_v = is_result_type<T>::value;
+
+  /**
+   * @brief Whether type T is the 'Ok' wrapper Ok<K>
+   */
   template<typename>
   struct is_ok_type {
     static constexpr bool value = false;
   };
 
+  /**
+   * @brief Whether type T is the 'Ok' wrapper Ok<K>
+   */
   template<ok_type T>
   struct is_ok_type<Ok<T>> {
     static constexpr bool value = true;
   };
 
+  /**
+   * @brief Whether type T is the 'Err' wrapper Err<K>
+   */
   template<typename>
   struct is_err_type {
     static constexpr bool value = false;
   };
 
+  /**
+   * @brief Whether type T is the 'Err' wrapper Err<K>
+   */
   template<error_type E>
   struct is_err_type<Err<E>> {
     static constexpr bool value = true;
   };
+
 } // namespace crab::result
 
 template<typename T, typename E>
@@ -277,7 +317,7 @@ public:
    * If the mapped function is Ok(type M), it returns Result<M, Error>
    */
   template<std::invocable<T> F, typename R = std::invoke_result_t<F, T>>
-    requires crab::result::is_result_type<R>::value and std::same_as<typename R::ErrType, ErrType>
+    requires crab::result::is_result_type_v<R> and std::same_as<typename R::ErrType, ErrType>
   [[nodiscard]] auto and_then(const F functor) -> Result<typename R::OkType, ErrType> {
     Result<Result<typename R::OkType, ErrType>, ErrType> res = this->map(functor);
 
@@ -331,7 +371,7 @@ namespace crab {
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
       inline auto operator()(auto tuple, const F function, const Rest... other_functions) const
-        requires is_result_type<decltype(function())>::value
+        requires is_result_type_v<decltype(function())>
       {
         // tuple.take_unchecked();
 
@@ -364,7 +404,7 @@ namespace crab {
           auto tuple,
           const F function,
           const Rest... other_functions) const
-        requires(ok_type<decltype(function())> and not is_result_type<decltype(function())>::value)
+        requires(ok_type<decltype(function())> and not is_result_type_v<decltype(function())>)
       {
         // tuple.take_unchecked();
 

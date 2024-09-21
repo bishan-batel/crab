@@ -9,24 +9,6 @@
 #include "crab/debug.hpp"
 #include "ref.hpp"
 
-namespace crab::box {
-  template<typename T>
-  struct helper {
-    using ty = T *;
-    using const_ty = const T *;
-    using SizeType = unit;
-    static constexpr unit DEFAULT_SIZE{};
-  };
-
-  template<typename T>
-  struct helper<T[]> {
-    using ty = T *;
-    using const_ty = const T *;
-    using SizeType = usize;
-    static constexpr SizeType DEFAULT_SIZE = 0;
-  };
-}; // namespace crab::box
-
 /**
  * @brief Owned Pointer (RAII) to an instance of T on the heap.
  *
@@ -39,11 +21,8 @@ template<typename T>
   requires(not std::is_const_v<T>)
 class Box {
 public:
-  using MutPtr = typename crab::box::helper<T>::ty;
-  using ConstPtr = typename crab::box::helper<T>::const_ty;
-  // using SizeType = typename crab::box::helper<T>::SizeType;
-  // static constexpr auto IS_ARRAY = crab::is_complete_type<T> and std::is_array_v<T>;
-  // static constexpr auto IS_SINGLE = not IS_ARRAY;
+  using MutPtr = T *;
+  using ConstPtr = const T *;
 
 private:
   MutPtr obj;
@@ -53,16 +32,7 @@ public:
   using Contained = std::remove_reference_t<decltype(*obj)>;
 
 private:
-  explicit Box(const MutPtr from)
-      // requires(not IS_ARRAY)
-      :
-      obj(from)
-  // , size(crab::box::helper<T>::DEFAULT_SIZE)
-  {}
-
-  // explicit Box(const MutPtr from, SizeType length)
-  //  requires IS_ARRAY
-  //    : obj(from), size(length) {}
+  explicit Box(const MutPtr from) : obj(from) {} // NOLINT
 
   // ReSharper disable once CppMemberFunctionMayBeConst
   auto drop() -> void {
@@ -81,72 +51,38 @@ public:
    * the heap or if something else has ownership, therefor 'unchecked' and it is
    * the responsibility of the caller to make sure.
    */
-  static auto wrap_unchecked(const MutPtr ref) -> Box
-    // requires IS_SINGLE
-  {
-    return Box(ref);
-  };
-
-  /**
-   * @brief Wraps pointer to an array with RAII
-   *
-   * This function has no way of knowing if the pointer passed is actually on
-   * the heap or if something else has ownership, therefor 'unchecked' and it is
-   * the responsibility of the caller to make sure.
-   */
-  //  static auto wrap_unchecked(const MutPtr ref, const SizeType length) -> Box
-  //   requires IS_ARRAY
-  // {
-  //   return Box(ref, length);
-  // };
+  static auto wrap_unchecked(const MutPtr ref) -> Box { return Box(ref); }; // NOLINT
 
   /**
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  static auto unwrap(Box box) -> MutPtr
-    // requires IS_SINGLE
-  {
+  static auto unwrap(Box box) -> MutPtr {
     const auto ptr = box.raw_ptr();
     box.obj = nullptr;
     return ptr;
   }
 
-  /**
-   * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
-   * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
-   */
-  //  static auto unwrap(Box box) -> std::pair<MutPtr, SizeType>
-  //   requires IS_ARRAY
-  // {
-  //   return std::make_pair(std::exchange(box.obj, nullptr), std::exchange(box.size,
-  //   crab::box::helper<T>::DEFAULT_SIZE));
-  // }
-  //
   Box() = delete;
 
   Box(const Box &) = delete;
 
-  Box(Box &&from) noexcept :
-      obj(std::exchange(from.obj, nullptr))
-  // , size(std::exchange(from.size, crab::box::helper<T>::DEFAULT_SIZE))
-  {}
+  Box(Box &&from) noexcept : obj(std::exchange(from.obj, nullptr)) {}
 
   // ReSharper disable once CppNonExplicitConvertingConstructor
   template<typename Derived>
-    requires std::is_base_of_v<T, Derived> 
-    // and IS_SINGLE
+    requires std::is_base_of_v<T, Derived>
   Box(Box<Derived> &&from) // NOLINT
       : Box{Box<Derived>::unwrap(std::forward<Box<Derived>>(from))} {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
   explicit Box(T val)
-    requires crab::is_complete_type<T> and std::is_copy_constructible_v<T> 
+    requires crab::is_complete_type<T> and std::is_copy_constructible_v<T>
       : Box(new Contained(val)) {}
 
   explicit Box(T &&val)
-    requires crab::is_complete_type<T> and std::is_move_constructible_v<T> 
+    requires crab::is_complete_type<T> and std::is_move_constructible_v<T>
       : Box(new Contained(std::move(val))) {}
 
   ~Box() { drop(); }
@@ -165,9 +101,7 @@ public:
 
   auto operator=(const Box &) -> void = delete;
 
-  auto operator=(Box &&rhs) noexcept -> Box &
-    // requires IS_SINGLE
-  {
+  auto operator=(Box &&rhs) noexcept -> Box & {
     if (&rhs == this) return *this;
 
     drop();
@@ -178,9 +112,7 @@ public:
 
   template<typename Derived>
     requires std::is_base_of_v<T, Derived> and (not std::is_same_v<T, Derived>)
-             auto operator=(Box<Derived> &&rhs) noexcept -> Box &
-               // requires IS_SINGLE
-  {
+  auto operator=(Box<Derived> &&rhs) noexcept -> Box & {
     if (&rhs == this) return *this;
 
     drop();
@@ -188,17 +120,6 @@ public:
 
     return *this;
   }
-
-  // auto operator=(Box rhs) noexcept -> Box &
-  //   requires IS_ARRAY
-  // {
-  //   if (&rhs == this) return *this;
-  //   drop();
-  //   obj = std::exchange(rhs.obj, nullptr);
-  //   size = std::exchange(rhs.size, crab::box::helper<T>::DEFAULT_SIZE);
-  //
-  //   return *this;
-  // }
 
   [[nodiscard]] auto operator->() -> MutPtr { return as_ptr(); }
 
@@ -210,24 +131,14 @@ public:
 
   friend auto operator<<(std::ostream &os, const Box &rhs) -> std::ostream & { return os << *rhs; }
 
-  // [[nodiscard]] auto operator[](const usize index) const -> const Contained &
-  //   requires IS_ARRAY
-  // {
-  //   debug_assert(index < size, "Index out of Bounds");
-  //   return as_ptr()[index];
-  // }
-  //
-  // [[nodiscard]] auto operator[](const usize index) -> Contained &
-  //   requires IS_ARRAY
-  // {
-  //   debug_assert(index < size, "Index out of Bounds");
-  //   return as_ptr()[index];
-  // }
-
-  // [[nodiscard]] auto length() const -> SizeType { return size; }
-
+  /**
+   * @brief Gets the underlying raw pointer for this box.
+   */
   [[nodiscard]] auto as_ptr() -> MutPtr { return raw_ptr(); }
 
+  /**
+   * @brief Gets the underlying raw pointer for this box.
+   */
   [[nodiscard]] auto as_ptr() const -> ConstPtr { return raw_ptr(); }
 
 private:
@@ -295,18 +206,7 @@ namespace crab {
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
   template<typename T>
-    // requires Box<T>::IS_SINGLE
   static auto release(Box<T> box) -> typename Box<T>::MutPtr {
     return Box<T>::unwrap(std::move(box));
   }
-
-  // /**
-  //  * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
-  //  * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
-  //  */
-  // template<typename T>
-  //   requires Box<T>::IS_ARRAY
-  // static auto release(Box<T> box) -> std::pair<typename Box<T>::MutPtr, typename Box<T>::SizeType> {
-  //   return Box<T>::unwrap(std::move(box));
-  // }
 } // namespace crab

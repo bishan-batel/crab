@@ -176,31 +176,6 @@ namespace crab {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }
 
-  // /**
-  //  * @brief Creates a new array on the heap of 'count' size w/ default constructor for
-  //  * each element
-  //  */
-  // template<typename T>
-  // static auto make_boxxed_array(const usize count) -> Box<T[]>
-  //   requires std::is_default_constructible_v<T>
-  // {
-  //   return Box<T[]>::wrap_unchecked(new T[count](), count);
-  // }
-  //
-  // /**
-  //  * @brief Creates a new array on the heap and copies 'from' to each element
-  //  */
-  // template<typename T>
-  // static auto make_boxxed_array(const usize count, const T &from) -> Box<T[]>
-  //   requires std::is_copy_constructible_v<T> and std::is_copy_assignable_v<T>
-  // {
-  //   auto box = Box<T[]>::wrap_unchecked(new T[count](), count);
-  //   for (usize i = 0; i < count; i++) {
-  //     box[i] = T(from);
-  //   }
-  //   return box;
-  // }
-  //
   /**
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release

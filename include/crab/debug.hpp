@@ -21,14 +21,17 @@ namespace crab::debug {
     [[nodiscard]] auto what() const noexcept -> const char * final { return fmt.c_str(); }
   };
 
-  inline unit dbg_assert(StringView function, StringView source, StringView assertion_line, usize line, StringView msg) {
+  inline unit
+  dbg_assert(StringView function, StringView source, StringView assertion_line, usize line, StringView msg) {
     throw AssertionFailedError{function, source, assertion_line, line, msg};
   }
 } // namespace crab::debug
   //
 #if DEBUG
   #define debug_assert(condition, message)                                                                             \
-    if (!static_cast<bool>(condition)) crab::debug::dbg_assert(__FUNCTION__, __FILE__, #condition, __LINE__, (message))
+    if (!static_cast<bool>(condition)) do {                                                                            \
+        crab::debug::dbg_assert(__FUNCTION__, __FILE__, #condition, __LINE__, (message));                              \
+    } while (false)
 #else
 
   #define debug_assert(...)

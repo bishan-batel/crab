@@ -32,22 +32,22 @@ using f32 = float;
 using f64 = long double;
 
 /**
- * \brief Unsigned 8 Bit Integer (cannot be negative)
+ * \brief Fix Sized Unsigned 8 Bit Integer (cannot be negative)
  */
 using u8 = std::uint8_t;
 
 /**
- * \brief Unsigned 16 Bit Integer (cannot be negative)
+ * \brief Fix Sized Unsigned 16 Bit Integer (cannot be negative)
  */
 using u16 = std::uint16_t;
 
 /**
- * \brief Unsigned 32 Bit Integer (cannot be negative)
+ * \brief Fix Sized Unsigned 32 Bit Integer (cannot be negative)
  */
 using u32 = std::uint32_t;
 
 /**
- * \brief Unsigned 64 Bit Integer (cannot be negative)
+ * \brief Fix Sized Unsigned 64 Bit Integer (cannot be negative)
  */
 using u64 = unsigned long int;
 
@@ -197,63 +197,63 @@ constexpr f32 operator""_f32(const f64 literal) { return static_cast<f32>(litera
 
 constexpr f64 operator""_f64(const f64 literal) { return literal; }
 
-#define crab_impl_literal(n)                                                                                           \
-  constexpr n operator""_##n(const unsigned long long literal) { return static_cast<n>(literal); }
+#define crab_impl_literal(type)                                                                                        \
+  constexpr type operator""_##type(const unsigned long long literal) { return static_cast<type>(literal); } // NOLINT
 
 /**
  * \brief Converts literal to an i16
  */
-crab_impl_literal(i16)
+crab_impl_literal(i16);
 
-    /**
-     * \brief Converts literal to an i32
-     */
-    crab_impl_literal(i32)
+/**
+ * \brief Converts literal to an i32
+ */
+crab_impl_literal(i32);
 
-    /**
-     * \brief Converts literal to an i64
-     */
-    crab_impl_literal(i64)
+/**
+ * \brief Converts literal to an i64
+ */
+crab_impl_literal(i64);
 
-    /**
-     * \brief Converts literal to an imax
-     */
-    crab_impl_literal(imax)
+/**
+ * \brief Converts literal to an imax
+ */
+crab_impl_literal(imax);
 
-    /**
-     * \brief Converts literal to an iptr
-     */
-    crab_impl_literal(iptr)
+/**
+ * \brief Converts literal to an iptr
+ */
+crab_impl_literal(iptr);
 
-    /**
-     * \brief Converts literal to an u16
-     */
-    crab_impl_literal(u16)
+/**
+ * \brief Converts literal to an u16
+ */
+crab_impl_literal(u16);
 
-    /**
-     * \brief Converts literal to an u32
-     */
-    crab_impl_literal(u32)
+/**
+ * \brief Converts literal to an u32
+ */
+crab_impl_literal(u32);
 
-    /**
-     * \brief Converts literal to an u64
-     */
-    crab_impl_literal(u64)
+/**
+ * \brief Converts literal to an u64
+ */
+crab_impl_literal(u64);
 
-    /**
-     * \brief Converts literal to an umax
-     */
-    crab_impl_literal(umax)
+/**
+ * \brief Converts literal to an umax
+ */
+crab_impl_literal(umax);
 
-    /**
-     * \brief Converts literal to an uptr
-     */
-    crab_impl_literal(uptr)
+/**
+ * \brief Converts literal to an uptr
+ */
+crab_impl_literal(uptr);
 
 #undef crab_impl_literal
 
-    // Pattern Matching
-    namespace crab {
+// Pattern Matching
+namespace crab {
   /**
    * @brief Shows its use with std::visit
    */
@@ -261,4 +261,4 @@ crab_impl_literal(i16)
   struct cases : Cases... {
     using Cases::operator()...;
   };
-}
+} // namespace crab

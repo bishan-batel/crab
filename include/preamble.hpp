@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <numbers>
+#include <ostream>
 #include <set>
 #include <span>
 #include <string>
@@ -184,6 +185,8 @@ struct unit {
 };
 
 constexpr unit unit::val{};
+
+constexpr auto operator<<(std::ostream &os, const unit &) -> std::ostream & { return os << "unit"; }
 
 /**
  * \brief Literal for converting a degree literal -> radians

@@ -6,7 +6,10 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
+#include <concepts>
 #include <format>
+#include <sstream>
+#include <type_traits>
 #include <variant>
 
 #include "crab/debug.hpp"
@@ -42,28 +45,34 @@ namespace crab::result {
    * @brief A valid error type.
    */
   template<typename E>
-  concept error_type = std::is_move_constructible_v<E>
-                       and (std::is_base_of_v<Error, E>
-                            or requires(const E err) {
-                              std::cout << err->what() << std::endl;
-                            }
-                            or requires(const E err) {
-                              std::cout << err.what() << std::endl;
-                            });
+  concept error_type = std::is_move_constructible_v<E>;
 
   /**
    * @brief Converts a given error to its stringified representation.
    */
-  template<typename E>
-    requires error_type<E>
+  template<error_type E>
   auto error_to_string(const E &err) -> String {
-    if constexpr (requires { std::cout << err.what() << std::endl; }) {
+    if constexpr (requires {
+                    { err.what() } -> std::convertible_to<String>;
+                  }) {
       return err.what();
-    } else if constexpr (requires { std::cout << err->what() << std::endl; }) {
-      return err->what();
-    } else {
-      return "";
     }
+
+    if constexpr (requires {
+                    { err->what() } -> std::convertible_to<String>;
+                  }) {
+      return err->what();
+    }
+
+    if constexpr (requires { OutStringStream{} << err; }) {
+      return (OutStringStream{} << err).str();
+    }
+
+    if constexpr (std::is_enum_v<E>) {
+      return String{typeid(E).name()} + "[" + std::to_string(static_cast<i64>(err)) + "]";
+    }
+
+    return typeid(E).name();
   }
 
   /**
@@ -447,12 +456,12 @@ namespace crab {
     return result::fallible<E>{}(Result<std::tuple<>, E>{std::make_tuple()}, fallible...);
   }
 
-  template<typename T>
+  template<result::error_type T>
   auto ok(T value) -> result::Ok<T> {
     return result::Ok{std::move(value)};
   }
 
-  template<typename E>
+  template<result::error_type E>
   auto err(E value) -> result::Err<E> {
     return result::Err{std::move(value)};
   }

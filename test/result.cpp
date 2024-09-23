@@ -100,4 +100,18 @@ TEST_CASE("Result", "[result]") {
     REQUIRE(transformed.is_err());
     REQUIRE(transformed.get_err_unchecked() == Error{});
   }
+
+  SECTION("String as Errors") {
+    const auto non_zero = [](u8 num) -> Result<u8, String> {
+      if (num != 0) {
+        return crab::ok(num);
+      }
+
+      return crab::err<String>("Zero.");
+    };
+
+    REQUIRE(non_zero(10).is_ok());
+
+    REQUIRE(non_zero(0).take_err_unchecked() == String{"Zero."});
+  }
 }

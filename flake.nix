@@ -23,6 +23,7 @@
               ninja
               cmake
               python3
+              valgrind
           ];
 
           nativeBuildInputs = with pkgs; [

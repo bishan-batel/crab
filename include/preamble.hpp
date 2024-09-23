@@ -145,6 +145,16 @@ using WideStringView = std::wstring_view;
 using StringStream = std::stringstream;
 
 /**
+ * \brief std::stringstream
+ */
+using OutStringStream = std::ostringstream;
+
+/**
+ * \brief std::stringstream
+ */
+using InStringStream = std::istringstream;
+
+/**
  * \brief std::wstringstream
  */
 using WideStringStream = std::wstringstream;

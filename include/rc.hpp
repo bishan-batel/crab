@@ -46,6 +46,8 @@ namespace crab::rc {
 
       [[nodiscard]] auto is_unique() const -> bool { return ref_count == 1; }
 
+      [[nodiscard]] auto get_ref_count() const -> usize { return ref_count; }
+
       [[nodiscard]] auto is_data_valid() const -> bool { return data != nullptr; }
 
       [[nodiscard]] auto should_free_data() const -> bool {
@@ -240,6 +242,11 @@ public:
   [[nodiscard]] auto is_unique() const -> bool {
     // ReSharper disable once CppDFAUnreachableCode
     return is_valid() and get_interior()->is_unique();
+  }
+
+  [[nodiscard]] auto get_ref_count() const -> usize {
+    if (not is_valid()) return 0;
+    return get_interior()->get_ref_count();
   }
 
   /**
@@ -448,6 +455,11 @@ public:
    * This will also consider Weak references.
    */
   [[nodiscard]] auto is_unique() const -> bool { return is_valid() and get_interior()->is_unique(); }
+
+  [[nodiscard]] auto get_ref_count() const -> usize {
+    if (not is_valid()) return 0;
+    return get_interior()->get_ref_count();
+  }
 
   /**
    * @brief Queries if this instance has been

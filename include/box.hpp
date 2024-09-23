@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <iostream>
 
 #include <type_traits>
@@ -140,6 +141,16 @@ public:
    * @brief Gets the underlying raw pointer for this box.
    */
   [[nodiscard]] auto as_ptr() const -> ConstPtr { return raw_ptr(); }
+
+  template<std::derived_from<Contained> Derived>
+  [[nodiscard]] auto downcast() const -> Option<Ref<Derived>> {
+    return crab::ref::from_ptr(dynamic_cast<const T *>(raw_ptr()));
+  }
+
+  template<std::derived_from<Contained> Derived>
+  [[nodiscard]] auto downcast() -> Option<RefMut<Derived>> {
+    return crab::ref::from_ptr(dynamic_cast<T *>(raw_ptr()));
+  }
 
 private:
   auto raw_ptr() -> MutPtr {

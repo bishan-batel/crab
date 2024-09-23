@@ -291,10 +291,10 @@ public:
    *
    * ex.
    *
-   * assert( 
+   * assert(
    *  Option<f32>{crab::none}
    *  .map([](f32 x) { return static_cast<i32>(x); }) // returns Option<i32>
-   *  .is_none() 
+   *  .is_none()
    * );
    *
    * assert( Option<i32>{420}

@@ -144,12 +144,12 @@ public:
 
   template<std::derived_from<Contained> Derived>
   [[nodiscard]] auto downcast() const -> Option<Ref<Derived>> {
-    return crab::ref::from_ptr(dynamic_cast<const T *>(raw_ptr()));
+    return crab::ref::from_ptr(dynamic_cast<const Derived *>(raw_ptr()));
   }
 
   template<std::derived_from<Contained> Derived>
   [[nodiscard]] auto downcast() -> Option<RefMut<Derived>> {
-    return crab::ref::from_ptr(dynamic_cast<T *>(raw_ptr()));
+    return crab::ref::from_ptr(dynamic_cast<Derived *>(raw_ptr()));
   }
 
 private:

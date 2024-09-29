@@ -16,7 +16,7 @@ namespace crab::debug {
         /* fmt{std::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}", source, line, function, assertion_text,
            msg)} { */
         fmt{std::format(
-            "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}",
+            "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}\n{}",
             source_location.file_name(),
             source_location.line(),
             source_location.column(),

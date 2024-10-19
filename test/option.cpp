@@ -3,7 +3,7 @@
 #include "preamble.hpp"
 
 TEST_CASE("Option", "[option]") {
-  Option a = crab::some(52);
+  Option<i32> a = crab::some(52);
 
   i32 took;
   REQUIRE_NOTHROW(took = a.take_unchecked());

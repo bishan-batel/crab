@@ -160,8 +160,8 @@ public:
    * referenced value inside.
    */
   [[nodiscard]] auto as_ref() const -> Option<Ref<Contained>> {
-    if (is_none()) return crab::None{};
-    return Option{Ref<Contained>{get_unchecked()}};
+    if (is_none()) return {};
+    return Ref<Contained>{get_unchecked()};
   }
 
   /**
@@ -365,7 +365,7 @@ namespace crab {
    * @param from Option to consume
    */
   template<typename T>
-  [[deprecated("Prefer use of Option<T>::take_unchecked()")]] auto unwrap(Option<T> &&from) -> T {
+  auto unwrap(Option<T> &&from) -> T {
     return from.take_unchecked();
   }
 

@@ -131,7 +131,13 @@ public:
   // /**
   //  * @brief Whether this option has a contained value or not (None)
   //  */
-  // [[nodiscard]] operator bool() const { return is_some(); }
+  [[nodiscard]]
+#if !_CRAB_IMPLICIT_BOOL_CONVERSION
+  explicit
+#endif
+  operator bool() const {
+    return is_some();
+  }
 
   /**
    * @brief Whether this option contains a value

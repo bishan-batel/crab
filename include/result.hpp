@@ -216,7 +216,13 @@ public:
 
   auto operator=(E &&from) -> Result & { return *this = Err{std::forward<E>(from)}; } // NOLINT
 
-  [[nodiscard]] explicit operator bool() const { return is_ok(); }
+  [[nodiscard]]
+#if !_CRAB_IMPLICIT_BOOL_CONVERSION
+  explicit
+#endif
+  operator bool() const {
+    return is_ok();
+  }
 
   [[nodiscard]]
   auto is_ok() const -> bool {

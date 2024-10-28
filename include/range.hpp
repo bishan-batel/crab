@@ -35,7 +35,7 @@ public:
       return tmp;
     }
 
-    constexpr friend auto operator<=>(const Iterator &a, const Iterator &b) -> usize { return b - a; };
+    constexpr friend auto operator<=>(const Iterator &a, const Iterator &b) -> bool { return b.pos - a.pos; }
 
   private:
     T pos;

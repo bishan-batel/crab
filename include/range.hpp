@@ -35,7 +35,9 @@ public:
       return tmp;
     }
 
-    constexpr friend auto operator<=>(const Iterator &a, const Iterator &b) -> bool { return b.pos - a.pos; }
+    constexpr friend auto operator==(const Iterator &a, const Iterator &b) -> bool { return a.pos == b.pos; };
+
+    constexpr friend auto operator!=(const Iterator &a, const Iterator &b) -> bool { return a.pos != b.pos; };
 
   private:
     T pos;

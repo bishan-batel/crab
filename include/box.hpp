@@ -114,7 +114,7 @@ public:
   template<typename Derived>
     requires std::derived_from<Derived, T> and (not std::same_as<T, Derived>)
   auto operator=(Box<Derived> &&rhs) noexcept -> Box & {
-    if (obj == static_cast<T *>(rhs.obj)) return *this;
+    if (obj == static_cast<T *>(rhs.as_ptr())) return *this;
 
     drop();
     obj = static_cast<T *>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));

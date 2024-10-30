@@ -6,6 +6,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <numbers>
 #include <ostream>
 #include <set>
@@ -158,6 +159,32 @@ using InStringStream = std::istringstream;
  * \brief std::wstringstream
  */
 using WideStringStream = std::wstringstream;
+
+/**
+ * @brief Function pointer that supports lambdas with captures
+ */
+template<typename F = void()>
+using Func = std::function<F>;
+
+/**
+ * std::ranges
+ */
+namespace ranges = std::ranges;
+
+/**
+ * std::ranges::views
+ */
+namespace views = std::ranges::views;
+
+/**
+ * @brief Alias for std::array
+ *
+ * Statically Sized list of packed objects
+ *
+ * @tparam T
+ */
+template<typename T, usize length>
+using SizedArray = std::array<T, length>;
 
 /**
  * \brief Abstraction over any contiguous sequence of elements

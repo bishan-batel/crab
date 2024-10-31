@@ -58,21 +58,21 @@ namespace crab::result {
       return err.what();
     }
 
-    if constexpr (requires {
-                    { err->what() } -> std::convertible_to<String>;
-                  }) {
+    else if constexpr (requires {
+                         { err->what() } -> std::convertible_to<String>;
+                       }) {
       return err->what();
     }
 
-    if constexpr (requires { OutStringStream{} << err; }) {
+    else if constexpr (requires { OutStringStream{} << err; }) {
       return (OutStringStream{} << err).str();
     }
 
-    if constexpr (std::is_enum_v<E>) {
+    else if constexpr (std::is_enum_v<E>) {
       return String{typeid(E).name()} + "[" + std::to_string(static_cast<i64>(err)) + "]";
+    } else {
+      return typeid(E).name();
     }
-
-    return typeid(E).name();
   }
 
   /**
@@ -216,7 +216,13 @@ public:
 
   auto operator=(E &&from) -> Result & { return *this = Err{std::forward<E>(from)}; } // NOLINT
 
-  [[nodiscard]] explicit operator bool() const { return is_ok(); }
+  [[nodiscard]]
+#if !_CRAB_IMPLICIT_BOOL_CONVERSION
+  explicit
+#endif
+  operator bool() const {
+    return is_ok();
+  }
 
   [[nodiscard]]
   auto is_ok() const -> bool {

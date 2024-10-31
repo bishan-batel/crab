@@ -103,7 +103,7 @@ public:
   auto operator=(const Box &) -> void = delete;
 
   auto operator=(Box &&rhs) noexcept -> Box & {
-    if (&rhs == this) return *this;
+    if (rhs.obj == obj) return *this;
 
     drop();
     obj = std::exchange(rhs.obj, nullptr);
@@ -112,9 +112,9 @@ public:
   }
 
   template<typename Derived>
-    requires std::is_base_of_v<T, Derived> and (not std::is_same_v<T, Derived>)
+    requires std::derived_from<Derived, T> and (not std::same_as<T, Derived>)
   auto operator=(Box<Derived> &&rhs) noexcept -> Box & {
-    if (&rhs == this) return *this;
+    if (obj == static_cast<T *>(rhs.as_ptr())) return *this;
 
     drop();
     obj = static_cast<T *>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));

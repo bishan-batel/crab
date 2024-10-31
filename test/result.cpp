@@ -67,6 +67,11 @@ TEST_CASE("Result", "[result]") {
   SECTION("fold") {
     {
       bool first = false, second = false;
+
+
+      // runs each in order until an error 
+      // if one error, shortciruit and the whole thing is err
+      // else, you get a tuple of all the values
       Result<std::tuple<i32, i32>, Error> a = crab::fallible<Error>(
           [&]() {
             first = true;
@@ -76,6 +81,11 @@ TEST_CASE("Result", "[result]") {
             second = true;
             return 22;
           });
+
+      // its just v similar to the ? operator in rust & the do notation in Haskell
+      // or just you manually doing every operation and doing the err check and returning 
+      // for non templated use cases - this for convenience
+      // for templated use cases this is literally epic
       REQUIRE((first and second));
       REQUIRE(a.is_ok());
 

@@ -4,9 +4,7 @@
 #include "ref.hpp"
 
 TEST_CASE("Option", "[option]") {
-  [[maybe_unused]] Dictionary<RefMut<i32>, i32> _dictionary{};
-
-  Option a = crab::some(52);
+  Option<i32> a = crab::some(52);
 
   i32 took;
   REQUIRE_NOTHROW(took = a.take_unchecked());

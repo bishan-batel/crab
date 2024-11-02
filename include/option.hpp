@@ -222,7 +222,7 @@ public:
   [[nodiscard]] auto take_or(const F default_generator) -> Contained
     requires std::is_copy_constructible_v<Contained> and std::convertible_to<std::invoke_result_t<F>, Contained>
   {
-    return is_some() ? Contained{get_unchecked()} : Contained{default_generator()};
+    return is_some() ? Contained{take_unchecked()} : Contained{default_generator()};
   }
 
   /**
@@ -272,7 +272,7 @@ public:
    */
   template<typename E>
   auto take_ok_or(E error) -> Result<Contained, E> {
-    return this->ok_or([error] { return error; });
+    return this->take_ok_or<E>([error] { return error; });
   }
 
   /**
@@ -281,9 +281,7 @@ public:
    * @param error_generator Function to generate an error to replace "None".
    */
   template<typename E, std::invocable F>
-  auto take_ok_or(F error_generator) -> Result<Contained, E>
-    requires std::copy_constructible<Contained> and std::convertible_to<std::invoke_result_t<F>, E>
-  {
+  auto take_ok_or(F error_generator) -> Result<Contained, E> {
     if (is_some()) {
       return take_unchecked();
     }

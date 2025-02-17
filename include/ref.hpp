@@ -49,7 +49,11 @@ public:
 
   friend constexpr auto operator<<(std::ostream& os, const Ref& val)
     -> std::ostream& {
-    return os << *val;
+    if constexpr (requires(const T& val) { os << val; }) {
+      return os << *val;
+    } else {
+      return os << val.as_ptr();
+    }
   }
 
 private:
@@ -112,7 +116,11 @@ public:
 
   friend constexpr auto operator<<(std::ostream& os, const RefMut& val)
     -> std::ostream& {
-    return os << *val;
+    if constexpr (requires(const T& val) { os << val; }) {
+      return os << *val;
+    } else {
+      return os << val.as_ptr();
+    }
   }
 
 private:

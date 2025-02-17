@@ -1,22 +1,37 @@
 ---
 Language: Cpp
 BasedOnStyle: LLVM
-AlignAfterOpenBracket: AlwaysBreak
+LineEnding: LF
+AlignAfterOpenBracket: BlockIndent
+AlignArrayOfStructures: Left
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: false
-AlignOperands: true
-AlignTrailingComments: false
+AlignConsecutiveMacros: AcrossEmptyLines
+AlignOperands: AlignAfterOperator
+AlignTrailingComments: 
+  Kind: Always
+  OverEmptyLines: 1
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
-AlwaysBreakAfterDefinitionReturnType: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCompoundRequirementOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
+AllowShortLambdasOnASingleLine: All
 AlwaysBreakTemplateDeclarations: Yes
+# BreakTemplateDeclarations: Yes
+AlwaysBreakBeforeMultilineStrings: false
 BinPackArguments: false
 BinPackParameters: false
+BitFieldColonSpacing: Both
+Standard: c++20
 BraceWrapping: 
   AfterCaseLabel: false
   AfterClass: false
-  AfterControlStatement: false
+  AfterControlStatement: Never
   AfterEnum: false
   AfterFunction: false
   AfterNamespace: false
@@ -31,10 +46,19 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
 BreakBeforeBraces: Custom
+BreakBeforeConceptDeclarations: Never
+BreakBeforeTernaryOperators: true
+BreakBeforeBinaryOperators: NonAssignment
 BreakConstructorInitializers: AfterColon
 BreakConstructorInitializersBeforeComma: false
-ColumnLimit: 120
-ConstructorInitializerAllOnOneLineOrOnePerLine: false
+BreakInheritanceList: AfterComma
+BracedInitializerIndentWidth: 2
+BreakAfterAttributes: Leave
+# AlwaysBreakAfterDefinitionReturnType: None
+# AlwaysBreakAfterReturnType: None
+PenaltyReturnTypeOnItsOwnLine: 9990
+ColumnLimit: 80
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 IncludeCategories: 
   - Regex: '^<.*'
     Priority: 1
@@ -44,12 +68,14 @@ IncludeCategories:
     Priority: 3
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
+IndentCaseBlocks: true
 IndentPPDirectives: BeforeHash
+InsertBraces: true
 InsertNewlineAtEOF: true
 MacroBlockBegin: ''
 MacroBlockEnd: ''
 NamespaceIndentation: All
-SpaceAfterCStyleCast: true
+SpaceAfterCStyleCast: false
 SpaceAfterTemplateKeyword: false
 SpaceBeforeRangeBasedForLoopColon: false
 SpaceInEmptyParentheses: false
@@ -58,4 +84,24 @@ SpacesInConditionalStatement: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 TabWidth: 2
+ContinuationIndentWidth: 2
+EmptyLineAfterAccessModifier: Always
+EmptyLineBeforeAccessModifier: LogicalBlock
+FixNamespaceComments: false
+CompactNamespaces: false
+UseTab: Never
+IncludeBlocks: Preserve
+MaxEmptyLinesToKeep: 1
+PackConstructorInitializers: NextLine
+ReferenceAlignment: Left
+QualifierAlignment: Custom
+QualifierOrder: [ inline, static, friend, constexpr, const, volatile, restrict, type ]
+RequiresClausePosition: WithPreceding
+RequiresExpressionIndentation: OuterScope
+SeparateDefinitionBlocks: Always
+SortIncludes: Never 
+SortUsingDeclarations: Never
+SpaceAfterLogicalNot: false
+PointerAlignment: Left
+SpaceBeforeCtorInitializerColon: false
 ...

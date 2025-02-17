@@ -1,9 +1,13 @@
 #include "option.hpp"
 #include <catch2/catch_test_macros.hpp>
+#include <functional>
+#include "box.hpp"
 #include "preamble.hpp"
 #include "ref.hpp"
 
 TEST_CASE("Option", "[option]") {
+
+
   Option<i32> a = crab::some(52);
 
   i32 took;
@@ -24,11 +28,14 @@ TEST_CASE("Option", "[option]") {
     Option<i32> nested = crab::some(10);
 
     REQUIRE(nested.map([](auto x) { return 2 * x; }).take_unchecked() == 20);
-    REQUIRE(nested.map([](auto x) { return x; }).is_none());
+    REQUIRE(nested.map(crab::identity<i32>).is_some());
 
     nested = 420;
 
-    REQUIRE(nested.flat_map([](auto x) { return crab::some(x); }).take_unchecked() == 420);
+    REQUIRE(
+      nested.flat_map([](auto x) { return crab::some(x); }).take_unchecked()
+      == 420
+    );
     REQUIRE(crab::some(crab::some(420)).flatten().take_unchecked() == 420);
   }
 
@@ -37,14 +44,15 @@ TEST_CASE("Option", "[option]") {
       bool first = false, second = false;
 
       Option<std::tuple<i32, i32>> a = crab::fallible(
-          [&]() {
-            first = true;
-            return 10;
-          },
-          [&]() {
-            second = true;
-            return 22;
-          });
+        [&]() {
+          first = true;
+          return 10;
+        },
+        [&]() {
+          second = true;
+          return 22;
+        }
+      );
 
       REQUIRE((first and second));
       REQUIRE(a.is_some());
@@ -58,14 +66,15 @@ TEST_CASE("Option", "[option]") {
       bool first = false, second = false;
 
       Option<std::tuple<i32, i32>> a = crab::fallible(
-          [&]() {
-            first = true;
-            return 420;
-          },
-          [&]() -> Option<i32> {
-            second = true;
-            return crab::none;
-          });
+        [&]() {
+          first = true;
+          return 420;
+        },
+        [&]() -> Option<i32> {
+          second = true;
+          return crab::none;
+        }
+      );
 
       REQUIRE((first and second));
       REQUIRE(a.is_none());
@@ -74,17 +83,28 @@ TEST_CASE("Option", "[option]") {
       second = false;
 
       a = crab::fallible(
-          [&]() -> Option<i32> {
-            first = true;
-            return crab::none;
-          },
-          [&]() -> Option<i32> {
-            second = true;
-            return crab::none;
-          });
+        [&]() -> Option<i32> {
+          first = true;
+          return crab::none;
+        },
+        [&]() -> Option<i32> {
+          second = true;
+          return crab::none;
+        }
+      );
 
       REQUIRE((first and not second));
       REQUIRE(a.is_none());
+    }
+
+    Option<Box<i32>> a{crab::make_box<i32>(10)};
+
+    Option<i32> b = std::move(a).map([](i32 x) { return x * 2; });
+    REQUIRE(a.is_none());
+    REQUIRE(b.is_some());
+
+    if (Option<bool> opt{true}) {
+      REQUIRE_NOTHROW(opt.get_unchecked());
     }
   }
 }

@@ -124,7 +124,7 @@ template<typename T>
 struct std::hash<RefMut<T>> { // NOLINT
 
   auto operator()(const RefMut<T>& mut) const -> usize {
-    return static_cast<usize>(mut.as_ptr());
+    return std::bit_cast<usize>(mut.as_ptr());
   };
 };
 
@@ -132,7 +132,7 @@ template<typename T>
 struct std::hash<Ref<T>> { // NOLINT
 
   auto operator()(const Ref<T>& mut) const -> usize {
-    return static_cast<usize>(mut.as_ptr());
+    return std::bit_cast<usize>(mut.as_ptr());
   };
 };
 

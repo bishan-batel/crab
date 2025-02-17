@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <iterator>
 #include <type_traits>
+#include "crab/debug.hpp"
 #include "preamble.hpp"
 
 template<std::integral T = usize>
@@ -43,7 +44,9 @@ public:
     T pos;
   };
 
-  Range(T min, T max) : min(min), max(max) { assert(min <= max and "Invalid Range, max cannot be greater than min"); }
+  Range(T min, T max) : min(min), max(max) {
+    debug_assert(min <= max, "Invalid Range, max cannot be greater than min");
+  }
 
   [[nodiscard]] constexpr auto upper_bound() const -> T { return max; }
 
@@ -52,6 +55,10 @@ public:
   [[nodiscard]] constexpr auto begin() const -> Iterator { return Iterator(min); }
 
   [[nodiscard]] constexpr auto end() const -> Iterator { return Iterator(max); }
+
+  [[nodiscard]] constexpr auto size() const -> usize { return static_cast<usize>(max - min); }
+
+  [[nodiscard]] constexpr auto contains(const T value) const -> bool { return min <= value and value < max; }
 };
 
 namespace crab {

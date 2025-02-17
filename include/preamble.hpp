@@ -9,6 +9,7 @@
 #include <functional>
 #include <numbers>
 #include <ostream>
+#include <ranges>
 #include <set>
 #include <span>
 #include <string>
@@ -16,7 +17,6 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <ranges>
 
 #define nameof(x) #x
 
@@ -166,6 +166,18 @@ using WideStringStream = std::wstringstream;
  */
 template<typename F = void()>
 using Func = std::function<F>;
+
+/**
+ * \brief std::tuple<T...> alias.
+ */
+template<typename... Types>
+using Tuple = std::tuple<Types...>;
+
+/**
+ * \brief std::pair<T, S> alias.
+ */
+template<typename A, typename B>
+using Pair = std::pair<A, B>;
 
 /**
  * std::ranges

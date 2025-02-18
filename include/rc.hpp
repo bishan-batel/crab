@@ -338,9 +338,13 @@ public:
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> Contained* { return raw_ptr(); }
+  [[nodiscard]] auto operator->() const -> const Contained* {
+    return raw_ptr();
+  }
 
-  [[nodiscard]] auto operator*() const -> Contained& { return *raw_ptr(); }
+  [[nodiscard]] auto operator*() const -> const Contained& {
+    return *raw_ptr();
+  }
 
   /**
    * @brief Gets a Ref<T> object to the value inside.
@@ -652,9 +656,17 @@ public:
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> Contained* { return raw_ptr(); }
+  [[nodiscard]] auto operator->() const -> const Contained* {
+    return raw_ptr();
+  }
 
-  [[nodiscard]] auto operator*() const -> Contained& { return *raw_ptr(); }
+  [[nodiscard]] auto operator*() const -> const Contained& {
+    return *raw_ptr();
+  }
+
+  [[nodiscard]] auto operator->() -> Contained* { return raw_ptr(); }
+
+  [[nodiscard]] auto operator*() -> Contained& { return *raw_ptr(); }
 
   /**
    * @brief Gets a Ref<T> object to the value inside.

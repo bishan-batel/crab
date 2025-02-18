@@ -236,7 +236,7 @@ struct unit {
 
 constexpr unit unit::val{};
 
-constexpr auto operator<<(std::ostream &os, const unit &) -> std::ostream & { return os << "unit"; }
+inline auto operator<<(std::ostream &os, const unit &) -> std::ostream & { return os << "unit"; }
 
 /**
  * \brief Literal for converting a degree literal -> radians

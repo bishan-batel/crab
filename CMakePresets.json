@@ -27,6 +27,33 @@
         "CMAKE_CXX_COMPILER": "clang++",
         "CMAKE_CXX_FLAGS_INIT": ""
       }
+    },
+    {
+      "name": "debug-gcc",
+      "displayName": "Debug",
+      "generator": "Ninja",
+      "binaryDir": "build/debug-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_CXX_FLAGS_INIT": "-Wall -Wextra -Wpedantic -Werror",
+        "CMAKE_CXX_STANDARD": "20",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON"
+      }
+    },
+    {
+      "name": "release-gcc",
+      "displayName": "Release",
+      "generator": "Ninja",
+      "binaryDir": "build/release-gcc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_CXX_FLAGS_INIT": ""
+      }
     }
   ]
 }

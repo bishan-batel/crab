@@ -4,8 +4,8 @@
 
 #include <type_traits>
 #include <utility>
-#include "crab/type_traits.hpp"
 #include "preamble.hpp"
+#include "crab/type_traits.hpp"
 
 #include "crab/debug.hpp"
 #include "ref.hpp"

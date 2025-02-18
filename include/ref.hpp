@@ -263,9 +263,9 @@ namespace crab::ref {
    * @tparam Derived What type to check
    * @param obj Object to check
    */
-  template<class Derived, std::derived_from<Derived> Base>
+  template<class Derived, class Base>
   constexpr auto is(const Base& obj) -> bool {
-    return dynamic_cast<Derived>(obj) != nullptr;
+    return dynamic_cast<const Derived*>(&obj) != nullptr;
   }
 
   /**

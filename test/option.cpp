@@ -7,7 +7,6 @@
 
 TEST_CASE("Option", "[option]") {
 
-
   Option<i32> a = crab::some(52);
 
   i32 took;
@@ -96,6 +95,9 @@ TEST_CASE("Option", "[option]") {
       REQUIRE((first and not second));
       REQUIRE(a.is_none());
     }
+  }
+
+  SECTION("move_only") {
 
     Option<Box<i32>> a{crab::make_box<i32>(10)};
 
@@ -106,5 +108,10 @@ TEST_CASE("Option", "[option]") {
     if (Option<bool> opt{true}) {
       REQUIRE_NOTHROW(opt.get_unchecked());
     }
+  }
+
+  SECTION("bool conversion") {
+    REQUIRE(Option<i32>{0});
+    REQUIRE_FALSE(Option<i32>{});
   }
 }

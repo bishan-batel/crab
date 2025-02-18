@@ -56,4 +56,8 @@ target_compile_definitions(${PROJECT_NAME}
         "RELEASE=$<IF:$<CONFIG:Debug>,0,1>"
 )
 
-add_subdirectory(test)
+option(CRAB_TESTS OFF)
+
+if(CRAB_TESTS)
+        add_subdirectory(test)
+endif()

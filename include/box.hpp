@@ -15,25 +15,31 @@
  *
  * This is a replacement for std::unique_ptr, with two key differences:
  *
- * - Prevents Interior Mutability, being passed a const Box<T>& means dealing with a const T&
- * - A Box<T> has the invariant of always being non null, if it is then you messed up with move semantics.
+ * - Prevents Interior Mutability, being passed a const Box<T>& means dealing
+ * with a const T&
+ * - A Box<T> has the invariant of always being non null, if it is then you
+ * messed up with move semantics.
  */
 template<typename T>
-  requires(not std::is_const_v<T>)
+requires(not std::is_const_v<T>)
 class Box {
 public:
-  using MutPtr = T *;
-  using ConstPtr = const T *;
+
+  using MutPtr = T*;
+  using ConstPtr = const T*;
 
 private:
+
   MutPtr obj;
   // SizeType size;
 
 public:
+
   using Contained = std::remove_reference_t<decltype(*obj)>;
 
 private:
-  explicit Box(const MutPtr from) : obj(from) {} // NOLINT
+
+  explicit Box(const MutPtr from): obj(from) {} // NOLINT
 
   // ReSharper disable once CppMemberFunctionMayBeConst
   auto drop() -> void {
@@ -45,6 +51,7 @@ private:
   }
 
 public:
+
   /**
    * @brief Wraps pointer with RAII
    *
@@ -52,7 +59,9 @@ public:
    * the heap or if something else has ownership, therefor 'unchecked' and it is
    * the responsibility of the caller to make sure.
    */
-  static auto wrap_unchecked(const MutPtr ref) -> Box { return Box(ref); }; // NOLINT
+  static auto wrap_unchecked(const MutPtr ref) -> Box {
+    return Box(ref);
+  }; // NOLINT
 
   /**
    * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
@@ -66,15 +75,16 @@ public:
 
   Box() = delete;
 
-  Box(const Box &) = delete;
+  Box(const Box&) = delete;
 
-  Box(Box &&from) noexcept : obj(std::exchange(from.obj, nullptr)) {}
+  Box(Box&& from) noexcept: obj(std::exchange(from.obj, nullptr)) {}
 
   // ReSharper disable once CppNonExplicitConvertingConstructor
   template<typename Derived>
-    requires std::is_base_of_v<T, Derived>
-  Box(Box<Derived> &&from) // NOLINT
-      : Box{Box<Derived>::unwrap(std::forward<Box<Derived>>(from))} {
+  requires std::is_base_of_v<T, Derived>
+  Box(Box<Derived>&& from) // NOLINT
+      :
+      Box{Box<Derived>::unwrap(std::forward<Box<Derived>>(from))} {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
@@ -82,15 +92,17 @@ public:
     requires crab::is_complete_type<T> and std::is_copy_constructible_v<T>
       : Box(new Contained(val)) {}
 
-  explicit Box(T &&val)
+  explicit Box(T&& val)
     requires crab::is_complete_type<T> and std::is_move_constructible_v<T>
       : Box(new Contained(std::move(val))) {}
 
   ~Box() { drop(); }
 
-  operator Contained &() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+  operator Contained&() { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
 
-  operator const Contained &() const { return *raw_ptr(); } // NOLINT(*-explicit-constructor)
+  operator const Contained&() const {
+    return *raw_ptr();
+  } // NOLINT(*-explicit-constructor)
 
   operator Ref<Contained>() const { // NOLINT(*-explicit-constructor)
     return crab::ref::from_ptr_unchecked(raw_ptr());
@@ -100,10 +112,12 @@ public:
     return crab::ref::from_ptr_unchecked(raw_ptr());
   }
 
-  auto operator=(const Box &) -> void = delete;
+  auto operator=(const Box&) -> void = delete;
 
-  auto operator=(Box &&rhs) noexcept -> Box & {
-    if (rhs.obj == obj) return *this;
+  auto operator=(Box&& rhs) noexcept -> Box& {
+    if (rhs.obj == obj) {
+      return *this;
+    }
 
     drop();
     obj = std::exchange(rhs.obj, nullptr);
@@ -112,12 +126,15 @@ public:
   }
 
   template<typename Derived>
-    requires std::derived_from<Derived, T> and (not std::same_as<T, Derived>)
-  auto operator=(Box<Derived> &&rhs) noexcept -> Box & {
-    if (obj == static_cast<T *>(rhs.as_ptr())) return *this;
+  requires std::derived_from<Derived, T> and (not std::same_as<T, Derived>)
+  auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
+    if (obj == static_cast<T*>(rhs.as_ptr())) {
+      return *this;
+    }
 
     drop();
-    obj = static_cast<T *>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
+    obj =
+      static_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
 
     return *this;
   }
@@ -126,11 +143,13 @@ public:
 
   [[nodiscard]] auto operator->() const -> ConstPtr { return as_ptr(); }
 
-  [[nodiscard]] auto operator*() -> Contained & { return *as_ptr(); }
+  [[nodiscard]] auto operator*() -> Contained& { return *as_ptr(); }
 
-  auto operator*() const -> const Contained & { return *as_ptr(); }
+  auto operator*() const -> const Contained& { return *as_ptr(); }
 
-  friend auto operator<<(std::ostream &os, const Box &rhs) -> std::ostream & { return os << *rhs; }
+  friend auto operator<<(std::ostream& os, const Box& rhs) -> std::ostream& {
+    return os << *rhs;
+  }
 
   /**
    * @brief Gets the underlying raw pointer for this box.
@@ -144,26 +163,23 @@ public:
 
   template<std::derived_from<Contained> Derived>
   [[nodiscard]] auto downcast() const -> Option<Ref<Derived>> {
-    return crab::ref::from_ptr(dynamic_cast<const Derived *>(raw_ptr()));
+    return crab::ref::from_ptr(dynamic_cast<const Derived*>(raw_ptr()));
   }
 
   template<std::derived_from<Contained> Derived>
   [[nodiscard]] auto downcast() -> Option<RefMut<Derived>> {
-    return crab::ref::from_ptr(dynamic_cast<Derived *>(raw_ptr()));
+    return crab::ref::from_ptr(dynamic_cast<Derived*>(raw_ptr()));
   }
 
 private:
+
   auto raw_ptr() -> MutPtr {
-#if DEBUG
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
-#endif
     return obj;
   }
 
   auto raw_ptr() const -> ConstPtr {
-#if DEBUG
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
-#endif
     return obj;
   }
 };
@@ -173,8 +189,8 @@ namespace crab {
    * @brief Makes a new instance of type T on the heap with given args
    */
   template<typename T, typename... Args>
-    requires std::is_constructible_v<T, Args...>
-  static auto make_box(Args &&...args) -> Box<T> {
+  requires std::is_constructible_v<T, Args...>
+  static auto make_box(Args&&... args) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});
   }
 
@@ -182,8 +198,9 @@ namespace crab {
    * @brief Makes a new instance of type T on the heap with given args
    */
   template<typename T, typename V>
-    requires std::is_convertible_v<T, V> and (std::is_integral_v<T> or std::is_floating_point_v<T>)
-  static auto make_box(V &&from) -> Box<T> {
+  requires std::is_convertible_v<T, V>
+         and (std::is_integral_v<T> or std::is_floating_point_v<T>)
+  static auto make_box(V&& from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }
 

@@ -21,15 +21,16 @@ namespace crab {
    */
   class Error {
   public:
+
     Error() = default;
 
-    Error(const Error &) = default;
+    Error(const Error&) = default;
 
-    Error(Error &&) = default;
+    Error(Error&&) = default;
 
-    Error &operator=(const Error &) = default;
+    Error& operator=(const Error&) = default;
 
-    Error &operator=(Error &&) = default;
+    Error& operator=(Error&&) = default;
 
     virtual ~Error() = default;
 
@@ -44,14 +45,13 @@ namespace crab::result {
   /**
    * @brief A valid error type.
    */
-  template<typename E>
-  concept error_type = std::is_move_constructible_v<E>;
+  template<typename E> concept error_type = std::is_move_constructible_v<E>;
 
   /**
    * @brief Converts a given error to its stringified representation.
    */
   template<error_type E>
-  auto error_to_string(const E &err) -> String {
+  auto error_to_string(const E& err) -> String {
     if constexpr (requires {
                     { err.what() } -> std::convertible_to<String>;
                   }) {
@@ -69,7 +69,8 @@ namespace crab::result {
     }
 
     else if constexpr (std::is_enum_v<E>) {
-      return String{typeid(E).name()} + "[" + std::to_string(static_cast<i64>(err)) + "]";
+      return String{typeid(E).name()} + "["
+           + std::to_string(static_cast<i64>(err)) + "]";
     } else {
       return typeid(E).name();
     }
@@ -78,31 +79,32 @@ namespace crab::result {
   /**
    * @brief Type constraint for a type that can be used with Result<T>
    */
-  template<typename T>
-  concept ok_type = std::is_move_constructible_v<T>;
+  template<typename T> concept ok_type = std::is_move_constructible_v<T>;
 
   /**
-   * @brief Thin wrapper over a value to be given to Result<T,E>(Ok)'s constructor
+   * @brief Thin wrapper over a value to be given to Result<T,E>(Ok)'s
+   * constructor
    */
   template<typename T>
-    requires ok_type<T>
+  requires ok_type<T>
   struct Ok {
     using Inner = T;
     T value;
 
-    explicit Ok(T value) : value(std::move(value)) {}
+    explicit Ok(T value): value(std::move(value)) {}
   };
 
   /**
-   * @brief Thin wrapper over a value to be given to Result<T,E>(Err)'s constructor
+   * @brief Thin wrapper over a value to be given to Result<T,E>(Err)'s
+   * constructor
    */
   template<typename E>
-    requires error_type<E>
+  requires error_type<E>
   struct Err {
     using Inner = E;
     E value;
 
-    explicit Err(E value) : value(std::move(value)) {}
+    explicit Err(E value): value(std::move(value)) {}
   };
 
   template<typename>
@@ -157,13 +159,17 @@ namespace crab::result {
 
 template<typename T, typename E>
 class Result final {
-  static_assert(crab::result::ok_type<T>, "T is not a valid Ok type, must be move constructible.");
+  static_assert(
+    crab::result::ok_type<T>,
+    "T is not a valid Ok type, must be move constructible."
+  );
   static_assert(crab::result::error_type<E>, "E is not a valid Err type.");
 };
 
 template<crab::result::ok_type T, crab::result::error_type E>
 class Result<T, E> final {
 public:
+
   using Err = crab::result::Err<E>;
   using Ok = crab::result::Ok<T>;
 
@@ -171,50 +177,55 @@ public:
   using OkType = T;
 
 private:
+
   struct invalidated {};
 
   std::variant<Ok, Err, invalidated> inner;
 
 public:
-  Result(T from) : // NOLINT(*-explicit-constructor)
+
+  Result(T from): // NOLINT(*-explicit-constructor)
       Result{Ok{std::move(from)}} {}
 
-  Result(E from) : // NOLINT(*-explicit-constructor)
+  Result(E from): // NOLINT(*-explicit-constructor)
       Result{Err{std::move(from)}} {}
 
-  Result(Ok &&from) : // NOLINT(*-explicit-constructor)
+  Result(Ok&& from): // NOLINT(*-explicit-constructor)
       inner{std::forward<Ok>(from)} {}
 
-  Result(Err &&from) : // NOLINT(*-explicit-constructor)
+  Result(Err&& from): // NOLINT(*-explicit-constructor)
       inner{std::forward<Err>(from)} {}
 
-  Result(Result &&from) noexcept : // NOLINT(*-explicit-constructor)
+  Result(Result&& from) noexcept: // NOLINT(*-explicit-constructor)
       inner{std::exchange(from.inner, invalidated{})} {}
 
-  Result(const Result &res)
-    requires std::copyable<T> and std::copyable<E>
+  Result(const Result& res) requires std::copyable<T> and std::copyable<E>
       : inner{res.inner} {}
 
-  auto operator=(const Result &res) -> Result &
-    requires std::copyable<T> and std::copyable<E>
+  auto operator=(const Result& res) -> Result& requires std::copyable<T>
+                                                    and std::copyable<E>
   {
     inner = res.inner;
     return *this;
   }
 
-  auto operator=(Ok &&from) -> Result & {
+  auto operator=(Ok&& from) -> Result& {
     inner = std::forward<Ok>(from);
     return *this;
   }
 
-  auto operator=(Err &&from) -> Result & {
+  auto operator=(Err&& from) -> Result& {
     inner = std::forward<Err>(from);
     return *this;
   }
 
-  auto operator=(T &&from) -> Result & { return *this = Ok{std::forward<T>(from)}; } // NOLINT
+  auto operator=(T&& from) -> Result& {
+    return *this = Ok{std::forward<T>(from)};
+  } // NOLINT
 
-  auto operator=(E &&from) -> Result & { return *this = Err{std::forward<E>(from)}; } // NOLINT
+  auto operator=(E&& from) -> Result& {
+    return *this = Err{std::forward<E>(from)};
+  } // NOLINT
 
   [[nodiscard]]
   explicit operator bool() const {
@@ -243,32 +254,36 @@ public:
     return val;
   }
 
-  [[nodiscard]] auto get_unchecked() -> T & {
-    // #if DEBUG
-    // ensure_valid();
-    // #endif
-
+  [[nodiscard]] auto get_unchecked() -> T& {
     debug_assert(
-        is_ok(),
-        std::format("Called unwrap on result with Error:\n{}", crab::result::error_to_string(get_err_unchecked())));
+      is_ok(),
+      std::format(
+        "Called unwrap on result with Error:\n{}",
+        crab::result::error_to_string(get_err_unchecked())
+      )
+    );
 
     return std::get<Ok>(inner).value;
   }
 
-  [[nodiscard]] auto get_err_unchecked() -> E & {
+  [[nodiscard]] auto get_err_unchecked() -> E& {
     debug_assert(is_err(), std::format("Called unwrap on ok value"));
 
     return std::get<Err>(inner).value;
   }
 
-  [[nodiscard]] auto get_unchecked() const -> const T & {
+  [[nodiscard]] auto get_unchecked() const -> const T& {
     debug_assert(
-        is_ok(),
-        std::format("Called unwrap on result with Error:\n{}", crab::result::error_to_string(get_err_unchecked())));
+      is_ok(),
+      std::format(
+        "Called unwrap on result with Error:\n{}",
+        crab::result::error_to_string(get_err_unchecked())
+      )
+    );
     return std::get<Ok>(inner).value;
   }
 
-  [[nodiscard]] auto get_err_unchecked() const -> const E & {
+  [[nodiscard]] auto get_err_unchecked() const -> const E& {
     debug_assert(is_err(), std::format("Called unwrap on ok value{}", [&] {
                    ensure_valid();
                    return "";
@@ -278,14 +293,17 @@ public:
   }
 
   auto ensure_valid() const -> void {
-    debug_assert(!std::holds_alternative<invalidated>(inner), "Invalid use of moved result");
+    debug_assert(
+      !std::holds_alternative<invalidated>(inner),
+      "Invalid use of moved result"
+    );
   }
 
-  friend auto operator<<(std::ostream &os, const Result &result) -> std::ostream & {
-#if DEBUG
-    result.ensure_valid();
-#endif
-    if (result.is_err()) return os << "Err(" << result.get_err_unchecked() << ")";
+  friend auto operator<<(std::ostream& os, const Result& result)
+    -> std::ostream& {
+    if (result.is_err()) {
+      return os << "Err(" << result.get_err_unchecked() << ")";
+    }
     return os << "Ok(" << result.get_unchecked() << ")";
   }
 
@@ -300,7 +318,8 @@ public:
   [[nodiscard]] auto map(const F functor) -> Result<R, E> {
     ensure_valid();
 
-    // std::variant<Ok, Err, invalidated> inner = std::exchange(inner, invalidated{});
+    // std::variant<Ok, Err, invalidated> inner = std::exchange(inner,
+    // invalidated{});
     if (is_ok()) {
       return Result<R, E>{functor(take_unchecked())};
     }
@@ -329,11 +348,16 @@ public:
    * If the mapped function is Ok(type M), it returns Result<M, Error>
    */
   template<std::invocable<T> F, typename R = std::invoke_result_t<F, T>>
-    requires crab::result::is_result_type_v<R> and std::same_as<typename R::ErrType, ErrType>
-  [[nodiscard]] auto and_then(const F functor) -> Result<typename R::OkType, ErrType> {
-    Result<Result<typename R::OkType, ErrType>, ErrType> res = this->map(functor);
+  requires crab::result::is_result_type_v<R>
+         and std::same_as<typename R::ErrType, ErrType>
+  [[nodiscard]] auto and_then(const F functor
+  ) -> Result<typename R::OkType, ErrType> {
+    Result<Result<typename R::OkType, ErrType>, ErrType> res =
+      this->map(functor);
 
-    if (res.is_err()) return res.take_err_unchecked();
+    if (res.is_err()) {
+      return res.take_err_unchecked();
+    }
 
     return res.take_unchecked();
   }
@@ -343,10 +367,11 @@ public:
   // result.map(x => x * 2);
 
   /**
-   * @brief Takes Ok value out of this object and returns it, if is Err and not Ok, an empty option will be returned
-   * instead.
+   * @brief Takes Ok value out of this object and returns it, if is Err and not
+   * Ok, an empty option will be returned instead.
    *
-   * This function is for use when wanting to abstract away any specific error type to simply 'none'.
+   * This function is for use when wanting to abstract away any specific error
+   * type to simply 'none'.
    */
   auto into_ok() -> Option<OkType> {
     if (is_ok()) {
@@ -357,10 +382,11 @@ public:
   }
 
   /**
-   * @brief Takes Err value out of this object and returns it, if is Ok and not Err, an empty option will be returned
-   * instead.
+   * @brief Takes Err value out of this object and returns it, if is Ok and not
+   * Err, an empty option will be returned instead.
    *
-   * This function is for use when wanting to abstract away any specific Ok type to simply 'none'.
+   * This function is for use when wanting to abstract away any specific Ok type
+   * to simply 'none'.
    */
   auto into_err() -> Option<ErrType> {
     if (is_err()) {
@@ -382,8 +408,11 @@ namespace crab {
 
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
-      inline auto operator()(auto tuple, const F function, const Rest... other_functions) const
-        requires is_result_type_v<decltype(function())>
+      inline auto operator()(
+        auto tuple,
+        const F function,
+        const Rest... other_functions
+      ) const requires is_result_type_v<decltype(function())>
       {
         // tuple.take_unchecked();
 
@@ -391,49 +420,78 @@ namespace crab {
         using FOkType = typename R::OkType;
 
         static_assert(
-            std::same_as<typename R::ErrType, Error>, "Cannot have multiple types of errors in fallible chain.");
+          std::same_as<typename R::ErrType, Error>,
+          "Cannot have multiple types of errors in fallible chain."
+        );
 
-        using ReturnOk = decltype(std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function().take_unchecked())));
+        using ReturnOk = decltype(std::tuple_cat(
+          tuple.take_unchecked(),
+          std::make_tuple(function().take_unchecked())
+        ));
         using Return = decltype(operator()(
-            Result<ReturnOk, Error>{
-                std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function().take_unchecked()))},
-            other_functions...));
+          Result<ReturnOk, Error>{std::tuple_cat(
+            tuple.take_unchecked(),
+            std::make_tuple(function().take_unchecked())
+          )},
+          other_functions...
+        ));
 
-        if (tuple.is_err()) return Return{tuple.take_err_unchecked()};
+        if (tuple.is_err()) {
+          return Return{tuple.take_err_unchecked()};
+        }
 
         Result<FOkType, Error> result = function();
 
-        if (result.is_err()) return Return{result.take_err_unchecked()};
+        if (result.is_err()) {
+          return Return{result.take_err_unchecked()};
+        }
 
         return operator()(
-            Result<ReturnOk, Error>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(result.take_unchecked()))},
-            other_functions...);
+          Result<ReturnOk, Error>{std::tuple_cat(
+            tuple.take_unchecked(),
+            std::make_tuple(result.take_unchecked())
+          )},
+          other_functions...
+        );
       }
 
       template<std::invocable F, std::invocable... Rest>
       inline auto operator()(
-          // Tuple : Result<std:tuple<...>, Error>
-          auto tuple,
-          const F function,
-          const Rest... other_functions) const
+        // Tuple : Result<std:tuple<...>, Error>
+        auto tuple,
+        const F function,
+        const Rest... other_functions
+      ) const
         requires(ok_type<decltype(function())> and not is_result_type_v<decltype(function())>)
       {
         // tuple.take_unchecked();
 
         using FOkType = decltype(function());
 
-        using ReturnOk = decltype(std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function())));
+        using ReturnOk = decltype(std::tuple_cat(
+          tuple.take_unchecked(),
+          std::make_tuple(function())
+        ));
         using Return = decltype(operator()(
-            Result<ReturnOk, Error>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))},
-            other_functions...));
+          Result<ReturnOk, Error>{
+            std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))
+          },
+          other_functions...
+        ));
 
-        if (tuple.is_err()) return Return{tuple.take_err_unchecked()};
+        if (tuple.is_err()) {
+          return Return{tuple.take_err_unchecked()};
+        }
 
         FOkType result = function();
 
         return operator()(
-            Result<ReturnOk, Error>{std::tuple_cat(tuple.take_unchecked(), std::make_tuple(std::move(result)))},
-            other_functions...);
+          Result<ReturnOk, Error>{std::tuple_cat(
+            tuple.take_unchecked(),
+            std::make_tuple(std::move(result))
+          )},
+          other_functions...
+        );
       }
     };
 
@@ -451,12 +509,15 @@ namespace crab {
     };
 
     template<std::invocable F>
-    using decay_fallible_function = typename decay_fallible<std::invoke_result_t<F>>::type;
+    using decay_fallible_function =
+      typename decay_fallible<std::invoke_result_t<F>>::type;
   } // namespace result
 
   template<result::error_type E, std::invocable... F>
-  auto fallible(const F... fallible) -> Result<std::tuple<result::decay_fallible_function<F>...>, E> {
-    return result::fallible<E>{}(Result<std::tuple<>, E>{std::make_tuple()}, fallible...);
+  auto fallible(const F... fallible
+  ) -> Result<std::tuple<result::decay_fallible_function<F>...>, E> {
+    return result::fallible<E>{
+    }(Result<std::tuple<>, E>{std::make_tuple()}, fallible...);
   }
 
   template<result::error_type T>

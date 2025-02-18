@@ -59,66 +59,66 @@ public:
     return std::exchange(box.raw_ptr(), nullptr);
   }
 
-  Box() = delete;
+  constexpr Box() = delete;
 
-  Box(const Box&) = delete;
+  constexpr Box(const Box&) = delete;
 
-  Box(Box&& from) noexcept: obj(std::exchange(from.obj, nullptr)) {}
+  constexpr Box(Box&& from) noexcept: obj(std::exchange(from.obj, nullptr)) {}
 
   template<std::derived_from<T> Derived>
-  Box(Box<Derived>&& from) // NOLINT
+  constexpr Box(Box<Derived>&& from) // NOLINT
       :
       Box{Box<Derived>::unwrap(std::forward<Box<Derived>>(from))} {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
-  explicit Box(T&& val): Box(new T(std::move(val))) {}
+  constexpr explicit Box(T&& val): Box(new T(std::move(val))) {}
 
-  ~Box() { drop(); }
+  constexpr ~Box() { drop(); }
 
-  operator T&() { // NOLINT(*-explicit-constructor)
+  constexpr operator T&() { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
-  operator const T&() const { // NOLINT(*-explicit-constructor)
-    return *raw_ptr();
-  }
-
-  template<typename Base>
-  requires std::derived_from<T, Base>
-  operator Base&() { // NOLINT(*-explicit-constructor)
+  constexpr operator const T&() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   template<typename Base>
   requires std::derived_from<T, Base>
-  operator const Base&() const { // NOLINT(*-explicit-constructor)
-    return *raw_ptr();
-  }
-
-  operator Ref<T>() const { // NOLINT(*-explicit-constructor)
-    return *raw_ptr();
-  }
-
-  operator RefMut<T>() { // NOLINT(*-explicit-constructor)
+  constexpr operator Base&() { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   template<typename Base>
   requires std::derived_from<T, Base>
-  operator Ref<Base>() const { // NOLINT(*-explicit-constructor)
+  constexpr operator const Base&() const { // NOLINT(*-explicit-constructor)
+    return *raw_ptr();
+  }
+
+  constexpr operator Ref<T>() const { // NOLINT(*-explicit-constructor)
+    return *raw_ptr();
+  }
+
+  constexpr operator RefMut<T>() { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   template<typename Base>
   requires std::derived_from<T, Base>
-  operator RefMut<Base>() { // NOLINT(*-explicit-constructor)
+  constexpr operator Ref<Base>() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
-  auto operator=(const Box&) -> void = delete;
+  template<typename Base>
+  requires std::derived_from<T, Base>
+  constexpr operator RefMut<Base>() { // NOLINT(*-explicit-constructor)
+    return *raw_ptr();
+  }
 
-  auto operator=(Box&& rhs) noexcept -> Box& {
+  constexpr auto operator=(const Box&) -> void = delete;
+
+  constexpr auto operator=(Box&& rhs) noexcept -> Box& {
     if (rhs.obj == obj) {
       return *this;
     }
@@ -130,7 +130,7 @@ public:
   }
 
   template<std::derived_from<T> Derived>
-  auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
+  constexpr auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
     if (obj == static_cast<T*>(rhs.as_ptr())) {
       return *this;
     }
@@ -142,33 +142,38 @@ public:
     return *this;
   }
 
-  [[nodiscard]] auto operator->() -> T* { return as_ptr(); }
+  [[nodiscard]] constexpr auto operator->() -> T* { return as_ptr(); }
 
-  [[nodiscard]] auto operator->() const -> const T* { return as_ptr(); }
+  [[nodiscard]] constexpr auto operator->() const -> const T* {
+    return as_ptr();
+  }
 
-  [[nodiscard]] auto operator*() -> T& { return *as_ptr(); }
+  [[nodiscard]] constexpr auto operator*() -> T& { return *as_ptr(); }
 
-  auto operator*() const -> const T& { return *as_ptr(); }
+  [[nodiscard]] constexpr auto operator*() const -> const T& {
+    return *as_ptr();
+  }
 
-  friend auto operator<<(std::ostream& os, const Box& rhs) -> std::ostream& {
+  friend constexpr auto operator<<(std::ostream& os, const Box& rhs)
+    -> std::ostream& {
     return os << *rhs;
   }
 
   /**
    * @brief Gets the underlying raw pointer for this box.
    */
-  [[nodiscard]] auto as_ptr() -> T* { return raw_ptr(); }
+  [[nodiscard]] constexpr auto as_ptr() -> T* { return raw_ptr(); }
 
   /**
    * @brief Gets the underlying raw pointer for this box.
    */
-  [[nodiscard]] auto as_ptr() const -> const T* { return raw_ptr(); }
+  [[nodiscard]] constexpr auto as_ptr() const -> const T* { return raw_ptr(); }
 
   /**
    * @brief Attempts to downcast the pointer
    */
   template<std::derived_from<T> Derived>
-  [[nodiscard]] auto downcast() const -> Option<Ref<Derived>> {
+  [[nodiscard]] constexpr auto downcast() const -> Option<Ref<Derived>> {
     return crab::ref::from_ptr(dynamic_cast<const Derived*>(raw_ptr()));
   }
 
@@ -176,7 +181,7 @@ public:
    * @brief Attempts to downcast the pointer
    */
   template<std::derived_from<T> Derived>
-  [[nodiscard]] auto downcast() -> Option<RefMut<Derived>> {
+  [[nodiscard]] constexpr auto downcast() -> Option<RefMut<Derived>> {
     return crab::ref::from_ptr(dynamic_cast<Derived*>(raw_ptr()));
   }
 
@@ -185,7 +190,7 @@ public:
    */
   template<typename Base>
   requires std::derived_from<T, Base>
-  [[nodiscard]] auto upcast() const -> const Base& {
+  [[nodiscard]] constexpr auto upcast() const -> const Base& {
     return *raw_ptr();
   }
 
@@ -194,7 +199,7 @@ public:
    */
   template<typename Base>
   requires std::derived_from<T, Base>
-  [[nodiscard]] auto upcast() -> Base& {
+  [[nodiscard]] constexpr auto upcast() -> Base& {
     return *raw_ptr();
   }
 
@@ -205,7 +210,7 @@ public:
    * crab::none
    */
   template<std::derived_from<T> Derived>
-  [[nodiscard]] auto downcast_lossy() && -> Option<Box<Derived>> {
+  [[nodiscard]] constexpr auto downcast_lossy() && -> Option<Box<Derived>> {
     auto* ptr = dynamic_cast<Derived*>(raw_ptr());
 
     if (ptr == nullptr) {
@@ -218,12 +223,12 @@ public:
 
 private:
 
-  [[nodiscard]] auto raw_ptr() -> T*& {
+  [[nodiscard]] constexpr auto raw_ptr() -> T*& {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
     return obj;
   }
 
-  [[nodiscard]] auto raw_ptr() const -> const T* {
+  [[nodiscard]] constexpr auto raw_ptr() const -> const T* {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
     return obj;
   }
@@ -234,8 +239,8 @@ namespace crab {
    * @brief Makes a new instance of type T on the heap with given args
    */
   template<typename T, typename... Args>
-  requires std::is_constructible_v<T, Args...>
-  [[nodiscard]] static auto make_box(Args&&... args) -> Box<T> {
+  requires std::constructible_from<T, Args...>
+  [[nodiscard]] static constexpr auto make_box(Args&&... args) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});
   }
 
@@ -243,9 +248,9 @@ namespace crab {
    * @brief Makes a new instance of type T on the heap with given args
    */
   template<typename T, typename V>
-  requires std::is_convertible_v<T, V>
-         and (std::is_integral_v<T> or std::is_floating_point_v<T>)
-  [[nodiscard]] static auto make_box(V&& from) -> Box<T> {
+  requires std::convertible_to<T, V>
+         and (std::integral<T> or std::floating_point<T>)
+  [[nodiscard]] static constexpr auto make_box(V&& from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }
 
@@ -254,7 +259,7 @@ namespace crab {
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
   template<typename T>
-  [[nodiscard]] static auto release(Box<T> box) -> T* {
+  [[nodiscard]] static constexpr auto release(Box<T> box) -> T* {
     return Box<T>::unwrap(std::move(box));
   }
 } // namespace crab

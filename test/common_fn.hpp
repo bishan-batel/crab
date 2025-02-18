@@ -5,10 +5,9 @@
 namespace crab::fn {
   constexpr auto identity = [](auto&& x) { return x; };
 
-  constexpr auto constant = [](auto&& x) {
-    return [x = std::forward<decltype(x)>(x)]<typename... Args>(Args&&...) {
-      return x;
-    };
+  template<typename T>
+  constexpr auto constant = [](T&& x) {
+    return [x = std::forward<T>(x)]<typename... Args>(Args&&...) { return x; };
   };
 
   template<typename T, typename R, typename... Args>

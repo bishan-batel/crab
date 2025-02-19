@@ -8,7 +8,8 @@
 
 class Error final : public crab::Error {
 public:
-  [[nodiscard]] auto operator==(const Error &) const -> bool { return true; }
+
+  [[nodiscard]] auto operator==(const Error&) const -> bool { return true; }
 
   [[nodiscard]] String what() const override { return "huh"; }
 };
@@ -68,23 +69,23 @@ TEST_CASE("Result", "[result]") {
     {
       bool first = false, second = false;
 
-
-      // runs each in order until an error 
+      // runs each in order until an error
       // if one error, shortciruit and the whole thing is err
       // else, you get a tuple of all the values
       Result<std::tuple<i32, i32>, Error> a = crab::fallible<Error>(
-          [&]() {
-            first = true;
-            return 10;
-          },
-          [&]() {
-            second = true;
-            return 22;
-          });
+        [&]() {
+          first = true;
+          return 10;
+        },
+        [&]() {
+          second = true;
+          return 22;
+        }
+      );
 
-      // its just v similar to the ? operator in rust & the do notation in Haskell
-      // or just you manually doing every operation and doing the err check and returning 
-      // for non templated use cases - this for convenience
+      // its just v similar to the ? operator in rust & the do notation in
+      // Haskell or just you manually doing every operation and doing the err
+      // check and returning for non templated use cases - this for convenience
       // for templated use cases this is literally epic
       REQUIRE((first and second));
       REQUIRE(a.is_ok());
@@ -96,16 +97,24 @@ TEST_CASE("Result", "[result]") {
     }
 
     Result<std::tuple<i32, i32, i32>, Error> a = crab::fallible<Error>(
-        []() -> i32 { return 0; }, []() -> Result<i32, Error> { return Error{}; }, []() -> i32 { return 0; });
+      []() -> i32 { return 0; },
+      []() -> Result<i32, Error> { return Error{}; },
+      []() -> i32 { return 0; }
+    );
     REQUIRE(a.get_err_unchecked() == Error{});
   }
 
   SECTION("and_then") {
-    auto transformed = Result<i32, Error>{10}.and_then([](const i32) { return Result<f32, Error>{10.f}; });
+    auto transformed = Result<i32, Error>{10}.and_then([](const i32) {
+      return Result<f32, Error>{10.f};
+    });
     REQUIRE(transformed.is_ok());
     REQUIRE(transformed.get_unchecked() == 10.f);
 
-    transformed = Result<i32, Error>{20}.and_then([](const i32) -> Result<f32, Error> { return Error{}; });
+    transformed =
+      Result<i32, Error>{20}.and_then([](const i32) -> Result<f32, Error> {
+        return Error{};
+      });
 
     REQUIRE(transformed.is_err());
     REQUIRE(transformed.get_err_unchecked() == Error{});
@@ -124,4 +133,9 @@ TEST_CASE("Result", "[result]") {
 
     REQUIRE(non_zero(0).take_err_unchecked() == String{"Zero."});
   }
+}
+
+void what() {
+  const i32 a = 10;
+  printf("%d\n", a);
 }

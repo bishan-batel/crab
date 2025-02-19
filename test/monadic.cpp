@@ -2,7 +2,7 @@
 #include <preamble.hpp>
 #include "option.hpp"
 #include "test_types.hpp"
-#include "common_fn.hpp"
+#include <crab/fn.hpp>
 
 consteval auto consteval_test() -> void {
   Option<i32> number = crab::unless(false, []() { return 2; });
@@ -114,5 +114,10 @@ TEST_CASE("Monadic Operations (Option)") {
       number = crab::unless(true, []() { return MoveOnlyType{"test"}; });
       REQUIRE(number.is_none());
     }
+  }
+
+  SECTION("as_ref") {
+    Option<String> name{"Hello"};
+    Option<RefMut<String>> a = name.as_ref_mut();
   }
 }

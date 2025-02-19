@@ -4,6 +4,7 @@
 #include "box.hpp"
 #include "preamble.hpp"
 #include "ref.hpp"
+#include <crab/fn.hpp>
 
 TEST_CASE("Option", "[option]") {
 
@@ -27,7 +28,7 @@ TEST_CASE("Option", "[option]") {
     Option<i32> nested = crab::some(10);
 
     REQUIRE(nested.map([](auto x) { return 2 * x; }).take_unchecked() == 20);
-    REQUIRE(nested.map(crab::identity<i32>).is_some());
+    REQUIRE(nested.map(crab::fn::identity).is_some());
 
     nested = 420;
 

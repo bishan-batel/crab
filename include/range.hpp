@@ -12,6 +12,7 @@ class Range final {
   T min, max;
 
 public:
+
   struct Iterator {
     using iterator_category = std::output_iterator_tag;
     using difference_type = std::ptrdiff_t;
@@ -19,13 +20,13 @@ public:
     using pointer = T;
     using reference = T;
 
-    constexpr explicit Iterator(T pos) : pos(pos) {}
+    constexpr explicit Iterator(T pos): pos(pos) {}
 
     constexpr auto operator*() const -> reference { return pos; }
 
     constexpr auto operator->() -> pointer { return pos; }
 
-    constexpr auto operator++() -> Iterator & {
+    constexpr auto operator++() -> Iterator& {
       ++pos;
       return *this;
     }
@@ -36,15 +37,22 @@ public:
       return tmp;
     }
 
-    constexpr friend auto operator==(const Iterator &a, const Iterator &b) -> bool { return a.pos == b.pos; };
+    friend constexpr auto operator==(const Iterator& a, const Iterator& b)
+      -> bool {
+      return a.pos == b.pos;
+    };
 
-    constexpr friend auto operator!=(const Iterator &a, const Iterator &b) -> bool { return a.pos != b.pos; };
+    friend constexpr auto operator!=(const Iterator& a, const Iterator& b)
+      -> bool {
+      return a.pos != b.pos;
+    };
 
   private:
+
     T pos;
   };
 
-  Range(T min, T max) : min(min), max(max) {
+  Range(T min, T max): min(min), max(max) {
     debug_assert(min <= max, "Invalid Range, max cannot be greater than min");
   }
 
@@ -52,13 +60,19 @@ public:
 
   [[nodiscard]] constexpr auto lower_bound() const -> T { return min; }
 
-  [[nodiscard]] constexpr auto begin() const -> Iterator { return Iterator(min); }
+  [[nodiscard]] constexpr auto begin() const -> Iterator {
+    return Iterator(min);
+  }
 
   [[nodiscard]] constexpr auto end() const -> Iterator { return Iterator(max); }
 
-  [[nodiscard]] constexpr auto size() const -> usize { return static_cast<usize>(max - min); }
+  [[nodiscard]] constexpr auto size() const -> usize {
+    return static_cast<usize>(max - min);
+  }
 
-  [[nodiscard]] constexpr auto contains(const T value) const -> bool { return min <= value and value < max; }
+  [[nodiscard]] constexpr auto contains(const T value) const -> bool {
+    return min <= value and value < max;
+  }
 };
 
 namespace crab {
@@ -74,7 +88,10 @@ namespace crab {
    * for (usize i = 5; i < 100; i++)
    */
   template<std::integral T = usize>
-  [[nodiscard]] constexpr auto range(T min, T max) -> Range<T> {
+  [[nodiscard]] constexpr auto range(
+    std::type_identity_t<T> min,
+    std::type_identity_t<T> max
+  ) -> Range<T> {
     return Range<T>(min, max);
   }
 
@@ -90,8 +107,8 @@ namespace crab {
    * for (usize i = 0; i < 100; i++)
    */
   template<std::integral T = usize>
-  [[nodiscard]] constexpr auto range(T max) -> Range<T> {
-    return Range<T>(0, max);
+  [[nodiscard]] constexpr auto range(std::type_identity_t<T> max) -> Range<T> {
+    return range<T>(0, max);
   }
 
   /**
@@ -106,7 +123,10 @@ namespace crab {
    * for (usize i = 5; i <= 100; i++)
    */
   template<std::integral T = usize>
-  [[nodiscard]] constexpr auto range_inclusive(T min, T max) -> Range<T> {
+  [[nodiscard]] constexpr auto range_inclusive(
+    std::type_identity_t<T> min,
+    std::type_identity_t<T> max
+  ) -> Range<T> {
     return range(min, max + 1);
   }
 
@@ -122,7 +142,9 @@ namespace crab {
    * for (usize i = 0; i <= 100; i++)
    */
   template<std::integral T = usize>
-  [[nodiscard]] constexpr auto range_inclusive(T max) -> Range<T> {
+  [[nodiscard]] constexpr auto range_inclusive( //
+    std::type_identity_t<T> max
+  ) -> Range<T> {
     return range(max + 1);
   }
 } // namespace crab

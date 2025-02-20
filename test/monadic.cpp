@@ -116,8 +116,42 @@ TEST_CASE("Monadic Operations (Option)") {
     }
   }
 
-  SECTION("as_ref") {
-    Option<String> name{"Hello"};
-    Option<RefMut<String>> a = name.as_ref_mut();
+  SECTION("as_ref/as_ref_mut") {
+
+    SECTION("copyable") {
+      Option<String> name{"Hello"};
+      Option<RefMut<String>> ref = name.as_ref_mut();
+      Option<Ref<String>> ref_mut = name.as_ref();
+
+      REQUIRE(name.is_some());
+      REQUIRE(ref.is_some());
+      REQUIRE(ref_mut.is_some());
+
+      REQUIRE(*ref.get_unchecked() == "Hello");
+      REQUIRE(*ref_mut.get_unchecked() == "Hello");
+
+      name.get_unchecked() += " World";
+
+      REQUIRE(*ref.get_unchecked() == "Hello World");
+      REQUIRE(*ref_mut.get_unchecked() == "Hello World");
+    }
+
+    SECTION("move only") {
+      Option<MoveOnlyType> name{MoveOnlyType{"Hello"}};
+      Option<RefMut<MoveOnlyType>> ref = name.as_ref_mut();
+      Option<Ref<MoveOnlyType>> ref_mut = name.as_ref();
+
+      REQUIRE(name.is_some());
+      REQUIRE(ref.is_some());
+      REQUIRE(ref_mut.is_some());
+
+      REQUIRE(ref.get_unchecked()->get_name() == "Hello");
+      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello");
+
+      name.get_unchecked().set_name("Hello World");
+
+      REQUIRE(ref.get_unchecked()->get_name() == "Hello World");
+      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello World");
+    }
   }
 }

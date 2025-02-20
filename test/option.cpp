@@ -163,6 +163,19 @@ TEST_CASE("Option", "[option]") {
     for (const usize i: crab::range(100)) {
       REQUIRE(numbers.contains(i));
     }
+
     REQUIRE_FALSE(numbers.contains(crab::none));
+
+    numbers.emplace(crab::none);
+
+    REQUIRE(numbers.contains(crab::none));
+
+    REQUIRE(
+      crab::hash<StringView>("Hello")
+      != crab::hash(crab::some<StringView>("Hello"))
+    );
+    REQUIRE(
+      crab::hash<StringView>("Hello") != crab::hash(Option<StringView>{})
+    );
   }
 }

@@ -8,6 +8,7 @@ add_executable(crab-tests
         rc.cpp
         pattern.cpp
         monadic.cpp
+        fn.cpp
 )
 target_link_libraries(crab-tests PRIVATE Catch2::Catch2WithMain crab)
 

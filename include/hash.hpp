@@ -2,6 +2,7 @@
 
 #include <type_traits>
 #include "preamble.hpp"
+#include "rc.hpp"
 
 namespace crab {
 
@@ -11,30 +12,39 @@ namespace crab {
   using hash_code = usize;
 
   /**
+   * @brief Any type that can be converted to a hash_code (usize)
+   */
+  template<typename T> concept into_hash_code =
+    std::convertible_to<T, hash_code>;
+
+  /**
    * @brief Is the given type hashable
    */
   template<typename T> concept hashable = requires(const T& v) {
     { std::hash<T>{v}() } -> std::convertible_to<hash_code>;
   };
 
-  /**
-   * @brief Hasher function type
-   */
-  template<class T, std::invocable<const T&> F>
-  requires std::convertible_to<std::invoke_result_t<F, const T&>, hash_code>
-  struct hash_function : F {};
-}
+  template<hashable T>
+  constexpr auto hash(const T& value) -> hash_code {
+    return static_cast<hash_code>(std::hash<T>{}(value));
+  }
 
-namespace std {
+  template<into_hash_code First, into_hash_code... Args>
+  constexpr auto hash_code_mix(First first, Args... rest) -> hash_code {
+    return crab::hash_code_mix(first, crab::hash_code_mix(rest...));
+  }
 
-  template<typename T>
-  requires std::convertible_to<
-    decltype(T::static_hasher),
-    crab::hash_function<T(const T&), crab::hash_code>>
-  struct hash<T> /* NOLINT */ {
-    constexpr auto operator()(const T& value) const -> crab::hash_code {
-      return static_cast<crab::hash_code>(T::static_hasher)(value);
-    }
-  };
+  template<hashable FirstItem, hashable... Items>
+  constexpr auto hash_together(FirstItem first, Items... items) -> hash_code {
+    return crab::hash_code_mix(
+      crab::hash(first),
+      crab::hash_together(items...)
+    );
+  }
+
+  template<hashable FirstItem>
+  constexpr auto hash_together(FirstItem first) -> hash_code {
+    return crab::hash(first);
+  }
 
 }

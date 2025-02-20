@@ -16,6 +16,7 @@
 #include <variant>
 
 #include "crab/debug.hpp"
+#include "hash.hpp"
 
 namespace crab {
   /**
@@ -599,9 +600,129 @@ public:
     );
   }
 
+  ///
+  /// Ordering Overloads
+  ///
+
+  template<typename S>
+  [[nodiscard]] auto operator==(const Option<S>& other) const -> bool {
+    static_assert(
+      std::equality_comparable_with<T, S>,
+      "Cannot equate to options if the inner types are not equatable"
+    );
+    if (is_none() or other.is_none()) {
+      return is_none() == other.is_none();
+    }
+
+    return get_unchecked() == other.get_unchecked();
+  };
+
+  template<typename S>
+  [[nodiscard]] auto operator!=(const Option<S>& other) const -> bool {
+    static_assert(
+      std::equality_comparable_with<T, S>,
+      "Cannot equate to options if the inner types are not inverse equatable"
+    );
+    if (is_none() or other.is_none()) {
+      return is_none() != other.is_none();
+    }
+
+    return get_unchecked() != other.get_unchecked();
+  };
+
+  template<typename S>
+  [[nodiscard]] auto operator>(const Option<S>& other) const -> bool {
+    static_assert(
+      std::equality_comparable_with<T, S>,
+      "Cannot compare to options if the inner types are not comparable with >"
+    );
+    if (is_none() or other.is_none()) {
+      return true;
+    }
+
+    return get_unchecked() > other.get_unchecked();
+  };
+
+  template<typename S>
+  [[nodiscard]] auto operator<(const Option<S>& other) const -> bool {
+    static_assert(
+      std::equality_comparable_with<T, S>,
+      "Cannot compare to options if the inner types are not comparable with <"
+    );
+    if (is_none() or other.is_none()) {
+      return true;
+    }
+
+    return get_unchecked() < other.get_unchecked();
+  };
+
+  template<typename S>
+  [[nodiscard]] auto operator>=(const Option<S>& other) const -> bool {
+    static_assert(
+      std::equality_comparable_with<T, S>,
+      "Cannot compare to options if the inner types are not comparable with >="
+    );
+    if (is_none() or other.is_none()) {
+      return is_none() == other.is_none();
+    }
+
+    return get_unchecked() >= other.get_unchecked();
+  };
+
+  template<typename S>
+  [[nodiscard]] auto operator<=(const Option<S>& other) const -> bool {
+    static_assert(
+      std::equality_comparable_with<T, S>,
+      "Cannot compare to options if the inner types are not comparable with <="
+    );
+    if (is_none() or other.is_none()) {
+      return is_none() == other.is_none();
+    }
+
+    return get_unchecked() <= other.get_unchecked();
+  };
+
+  [[nodiscard]] auto operator==(const crab::None&) const -> bool {
+    return is_none();
+  };
+
+  [[nodiscard]] auto operator!=(const crab::None&) const -> bool {
+    return is_some();
+  };
+
+  [[nodiscard]] auto operator>(const crab::None&) const -> bool {
+    return true;
+  };
+
+  [[nodiscard]] auto operator<(const crab::None&) const -> bool {
+    return true;
+  };
+
+  [[nodiscard]] auto operator>=(const crab::None&) const -> bool {
+    return true;
+  };
+
+  [[nodiscard]] auto operator<=(const crab::None&) const -> bool {
+    return true;
+  };
+
 private:
 
   std::variant<T, crab::None> value;
+};
+
+namespace std {
+  template<typename T>
+  struct std::hash<Option<T>> /*NOLINT*/ {
+    [[nodiscard]]
+    auto operator()(const Option<T>& opt) const -> crab::hash_code {
+      if (opt.is_some()) {
+        return 0;
+      }
+
+      return crab::hash_together<usize, T>(1, opt.get_unchecked());
+    }
+  };
 };
 
 namespace crab {

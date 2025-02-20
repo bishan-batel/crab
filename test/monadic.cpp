@@ -10,7 +10,7 @@ consteval auto consteval_test() -> void {
 
   std::ignore = number.filter([](i32 x) { return x % 2 == 0; });
 
-  Option<MoveOnlyType> moved{MoveOnlyType{"value"}};
+  Option moved{ex::MoveOnly{"value"}};
   std::ignore = std::move(moved).filter(crab::fn::constant(true));
 }
 
@@ -45,13 +45,13 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move") {
-      Option<MoveOnlyType> value{MoveOnlyType{"message"}};
+      Option<ex::MoveOnly> value{ex::MoveOnly{"message"}};
 
-      constexpr auto not_empty = [](const MoveOnlyType& x) {
+      constexpr auto not_empty = [](const ex::MoveOnly& x) {
         return not x.get_name().empty();
       };
 
-      Option<MoveOnlyType> moved = std::move(value).filter(not_empty);
+      Option<ex::MoveOnly> moved = std::move(value).filter(not_empty);
       REQUIRE(value.is_none());
       REQUIRE_NOTHROW(moved.get_unchecked().get_name() == "message");
 
@@ -82,14 +82,14 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move-only") {
-      Option<MoveOnlyType> number =
-        crab::then(true, []() { return MoveOnlyType{"test"}; });
+      Option<ex::MoveOnly> number =
+        crab::then(true, []() { return ex::MoveOnly{"test"}; });
 
       REQUIRE_NOTHROW(
         number.is_some() and number.get_unchecked().get_name() == "test"
       );
 
-      number = crab::then(false, []() { return MoveOnlyType{"test"}; });
+      number = crab::then(false, []() { return ex::MoveOnly{"test"}; });
       REQUIRE(number.is_none());
     }
   }
@@ -104,14 +104,14 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move-only") {
-      Option<MoveOnlyType> number =
-        crab::unless(false, []() { return MoveOnlyType{"test"}; });
+      Option<ex::MoveOnly> number =
+        crab::unless(false, []() { return ex::MoveOnly{"test"}; });
 
       REQUIRE_NOTHROW(
         number.is_some() and number.get_unchecked().get_name() == "test"
       );
 
-      number = crab::unless(true, []() { return MoveOnlyType{"test"}; });
+      number = crab::unless(true, []() { return ex::MoveOnly{"test"}; });
       REQUIRE(number.is_none());
     }
   }
@@ -137,9 +137,9 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move only") {
-      Option<MoveOnlyType> name{MoveOnlyType{"Hello"}};
-      Option<RefMut<MoveOnlyType>> ref = name.as_ref_mut();
-      Option<Ref<MoveOnlyType>> ref_mut = name.as_ref();
+      Option<ex::MoveOnly> name{ex::MoveOnly{"Hello"}};
+      Option<RefMut<ex::MoveOnly>> ref = name.as_ref_mut();
+      Option<Ref<ex::MoveOnly>> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
       REQUIRE(ref.is_some());

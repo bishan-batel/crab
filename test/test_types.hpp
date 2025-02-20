@@ -3,49 +3,74 @@
 #include <utility>
 #include "preamble.hpp"
 
-class MoveOnlyType {
-public:
+namespace ex {
 
-  constexpr explicit MoveOnlyType(String name): name{std::move(name)} {}
+  class MoveOnly {
+  public:
 
-  constexpr MoveOnlyType(const MoveOnlyType&) = delete;
+    constexpr explicit MoveOnly(String name): name{std::move(name)} {}
 
-  constexpr MoveOnlyType(MoveOnlyType&& from) noexcept:
-      name{std::move(from.name)} {}
+    constexpr MoveOnly(const MoveOnly&) = delete;
 
-  constexpr auto operator=(const MoveOnlyType&) -> MoveOnlyType& = delete;
+    constexpr MoveOnly(MoveOnly&& from) noexcept: name{std::move(from.name)} {}
 
-  constexpr auto operator=(MoveOnlyType&& from) noexcept -> MoveOnlyType& {
-    if (this == &from) {
+    constexpr auto operator=(const MoveOnly&) -> MoveOnly& = delete;
+
+    constexpr auto operator=(MoveOnly&& from) noexcept -> MoveOnly& {
+      if (this == &from) {
+        return *this;
+      }
+
+      name = std::move(from.name);
+
       return *this;
     }
 
-    name = std::move(from.name);
+    constexpr auto set_name(String name) -> void {
+      this->name = std::move(name);
+    }
 
-    return *this;
-  }
+    [[nodiscard]] constexpr auto get_name() const -> const String& {
+      return name;
+    }
 
-  constexpr auto set_name(String name) -> void { this->name = std::move(name); }
+  private:
 
-  [[nodiscard]] constexpr auto get_name() const -> const String& {
-    return name;
-  }
+    String name;
+  };
 
-private:
+  struct Copyable {
+    constexpr explicit Copyable(String name): name{std::move(name)} {}
 
-  String name;
-};
+    constexpr auto set_name(String name) -> void {
+      this->name = std::move(name);
+    }
 
-struct CopyableType {
-  constexpr explicit CopyableType(String name): name{std::move(name)} {}
+    [[nodiscard]] constexpr auto get_name() const -> const String& {
+      return name;
+    }
 
-  constexpr auto set_name(String name) -> void { this->name = std::move(name); }
+  private:
 
-  [[nodiscard]] constexpr auto get_name() const -> const String& {
-    return name;
-  }
+    String name;
+  };
 
-private:
+  struct Base {
+    virtual ~Base() = default;
 
-  String name;
-};
+    [[nodiscard]] virtual auto name() const -> StringView { return "Base"; }
+  };
+
+  struct Derived : public Base {
+    [[nodiscard]] auto name() const -> StringView override { return "Derived"; }
+  };
+
+  constexpr auto test_values =
+    []<typename... T>(const auto& test, T&&... types) {
+      const auto test_wrapped = [test]<typename S>(S&& x) {
+        test(std::forward<S>(x));
+        return unit::val;
+      };
+      (std::ignore = ... = test_wrapped(std::forward<T>(types)));
+    };
+}

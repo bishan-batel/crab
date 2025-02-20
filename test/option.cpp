@@ -1,9 +1,10 @@
-#include "option.hpp"
+#include <option.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
 #include "box.hpp"
-#include "preamble.hpp"
-#include "ref.hpp"
+#include "test_types.hpp"
+#include <preamble.hpp>
+#include <ref.hpp>
 #include <crab/fn.hpp>
 
 TEST_CASE("Option", "[option]") {
@@ -43,7 +44,7 @@ TEST_CASE("Option", "[option]") {
     SECTION("All Some crab::fallible") {
       bool first = false, second = false;
 
-      Option<std::tuple<i32, i32>> a = crab::fallible(
+      Option<Tuple<i32, i32>> a = crab::fallible(
         [&]() {
           first = true;
           return 10;
@@ -114,5 +115,48 @@ TEST_CASE("Option", "[option]") {
   SECTION("bool conversion") {
     REQUIRE(Option<i32>{0});
     REQUIRE_FALSE(Option<i32>{});
+
+    REQUIRE_FALSE(not crab::some(0));
+    REQUIRE(not Option<i32>{});
+  }
+
+  SECTION("Comparisons") {
+
+    for (usize i = 0; i < 10; i++) {
+
+      ex::test_values(
+        [](auto&& x) {
+          Option val{x};
+
+          REQUIRE(val == crab::some(x));
+
+          const auto cmp_none = [&]() {
+            REQUIRE(val > crab::none);
+            REQUIRE(val < crab::none);
+            REQUIRE(val >= crab::none);
+            REQUIRE(val <= crab::none);
+          };
+
+          cmp_none();
+          val = crab::none;
+          cmp_none();
+
+          REQUIRE(val == crab::none);
+        },
+        i,
+        static_cast<f32>(i),
+        static_cast<u16>(i),
+        static_cast<f64>(i),
+        static_cast<u8>(i)
+      );
+    }
+  }
+
+  SECTION("Hash") {
+    Set<Option<usize>> numbers{};
+
+    for (usize i = 0; i < 100; i++) {
+      numbers.emplace(i);
+    }
   }
 }

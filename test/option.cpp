@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <option.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
@@ -6,6 +7,7 @@
 #include <preamble.hpp>
 #include <ref.hpp>
 #include <crab/fn.hpp>
+#include <range.hpp>
 
 TEST_CASE("Option", "[option]") {
 
@@ -155,8 +157,12 @@ TEST_CASE("Option", "[option]") {
   SECTION("Hash") {
     Set<Option<usize>> numbers{};
 
-    for (usize i = 0; i < 100; i++) {
+    for (const usize i: crab::range(100)) {
       numbers.emplace(i);
     }
+    for (const usize i: crab::range(100)) {
+      REQUIRE(numbers.contains(i));
+    }
+    REQUIRE_FALSE(numbers.contains(crab::none));
   }
 }

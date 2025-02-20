@@ -7,12 +7,12 @@ namespace crab::fn {
   /**
    * @brief Identity Function, f(x)=x forall x
    */
-  constexpr auto identity = [](auto&& x) -> decltype(x) {
+  constexpr auto identity = []<typename T>(T&& x) -> T {
     static_assert(
-      std::move_constructible<decltype(x)>,
+      std::move_constructible<T>,
       "Cannot create an identity function for a type that cannot be moved."
     );
-    return std::forward<std::remove_reference_t<decltype(x)>>(x);
+    return std::forward<T>(x);
   };
 
   /**
@@ -21,12 +21,12 @@ namespace crab::fn {
    *
    * @param x Any integer value to check
    */
-  constexpr auto constant = [](auto&& x) {
+  constexpr auto constant = []<typename T>(T&& x) {
     static_assert(
-      std::move_constructible<decltype(x)>,
+      std::move_constructible<T>,
       "Cannot create a constant function for a type that cannot be moved."
     );
-    return [x = std::forward<decltype(x)>(x)]<typename... Args>(Args&&...) {
+    return [x = std::forward<T>(x)]<typename... Args>(Args&&...) {
       return decltype(x){x};
     };
   };

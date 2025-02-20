@@ -633,7 +633,9 @@ public:
   template<typename S>
   [[nodiscard]] auto operator>(const Option<S>& other) const -> bool {
     static_assert(
-      std::equality_comparable_with<T, S>,
+      requires(const T& a, const S& b) {
+        { a > b } -> std::convertible_to<bool>;
+      },
       "Cannot compare to options if the inner types are not comparable with >"
     );
     if (is_none() or other.is_none()) {
@@ -646,7 +648,9 @@ public:
   template<typename S>
   [[nodiscard]] auto operator<(const Option<S>& other) const -> bool {
     static_assert(
-      std::equality_comparable_with<T, S>,
+      requires(const T& a, const S& b) {
+        { a < b } -> std::convertible_to<bool>;
+      },
       "Cannot compare to options if the inner types are not comparable with <"
     );
     if (is_none() or other.is_none()) {
@@ -659,7 +663,9 @@ public:
   template<typename S>
   [[nodiscard]] auto operator>=(const Option<S>& other) const -> bool {
     static_assert(
-      std::equality_comparable_with<T, S>,
+      requires(const T& a, const S& b) {
+        { a >= b } -> std::convertible_to<bool>;
+      },
       "Cannot compare to options if the inner types are not comparable with >="
     );
     if (is_none() or other.is_none()) {
@@ -672,11 +678,26 @@ public:
   template<typename S>
   [[nodiscard]] auto operator<=(const Option<S>& other) const -> bool {
     static_assert(
-      std::equality_comparable_with<T, S>,
+      requires(const T& a, const S& b) {
+        { a <= b } -> std::convertible_to<bool>;
+      },
       "Cannot compare to options if the inner types are not comparable with <="
     );
     if (is_none() or other.is_none()) {
       return is_none() == other.is_none();
+    }
+
+    return get_unchecked() <= other.get_unchecked();
+  };
+
+  template<typename S>
+  [[nodiscard]] auto operator<=>(const Option<S>& other) const -> bool {
+    static_assert(
+      std::three_way_comparable_with<T, S>,
+      "Cannot compare to options if the inner types are not comparable with <=>"
+    );
+    if (is_none() or other.is_none()) {
+      return is_none() <=> other.is_none();
     }
 
     return get_unchecked() <= other.get_unchecked();

@@ -716,7 +716,7 @@ namespace std {
   struct std::hash<Option<T>> /*NOLINT*/ {
     [[nodiscard]]
     auto operator()(const Option<T>& opt) const -> crab::hash_code {
-      if (opt.is_some()) {
+      if (opt.is_none()) {
         return 0;
       }
 

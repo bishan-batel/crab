@@ -282,7 +282,8 @@ public:
    * @brief Move out the Ok value inside, this will panic & crash if there is no
    * contained Ok value
    */
-  [[nodiscard]] auto take_unchecked(
+  [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] auto
+  take_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> T {
     ensure_valid(loc);
@@ -301,7 +302,8 @@ public:
    * @brief Move out the Error value inside, this will panic & crash if there is
    * no contained Error value
    */
-  [[nodiscard]] auto take_err_unchecked(
+  [[deprecated("Prefer safer unwrap_err instead")]] [[nodiscard]] auto
+  take_err_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> E {
     ensure_valid(loc);
@@ -386,13 +388,28 @@ public:
   [[nodiscard]] auto unwrap(
     const std::source_location loc = std::source_location::current()
   ) && -> T {
-    return take_unchecked(loc);
+    ensure_valid(loc);
+    debug_assert_transparent(
+      is_ok(),
+      std::format(
+        "Called unwrap on result with Error:\n{}",
+        crab::result::error_to_string(get_err_unchecked())
+      ),
+      loc
+    );
+    return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
 
   [[nodiscard]] auto unwrap_err(
     const std::source_location loc = std::source_location::current()
   ) && -> E {
-    return take_err_unchecked(loc);
+    ensure_valid(loc);
+    debug_assert_transparent(
+      is_err(),
+      "Called unwrap_err on result with Ok value",
+      loc
+    );
+    return std::get<Err>(std::exchange(inner, invalidated{})).value;
   }
 
   /**
@@ -454,10 +471,10 @@ public:
     ensure_valid(loc);
 
     if (is_ok()) {
-      return Result<R, E>{functor(take_unchecked(loc))};
+      return Result<R, E>{functor(std::move(*this).unwrap(loc))};
     }
 
-    return Result<R, E>{take_err_unchecked(loc)};
+    return Result<R, E>{std::move(*this).unwrap_err(loc)};
   }
 
   /**
@@ -475,10 +492,10 @@ public:
     ensure_valid(loc);
 
     if (is_err()) {
-      return Result<T, R>{functor(take_err_unchecked(loc))};
+      return Result<T, R>{functor(std::move(*this).unwrap(loc))};
     }
 
-    return Result<T, R>{take_unchecked(loc)};
+    return Result<T, R>{std::move(*this).unwrap_err(loc)};
   }
 
   /**
@@ -545,10 +562,10 @@ public:
     ensure_valid(loc);
 
     if (is_err()) {
-      return Returned{take_err_unchecked(loc)};
+      return Returned{std::move(*this).unwrap_err(loc)};
     }
 
-    return Returned{functor(take_unchecked(loc))};
+    return Returned{functor(std::move(*this).unwrap(loc))};
   }
 
   /**
@@ -582,7 +599,7 @@ public:
     ensure_valid(loc);
 
     if (is_ok()) {
-      return take_unchecked(loc);
+      return std::move(*this).unwrap(loc);
     }
 
     return {};
@@ -601,7 +618,7 @@ public:
     ensure_valid(loc);
 
     if (is_err()) {
-      return take_err_unchecked(loc);
+      return std::move(*this).unwrap_err(loc);
     }
 
     return {};
@@ -686,31 +703,31 @@ namespace crab {
         );
 
         using ReturnOk = decltype(std::tuple_cat(
-          tuple.take_unchecked(),
-          std::make_tuple(function().take_unchecked())
+          std::move(tuple).unwrap(),
+          std::make_tuple(function().unwrap())
         ));
         using Return = decltype(operator()(
           Result<ReturnOk, Error>{std::tuple_cat(
-            tuple.take_unchecked(),
-            std::make_tuple(function().take_unchecked())
+            std::move(tuple).unwrap(),
+            std::make_tuple(function().unwrap())
           )},
           other_functions...
         ));
 
         if (tuple.is_err()) {
-          return Return{tuple.take_err_unchecked()};
+          return Return{std::move(tuple).unwrap_err()};
         }
 
         Result<FOkType, Error> result = function();
 
         if (result.is_err()) {
-          return Return{result.take_err_unchecked()};
+          return Return{std::move(result).unwrap_err()};
         }
 
         return operator()(
           Result<ReturnOk, Error>{std::tuple_cat(
-            tuple.take_unchecked(),
-            std::make_tuple(result.take_unchecked())
+            std::move(tuple).unwrap(),
+            std::make_tuple(std::move(result).unwrap())
           )},
           other_functions...
         );
@@ -730,25 +747,26 @@ namespace crab {
         using FOkType = decltype(function());
 
         using ReturnOk = decltype(std::tuple_cat(
-          tuple.take_unchecked(),
+          std::move(tuple).unwrap(),
           std::make_tuple(function())
         ));
         using Return = decltype(operator()(
-          Result<ReturnOk, Error>{
-            std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))
-          },
+          Result<ReturnOk, Error>{std::tuple_cat(
+            std::move(tuple).unwrap(),
+            std::make_tuple(function())
+          )},
           other_functions...
         ));
 
         if (tuple.is_err()) {
-          return Return{tuple.take_err_unchecked()};
+          return Return{std::move(tuple).unwrap_err()};
         }
 
         FOkType result = function();
 
         return operator()(
           Result<ReturnOk, Error>{std::tuple_cat(
-            tuple.take_unchecked(),
+            std::move(tuple).unwrap(),
             std::make_tuple(std::move(result))
           )},
           other_functions...

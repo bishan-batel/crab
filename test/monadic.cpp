@@ -10,7 +10,7 @@ consteval auto consteval_test() -> void {
 
   std::ignore = number.filter([](i32 x) { return x % 2 == 0; });
 
-  Option moved{ex::MoveOnly{"value"}};
+  Option<ex::MoveOnly> moved{ex::MoveOnly{"value"}};
   std::ignore = std::move(moved).filter(crab::fn::constant(true));
 }
 

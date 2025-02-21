@@ -22,12 +22,12 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_FALSE(result.is_err());
 
     REQUIRE(result.get_unchecked() == 10);
-    REQUIRE(result.take_unchecked() == 10);
+    REQUIRE(std::move(result).unwrap() == 10);
 
     REQUIRE_THROWS(result.get_unchecked());
     REQUIRE_THROWS(result.get_err_unchecked());
-    REQUIRE_THROWS(result.take_unchecked());
-    REQUIRE_THROWS(result.take_err_unchecked());
+    REQUIRE_THROWS(std::move(result).unwrap());
+    REQUIRE_THROWS(std::move(result).unwrap());
 
     result = err(Error{});
     REQUIRE(result.is_err());
@@ -61,7 +61,7 @@ TEST_CASE("Result", "[result]") {
     std::ignore = huh.copied().map([](const i32 a) { return a * 2; });
     REQUIRE(huh.is_err());
 
-    std::ignore = huh.take_err_unchecked();
+    std::ignore = std::move(huh).unwrap_err();
     REQUIRE_THROWS(std::ignore = std::move(huh).map([](const i32 a) {
       return a * 2;
     }));
@@ -92,7 +92,7 @@ TEST_CASE("Result", "[result]") {
       REQUIRE((first and second));
       REQUIRE(a.is_ok());
 
-      auto [num1, num2] = a.take_unchecked();
+      auto [num1, num2] = a.get_unchecked();
 
       REQUIRE(num1 == 10);
       REQUIRE(num2 == 22);
@@ -126,7 +126,7 @@ TEST_CASE("Result", "[result]") {
   SECTION("String as Errors") {
     const auto non_zero = [](u8 num) -> Result<u8, String> {
       if (num != 0) {
-        return crab::ok(num);
+        return num;
       }
 
       return crab::err<String>("Zero.");
@@ -134,7 +134,7 @@ TEST_CASE("Result", "[result]") {
 
     REQUIRE(non_zero(10).is_ok());
 
-    REQUIRE(non_zero(0).take_err_unchecked() == String{"Zero."});
+    REQUIRE(non_zero(0).get_err_unchecked() == String{"Zero."});
   }
 }
 

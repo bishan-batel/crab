@@ -202,10 +202,20 @@ public:
   Result(const Result& res) requires std::copyable<T> and std::copyable<E>
       : inner{res.inner} {}
 
-  auto operator=(const Result& res) -> Result& requires std::copyable<T>
-                                                    and std::copyable<E>
+  auto operator=(const Result& res) -> Result& //
+    requires std::copyable<T> and std::copyable<E>
   {
+    if (&res == this) {
+      return *this;
+    }
+
     inner = res.inner;
+
+    return *this;
+  }
+
+  auto operator=(Result&& res) noexcept -> Result& {
+    inner = std::exchange(res.inner, invalidated{});
     return *this;
   }
 
@@ -220,84 +230,150 @@ public:
   }
 
   auto operator=(T&& from) -> Result& {
-    return *this = Ok{std::forward<T>(from)};
-  } // NOLINT
-
-  auto operator=(E&& from) -> Result& {
-    return *this = Err{std::forward<E>(from)};
-  } // NOLINT
-
-  [[nodiscard]]
-  explicit operator bool() const {
-    return is_ok();
+    return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  [[nodiscard]]
-  auto is_ok() const -> bool {
+  auto operator=(E&& from) -> Result& {
+    return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
+  }
+
+  [[nodiscard]] explicit operator bool() const { return is_ok(); }
+
+  /**
+   * @brief Does this result hold an ok value
+   */
+  [[nodiscard]] auto is_ok() const -> bool {
     return std::holds_alternative<Ok>(inner);
   }
 
-  [[nodiscard]]
-  auto is_err() const -> bool {
+  /**
+   * @brief Does this result hold an err value
+   */
+  [[nodiscard]] auto is_err() const -> bool {
     return std::holds_alternative<Err>(inner);
   }
 
-  [[nodiscard]] auto take_unchecked() -> T {
-    T val{std::move(get_unchecked())};
-    inner = invalidated{};
-    return val;
+  /**
+   * @brief Move out the Ok value inside, this will panic & crash if there is no
+   * contained Ok value
+   */
+  [[nodiscard]] auto take_unchecked(
+    const std::source_location loc = std::source_location::current()
+  ) -> T {
+    ensure_valid(loc);
+    debug_assert_transparent(
+      is_ok(),
+      std::format(
+        "Called take_unchecked on result with Error:\n{}",
+        crab::result::error_to_string(get_err_unchecked())
+      ),
+      loc
+    );
+    return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
 
-  [[nodiscard]] auto take_err_unchecked() -> E {
-    E val{std::move(get_err_unchecked())};
-    inner = invalidated{};
-    return val;
+  /**
+   * @brief Move out the Error value inside, this will panic & crash if there is
+   * no contained Error value
+   */
+  [[nodiscard]] auto take_err_unchecked(
+    const std::source_location loc = std::source_location::current()
+  ) -> E {
+    ensure_valid(loc);
+    debug_assert_transparent(
+      is_err(),
+      "Called take_err_unchecked on result with ok value",
+      loc
+    );
+    return std::get<Err>(std::exchange(inner, invalidated{})).value;
   }
 
-  [[nodiscard]] auto get_unchecked() -> T& {
-    debug_assert(
+  /**
+   * @brief Gets a reference to the contained inner Ok value, if there is no Ok
+   * value this will panic and crash.
+   */
+  [[nodiscard]] auto get_unchecked(
+    const std::source_location loc = std::source_location::current()
+  ) -> T& {
+    ensure_valid(loc);
+    debug_assert_transparent(
       is_ok(),
       std::format(
         "Called unwrap on result with Error:\n{}",
         crab::result::error_to_string(get_err_unchecked())
-      )
+      ),
+      loc
     );
-
     return std::get<Ok>(inner).value;
   }
 
-  [[nodiscard]] auto get_err_unchecked() -> E& {
-    debug_assert(is_err(), std::format("Called unwrap on ok value"));
-
+  /**
+   * @brief Gets a reference to the contained Error value, if there is no Error
+   * value this will panic and crash.
+   */
+  [[nodiscard]] auto get_err_unchecked(
+    const std::source_location loc = std::source_location::current()
+  ) -> E& {
+    ensure_valid(loc);
+    debug_assert_transparent(
+      is_err(),
+      std::format("Called unwrap on Ok value"),
+      loc
+    );
     return std::get<Err>(inner).value;
   }
 
-  [[nodiscard]] auto get_unchecked() const -> const T& {
-    debug_assert(
+  /**
+   * @brief Gets a reference to the contained inner Ok value, if there is no Ok
+   * value this will panic and crash.
+   */
+  [[nodiscard]] auto get_unchecked(
+    const std::source_location loc = std::source_location::current()
+  ) const -> const T& {
+    ensure_valid(loc);
+    debug_assert_transparent(
       is_ok(),
       std::format(
         "Called unwrap on result with Error:\n{}",
         crab::result::error_to_string(get_err_unchecked())
-      )
+      ),
+      loc
     );
     return std::get<Ok>(inner).value;
   }
 
-  [[nodiscard]] auto get_err_unchecked() const -> const E& {
-    debug_assert(is_err(), std::format("Called unwrap on ok value{}", [&] {
-                   ensure_valid();
-                   return "";
-                 }()));
-
+  /**
+   * @brief Gets a reference to the contained Error value, if there is no Error
+   * value this will panic and crash.
+   */
+  [[nodiscard]] auto get_err_unchecked(
+    const std::source_location loc = std::source_location::current()
+  ) const -> const E& {
+    ensure_valid(loc);
+    debug_assert_transparent(
+      is_err(),
+      std::format("Called unwrap on Ok value"),
+      loc
+    );
     return std::get<Err>(inner).value;
   }
 
-  auto ensure_valid() const -> void {
-    debug_assert(
-      !std::holds_alternative<invalidated>(inner),
-      "Invalid use of moved result"
+private:
+
+  /**
+   * @brief Internal method for preventing use-after-movas
+   */
+  auto ensure_valid(
+    const std::source_location loc = std::source_location::current()
+  ) const -> void {
+    debug_assert_transparent(
+      not std::holds_alternative<invalidated>(inner),
+      "Invalid use of moved result",
+      loc
     );
   }
+
+public:
 
   friend auto operator<<(std::ostream& os, const Result& result)
     -> std::ostream& {
@@ -307,24 +383,29 @@ public:
     return os << "Ok(" << result.get_unchecked() << ")";
   }
 
-  // Functional / Chaining Methods
+  // ===========================================================================
+  //                            Monadic Operations
+  // ===========================================================================
 
   /**
    * Consumes self and if not Error, maps the Ok value to a new value
    * @tparam F
    * @return
    */
-  template<std::invocable<T> F, typename R = std::invoke_result_t<F, T>>
-  [[nodiscard]] auto map(const F functor) -> Result<R, E> {
-    ensure_valid();
+  template<
+    std::invocable<T> F,
+    typename R = std::remove_cvref_t<std::invoke_result_t<F, T>>>
+  [[nodiscard]] auto map(
+    F functor,
+    const std::source_location loc = std::source_location::current()
+  ) -> Result<R, E> {
+    ensure_valid(loc);
 
-    // std::variant<Ok, Err, invalidated> inner = std::exchange(inner,
-    // invalidated{});
     if (is_ok()) {
-      return Result<R, E>{functor(take_unchecked())};
+      return Result<R, E>{functor(take_unchecked(loc))};
     }
 
-    return Result<R, E>{take_err_unchecked()};
+    return Result<R, E>{take_err_unchecked(loc)};
   }
 
   /**
@@ -332,15 +413,20 @@ public:
    * @tparam F
    * @return
    */
-  template<std::invocable<E> F, typename R = std::invoke_result_t<F, E>>
-  [[nodiscard]] auto map_err(const F functor) -> Result<T, R> {
-    ensure_valid();
+  template<
+    std::invocable<E> F,
+    typename R = std::remove_cvref_t<std::invoke_result_t<F, E>>>
+  [[nodiscard]] auto map_err(
+    F functor,
+    const std::source_location loc = std::source_location::current()
+  ) -> Result<T, R> {
+    ensure_valid(loc);
 
     if (is_err()) {
-      return Result<T, R>{functor(take_err_unchecked())};
+      return Result<T, R>{functor(take_err_unchecked(loc))};
     }
 
-    return Result<T, R>{take_unchecked()};
+    return Result<T, R>{take_unchecked(loc)};
   }
 
   /**

@@ -436,13 +436,9 @@ public:
   template<std::invocable<T> F>
   requires std::copy_constructible<T>
   [[nodiscard]] constexpr auto map( //
-    const F& mapper
+    F mapper
   ) const& {
-    using Returned = Option<crab::clean_invoke_result<F, T>>;
-    if (is_some()) {
-      return Returned{mapper(T{get_unchecked()})};
-    }
-    return Returned{};
+    return copied().map(mapper);
   }
 
   /**

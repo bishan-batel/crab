@@ -39,6 +39,10 @@ TEST_CASE("Option", "[option]") {
       nested.flat_map([](auto x) { return crab::some(x); }).take_unchecked()
       == 420
     );
+
+    auto opt = nested.flat_map([](auto x) { return crab::some(x); });
+    REQUIRE(opt.is_some());
+
     REQUIRE(crab::some(crab::some(420)).flatten().take_unchecked() == 420);
   }
 

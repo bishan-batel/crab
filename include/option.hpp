@@ -406,11 +406,12 @@ public:
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto map( //
     F mapper
-  ) && -> Option<std::remove_cvref_t<std::invoke_result_t<F, T&&>>> {
+  ) && {
+    using Returned = Option<crab::clean_invoke_result<F, T>>;
     if (is_some()) {
-      return mapper(take_unchecked());
+      return Returned{mapper(take_unchecked())};
     }
-    return crab::None{};
+    return Returned{};
   }
 
   /**
@@ -436,24 +437,24 @@ public:
   requires std::copy_constructible<T>
   [[nodiscard]] constexpr auto map( //
     const F& mapper
-  ) const& -> Option<std::remove_cvref_t<std::invoke_result_t<F, T>>> {
+  ) const& {
+    using Returned = Option<crab::clean_invoke_result<F, T>>;
     if (is_some()) {
-      return mapper(T{get_unchecked()});
+      return Returned{mapper(T{get_unchecked()})};
     }
-    return {};
+    return Returned{};
   }
 
   /**
    * @brief Shorthand for calling .map(...).flatten()
    */
   template<std::invocable<T&&> F>
-  [[nodiscard]] constexpr auto flat_map(const F& mapper) && //
-    -> Option<
-      typename std::remove_cvref_t<std::invoke_result_t<F, T&&>>::Contained> {
+  [[nodiscard]] constexpr auto flat_map(const F& mapper) && {
+    using Returned = crab::clean_invoke_result<F, T>;
     if (is_some()) {
-      return mapper(take_unchecked());
+      return Returned{mapper(take_unchecked())};
     }
-    return crab::None{};
+    return Returned{crab::None{}};
   }
 
   /**
@@ -461,13 +462,13 @@ public:
    */
   template<std::invocable<T> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto flat_map(const F& mapper)
-    const& -> Option<typename std::remove_cvref_t<
-             std::invoke_result_t<F, T>>::Contained> {
+  [[nodiscard]] constexpr auto flat_map(const F& mapper) const& {
+    using Returned = crab::clean_invoke_result<F, T>;
+
     if (is_some()) {
-      return mapper(T{get_unchecked()});
+      return Returned{mapper(T{get_unchecked()})};
     }
-    return crab::None{};
+    return Returned{crab::None{}};
   }
 
   /**
@@ -752,16 +753,6 @@ namespace crab {
    * @brief 'None' value type for use with Option<T>
    */
   inline constexpr None none{};
-
-  namespace option {
-    template<typename T>
-    struct is_option_type : std::false_type {};
-
-    template<typename T>
-    struct is_option_type<Option<T>> : std::true_type {};
-  } // namespace option
-
-  template<typename T> concept option_type = option::is_option_type<T>::value;
 
   /**
    * @brief Creates an Option<T> from some value T

@@ -51,18 +51,20 @@ TEST_CASE("Result", "[result]") {
 
   SECTION("std::visit") {
     Result<i32, Error> huh{10};
-    huh = huh.map([](const i32 a) { return a * 2; });
+    huh = std::move(huh).map([](const i32 a) { return a * 2; });
     REQUIRE(huh.get_unchecked() == 20);
 
-    std::ignore = huh.map([](const i32 a) { return a * 2; });
+    std::ignore = std::move(huh).map([](const i32 a) { return a * 2; });
     REQUIRE_THROWS(huh.get_unchecked());
 
     huh = Error{};
-    huh = huh.map([](const i32 a) { return a * 2; });
+    std::ignore = huh.copied().map([](const i32 a) { return a * 2; });
     REQUIRE(huh.is_err());
 
     std::ignore = huh.take_err_unchecked();
-    REQUIRE_THROWS(std::ignore = huh.map([](const i32 a) { return a * 2; }));
+    REQUIRE_THROWS(std::ignore = std::move(huh).map([](const i32 a) {
+      return a * 2;
+    }));
   }
 
   SECTION("fold") {
@@ -105,9 +107,10 @@ TEST_CASE("Result", "[result]") {
   }
 
   SECTION("and_then") {
-    auto transformed = Result<i32, Error>{10}.and_then([](const i32) {
-      return Result<f32, Error>{10.f};
-    });
+    Result<f32, Error> transformed =
+      Result<i32, Error>{10}.and_then([](const i32) -> Result<f32, Error> {
+        return 10.f;
+      });
     REQUIRE(transformed.is_ok());
     REQUIRE(transformed.get_unchecked() == 10.f);
 

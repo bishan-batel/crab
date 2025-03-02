@@ -204,11 +204,18 @@ public:
   constexpr Result(Result&& from) noexcept: /* NOLINT(*explicit*) */
       inner{std::exchange(from.inner, invalidated{})} {}
 
-  constexpr Result(const Result& res) requires is_copyable
-      : inner{res.inner} {}
+  constexpr Result(const Result& res): inner{res.inner} {
+    static_assert(
+      is_copyable,
+      "Cannot copy a result with a non-copyable Err or Ok type"
+    );
+  }
 
-  auto operator=(const Result& res) -> Result& requires is_copyable
-  {
+  constexpr auto operator=(const Result& res) -> Result& {
+    static_assert(
+      is_copyable,
+      "Cannot copy a result with a non-copyable Err or Ok type"
+    );
     if (&res == this) {
       return *this;
     }
@@ -218,42 +225,42 @@ public:
     return *this;
   }
 
-  auto operator=(Result&& res) noexcept -> Result& {
+  constexpr auto operator=(Result&& res) noexcept -> Result& {
     inner = std::exchange(res.inner, invalidated{});
     return *this;
   }
 
-  auto operator=(Ok&& from) -> Result& {
+  constexpr auto operator=(Ok&& from) -> Result& {
     inner = std::forward<Ok>(from);
     return *this;
   }
 
-  auto operator=(Err&& from) -> Result& {
+  constexpr auto operator=(Err&& from) -> Result& {
     inner = std::forward<Err>(from);
     return *this;
   }
 
-  auto operator=(T&& from) -> Result& {
+  constexpr auto operator=(T&& from) -> Result& {
     return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  auto operator=(E&& from) -> Result& {
+  constexpr auto operator=(E&& from) -> Result& {
     return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
   }
 
-  [[nodiscard]] explicit operator bool() const { return is_ok(); }
+  [[nodiscard]] constexpr explicit operator bool() const { return is_ok(); }
 
   /**
    * @brief Does this result hold an ok value
    */
-  [[nodiscard]] auto is_ok() const -> bool {
+  [[nodiscard]] constexpr auto is_ok() const -> bool {
     return std::holds_alternative<Ok>(inner);
   }
 
   /**
    * @brief Does this result hold an err value
    */
-  [[nodiscard]] auto is_err() const -> bool {
+  [[nodiscard]] constexpr auto is_err() const -> bool {
     return std::holds_alternative<Err>(inner);
   }
 
@@ -265,7 +272,7 @@ public:
    * Result<i32,String>{10}.is_ok_and(crab::fn::odd) -> false
    */
   template<std::predicate<const T&> F>
-  [[nodiscard]] auto is_ok_and(F&& functor) const -> bool {
+  [[nodiscard]] constexpr auto is_ok_and(F&& functor) const -> bool {
     return is_ok() and functor(get_unchecked());
   }
 
@@ -274,7 +281,7 @@ public:
    * match with the given predicate
    */
   template<std::predicate<const E&> F>
-  [[nodiscard]] auto is_err_and(F&& functor) const -> bool {
+  [[nodiscard]] constexpr auto is_err_and(F&& functor) const -> bool {
     return is_err() and functor(get_err_unchecked());
   }
 
@@ -282,7 +289,7 @@ public:
    * @brief Move out the Ok value inside, this will panic & crash if there is no
    * contained Ok value
    */
-  [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] auto
+  [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] constexpr auto
   take_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> T {
@@ -302,7 +309,7 @@ public:
    * @brief Move out the Error value inside, this will panic & crash if there is
    * no contained Error value
    */
-  [[deprecated("Prefer safer unwrap_err instead")]] [[nodiscard]] auto
+  [[deprecated("Prefer safer unwrap_err instead")]] [[nodiscard]] constexpr auto
   take_err_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> E {
@@ -319,7 +326,7 @@ public:
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
-  [[nodiscard]] auto get_unchecked(
+  [[nodiscard]] constexpr auto get_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> T& {
     ensure_valid(loc);
@@ -338,7 +345,7 @@ public:
    * @brief Gets a reference to the contained Error value, if there is no Error
    * value this will panic and crash.
    */
-  [[nodiscard]] auto get_err_unchecked(
+  [[nodiscard]] constexpr auto get_err_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> E& {
     ensure_valid(loc);
@@ -354,7 +361,7 @@ public:
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
-  [[nodiscard]] auto get_unchecked(
+  [[nodiscard]] constexpr auto get_unchecked(
     const std::source_location loc = std::source_location::current()
   ) const -> const T& {
     ensure_valid(loc);
@@ -373,7 +380,7 @@ public:
    * @brief Gets a reference to the contained Error value, if there is no Error
    * value this will panic and crash.
    */
-  [[nodiscard]] auto get_err_unchecked(
+  [[nodiscard]] constexpr auto get_err_unchecked(
     const std::source_location loc = std::source_location::current()
   ) const -> const E& {
     ensure_valid(loc);
@@ -385,7 +392,7 @@ public:
     return std::get<Err>(inner).value;
   }
 
-  [[nodiscard]] auto unwrap(
+  [[nodiscard]] constexpr auto unwrap(
     const std::source_location loc = std::source_location::current()
   ) && -> T {
     ensure_valid(loc);
@@ -400,7 +407,7 @@ public:
     return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
 
-  [[nodiscard]] auto unwrap_err(
+  [[nodiscard]] constexpr auto unwrap_err(
     const std::source_location loc = std::source_location::current()
   ) && -> E {
     ensure_valid(loc);
@@ -415,7 +422,7 @@ public:
   /**
    * @brief Internal method for preventing use-after-movas
    */
-  auto ensure_valid(
+  constexpr auto ensure_valid(
     const std::source_location loc = std::source_location::current()
   ) const -> void {
     debug_assert_transparent(
@@ -425,7 +432,7 @@ public:
     );
   }
 
-  friend auto operator<<(std::ostream& os, const Result& result)
+  friend constexpr auto operator<<(std::ostream& os, const Result& result)
     -> std::ostream& {
     if (result.is_err()) {
       return os << "Err(" << result.get_err_unchecked() << ")";
@@ -433,7 +440,7 @@ public:
     return os << "Ok(" << result.get_unchecked() << ")";
   }
 
-  [[nodiscard]] auto copied(
+  [[nodiscard]] constexpr auto copied(
     const std::source_location loc = std::source_location::current()
   ) const -> Result {
     static_assert(
@@ -444,9 +451,9 @@ public:
     ensure_valid(loc);
 
     if (is_ok()) {
-      return Ok{get_unchecked()};
+      return Result{T{get_unchecked()}};
     } else {
-      return Err{get_err_unchecked()};
+      return Result{E{get_err_unchecked()}};
     }
   }
 
@@ -462,7 +469,7 @@ public:
    * @return
    */
   template<std::invocable<T> F>
-  [[nodiscard]] auto map(
+  [[nodiscard]] constexpr auto map(
     F&& functor,
     const std::source_location loc = std::source_location::current()
   ) && {
@@ -483,7 +490,7 @@ public:
    * @return
    */
   template<std::invocable<E> F>
-  [[nodiscard]] auto map_err(
+  [[nodiscard]] constexpr auto map_err(
     F&& functor,
     const std::source_location loc = std::source_location::current()
   ) && {
@@ -504,7 +511,7 @@ public:
    * @return
    */
   template<std::invocable<T> F>
-  [[nodiscard]] auto map(
+  [[nodiscard]] constexpr auto map(
     F&& functor,
     const std::source_location loc = std::source_location::current()
   ) const& {
@@ -522,7 +529,7 @@ public:
    * @return
    */
   template<std::invocable<E> F>
-  [[nodiscard]] auto map_err(
+  [[nodiscard]] constexpr auto map_err(
     F&& functor,
     const std::source_location loc = std::source_location::current()
   ) const& {
@@ -542,8 +549,8 @@ public:
    * If the mapped function is Ok(type M), it returns Result<M, Error>
    */
   template<std::invocable<T> F>
-  [[nodiscard]] auto and_then(
-    F functor,
+  [[nodiscard]] constexpr auto and_then(
+    F&& functor,
     const std::source_location loc = std::source_location::current()
   ) && {
     using Returned = crab::clean_invoke_result<F, T>;
@@ -574,7 +581,7 @@ public:
    * Result<M, Error>
    */
   template<std::invocable<T> F>
-  [[nodiscard]] auto and_then(
+  [[nodiscard]] constexpr auto and_then(
     F&& functor,
     const std::source_location loc = std::source_location::current()
   ) const& {
@@ -593,7 +600,7 @@ public:
    * This function is for use when wanting to abstract away any specific error
    * type to simply 'none'.
    */
-  [[nodiscard]] auto ok(
+  [[nodiscard]] constexpr auto ok(
     const std::source_location loc = std::source_location::current()
   ) && -> Option<T> {
     ensure_valid(loc);
@@ -612,7 +619,7 @@ public:
    * This function is for use when wanting to abstract away any specific Ok type
    * to simply 'none'.
    */
-  [[nodiscard]] auto err(
+  [[nodiscard]] constexpr auto err(
     const std::source_location loc = std::source_location::current()
   ) && -> Option<E> {
     ensure_valid(loc);
@@ -631,7 +638,7 @@ public:
    * This function is for use when wanting to abstract away any specific error
    * type to simply 'none'.
    */
-  [[nodiscard]] auto ok(
+  [[nodiscard]] constexpr auto ok(
     const std::source_location loc = std::source_location::current()
   ) const& -> Option<T> {
     static_assert(
@@ -656,7 +663,7 @@ public:
    * This function is for use when wanting to abstract away any specific Ok type
    * to simply 'none'.
    */
-  [[nodiscard]] auto err(
+  [[nodiscard]] constexpr auto err(
     const std::source_location loc = std::source_location::current()
   ) const& -> Option<E> {
     static_assert(
@@ -682,13 +689,13 @@ namespace crab {
       constexpr fallible() = default;
 
       // Identity
-      inline auto operator()(auto tuple) const { return tuple; }
+      constexpr auto operator()(auto tuple) const { return tuple; }
 
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>
-      inline auto operator()(
+      constexpr auto operator()(
         auto tuple,
-        const F function,
+        F&& function,
         const Rest... other_functions
       ) const requires is_result_type_v<decltype(function())>
       {
@@ -734,10 +741,10 @@ namespace crab {
       }
 
       template<std::invocable F, std::invocable... Rest>
-      inline auto operator()(
+      constexpr auto operator()(
         // Tuple : Result<std:tuple<...>, Error>
         auto tuple,
-        const F function,
+        F&& function,
         const Rest... other_functions
       ) const
         requires(ok_type<decltype(function())> and not is_result_type_v<decltype(function())>)
@@ -793,34 +800,39 @@ namespace crab {
   } // namespace result
 
   template<result::error_type E, std::invocable... F>
-  auto fallible(const F... fallible
+  constexpr auto fallible( //
+    F&&... fallible
   ) -> Result<std::tuple<result::decay_fallible_function<F>...>, E> {
-    return result::fallible<E>{
-    }(Result<std::tuple<>, E>{std::make_tuple()}, fallible...);
+    return result::fallible<E>{}(
+      Result<std::tuple<>, E>{
+        std::make_tuple(),
+      },
+      fallible...
+    );
   }
 
-  template<result::error_type T>
-  [[nodiscard]] auto ok(T&& value) {
+  template<result::ok_type T>
+  [[nodiscard]] constexpr auto ok(T&& value) {
     return result::Ok<std::remove_cvref_t<T>>{std::forward<T>(value)};
   }
 
   template<result::error_type E>
-  [[nodiscard]] auto err(E&& value) {
+  [[nodiscard]] constexpr auto err(E&& value) {
     return result::Err<std::remove_cvref_t<E>>{std::forward<E>(value)};
   }
 
   template<typename T, typename E>
-  [[nodiscard]] auto unwrap(
+  [[nodiscard]] constexpr auto unwrap(
     Result<T, E>&& result,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) -> T {
     return std::forward<Result<T, E>>(result).unwrap(loc);
   }
 
   template<typename T, typename E>
-  [[nodiscard]] auto unwrap_err(
+  [[nodiscard]] constexpr auto unwrap_err(
     Result<T, E>&& result,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) -> E {
     return std::forward<Result<T, E>>(result).unwrap_err(loc);
   }

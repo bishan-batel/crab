@@ -598,7 +598,7 @@ public:
   [[nodiscard]]
   constexpr auto zip(Option<Vals>... other) && -> Option<Tuple<T, Vals...>> {
     if (is_none()) {
-      return false;
+      return crab::None{};
     }
 
     if ((... or other.is_none())) {

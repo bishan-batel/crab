@@ -516,10 +516,10 @@ public:
     ensure_valid(loc);
 
     if (is_err()) {
-      return Result<T, R>{functor(std::move(*this).unwrap(loc))};
+      return Result<T, R>{functor(std::move(*this).unwrap_err(loc))};
     }
 
-    return Result<T, R>{std::move(*this).unwrap_err(loc)};
+    return Result<T, R>{std::move(*this).unwrap(loc)};
   }
 
   /**

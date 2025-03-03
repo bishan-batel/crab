@@ -763,7 +763,7 @@ namespace crab {
    */
   template<typename T>
   [[nodiscard]] constexpr auto some(T from) {
-    return Option<crab::clean_invoke_result<T>>{std::move(from)};
+    return Option<std::remove_cvref_t<T>>{std::move(from)};
   }
 
   /**
@@ -804,7 +804,7 @@ namespace crab {
       constexpr fallible() = default;
 
       // Identity
-      inline auto operator()(auto tuple) const { return tuple; }
+      constexpr auto operator()(auto tuple) const { return tuple; }
 
       // Pass with Result<T, E>
       template<std::invocable F, std::invocable... Rest>

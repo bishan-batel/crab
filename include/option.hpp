@@ -77,7 +77,6 @@ namespace crab::ref {
 
   template<typename T>
   struct is_ref_mut_type<RefMut<T>> : std::true_type {};
-
 } // namespace crab::ref
 
 /**
@@ -152,6 +151,23 @@ public:
     return *this;
   }
 
+  /**
+   * @brief Move an option
+   */
+  constexpr Option(Option&& from) /*NOLINT(*explicit*)*/ noexcept:
+      value(std::exchange(from.value, crab::None{})) {}
+
+  constexpr auto operator=(Option&& opt) noexcept -> Option& {
+    value = std::exchange(opt.value, crab::None{});
+    return *this;
+  }
+
+  constexpr Option(const Option&) = default;
+
+  constexpr auto operator=(const Option&) -> Option& = default;
+
+  constexpr ~Option() = default;
+
   // /**
   //  * @brief Whether this option has a contained value or not (None)
   //  */
@@ -196,8 +212,8 @@ public:
    * method is called this option is 'None'
    */
   [[nodiscard]]
-  constexpr auto take_or_default() const
-    -> T&& requires std::constructible_from<T> and std::copyable<T>
+  constexpr auto take_or_default() const -> T
+    requires std::constructible_from<T> and std::copyable<T>
   {
     return is_some() ? unwrap() : T{};
   }
@@ -255,7 +271,7 @@ public:
    * @param default_generator Function to create the default value
    */
   template<std::invocable F>
-  [[nodiscard]] constexpr auto get_or(F&& default_generator) const -> T
+  [[nodiscard]] constexpr auto get_or(F default_generator) const -> T
     requires std::copy_constructible<T>
          and std::convertible_to<std::invoke_result_t<F>, T>
   {
@@ -279,66 +295,18 @@ public:
    * @param default_generator Function to create the default value
    */
   template<std::invocable F>
-  [[nodiscard]] constexpr auto take_or(F&& default_generator) && -> T {
+  [[nodiscard]] constexpr auto take_or(F default_generator) && -> T {
     return is_some() ? T{std::move(*this).unwrap()} : T{default_generator()};
   }
 
   /**
-   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
-   * exists, else returns a default value
-   * @param default_value
-   */
-  [[nodiscard]] constexpr auto take_or(T default_value) & -> T {
-    static_assert(
-      std::is_trivially_copyable_v<T>,
-      "Cannot take_or a lvalue Option<T> when T is not trivially copyable, try "
-      "moving then calling unwrap"
-    );
-    return this->take_or([default_value = std::move(default_value)] {
-      return default_value;
-    });
-  }
-
-  /**
-   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
-   * exists, else uses 'F' to compute & create a default value
-   * @param default_generator Function to create the default value
-   */
-  template<std::invocable F>
-  [[nodiscard]] constexpr auto take_or(F&& default_generator) & -> T {
-    static_assert(
-      std::is_trivially_copyable_v<T>,
-      "Cannot take_or a lvalue Option<T> when T is not trivially copyable, try "
-      "moving then calling unwrap"
-    );
-    return is_some() ? T{unwrap()} : T{default_generator()};
-  }
-
-  /**
    * @brief Takes value out of the option and returns it, will error if option
    * is none, After this, the value has been 'taken out' of this option, after
    * this method is called this option is 'None'
    */
   [[nodiscard]] constexpr auto unwrap(
     const std::source_location loc = std::source_location::current()
-  ) && -> T&& {
-    debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
-    return std::get<T>(std::exchange(value, crab::None{}));
-  }
-
-  /**
-   * @brief Takes value out of the option and returns it, will error if option
-   * is none, After this, the value has been 'taken out' of this option, after
-   * this method is called this option is 'None'
-   */
-  [[nodiscard]] constexpr auto unwrap(
-    const std::source_location loc = std::source_location::current()
-  ) & -> T&& {
-    static_assert(
-      std::is_trivially_copyable_v<T>,
-      "Cannot unwrap a lvalue Option<T> when T is not trivially copyable, try "
-      "moving then calling unwrap"
-    );
+  ) && -> T {
     debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
     return std::get<T>(std::exchange(value, crab::None{}));
   }
@@ -393,9 +361,7 @@ public:
    * @param error_generator Function to generate an error to replace "None".
    */
   template<typename E, std::invocable F>
-  [[nodiscard]] constexpr auto ok_or( //
-    F&& error_generator
-  ) const -> Result<T, E>
+  [[nodiscard]] constexpr auto ok_or(F error_generator) const -> Result<T, E>
     requires std::copy_constructible<T>
          and std::convertible_to<std::invoke_result_t<F>, E>
   {
@@ -426,8 +392,7 @@ public:
    * @param error_generator Function to generate an error to replace "None".
    */
   template<typename E, std::invocable F>
-  [[nodiscard]] constexpr auto take_ok_or( //
-    F&& error_generator
+  [[nodiscard]] constexpr auto take_ok_or(F error_generator
   ) && -> Result<T, E> {
     if (is_some()) {
       return std::move(*this).unwrap();
@@ -455,9 +420,7 @@ public:
    * );
    */
   template<std::invocable<T> F>
-  [[nodiscard]] constexpr auto map( //
-    F&& mapper
-  ) && {
+  [[nodiscard]] constexpr auto map(F mapper) && {
     using Returned = Option<crab::clean_invoke_result<F, T>>;
     if (is_some()) {
       return Returned{mapper(std::move(*this).unwrap())};
@@ -486,8 +449,9 @@ public:
    */
   template<std::invocable<T> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto map( //
-    F&& mapper
+  [[nodiscard]] constexpr auto map(
+
+    F mapper
   ) const& {
     return copied().map(mapper);
   }
@@ -496,7 +460,7 @@ public:
    * @brief Shorthand for calling .map(...).flatten()
    */
   template<std::invocable<T&&> F>
-  [[nodiscard]] constexpr auto flat_map(const F& mapper) && {
+  [[nodiscard]] constexpr auto flat_map(F mapper) && {
     using Returned = crab::clean_invoke_result<F, T>;
     if (is_some()) {
       return Returned{mapper(std::move(*this).unwrap())};
@@ -509,7 +473,7 @@ public:
    */
   template<std::invocable<T> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto flat_map(const F& mapper) const& {
+  [[nodiscard]] constexpr auto flat_map(F mapper) const& {
     using Returned = crab::clean_invoke_result<F, T>;
 
     if (is_some()) {
@@ -548,7 +512,7 @@ public:
    * @brief Copies this option and returns, use this before map if you do not
    * want to consume the option.
    */
-  [[nodiscard]] constexpr auto copied() const -> Option<T>
+  [[nodiscard]] constexpr auto copied() const -> Option
     requires std::copy_constructible<T>
   {
     if (is_some()) {
@@ -563,7 +527,7 @@ public:
    * will return Some, else None
    */
   template<std::predicate<const T&> F>
-  [[nodiscard]] constexpr auto filter(const F& func) && -> Option<T> {
+  [[nodiscard]] constexpr auto filter(F func) && -> Option {
     if (is_none()) {
       return crab::None{};
     }
@@ -583,7 +547,7 @@ public:
    */
   template<std::predicate<const T&> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto filter(const F& func) const& -> Option<T> {
+  [[nodiscard]] constexpr auto filter(F func) const& -> Option<T> {
     if (is_none()) {
       return crab::None{};
     }
@@ -603,7 +567,7 @@ public:
    */
   template<std::predicate<const T&> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto filter(const F& func) & -> Option<T> {
+  [[nodiscard]] constexpr auto filter(F func) & -> Option<T> {
     if (is_none()) {
       return crab::None{};
     }
@@ -801,7 +765,6 @@ namespace std {
 };
 
 namespace crab {
-
   /**
    * @brief 'None' value type for use with Option<T>
    */
@@ -860,8 +823,8 @@ namespace crab {
       constexpr auto operator()(
         // Tuple : Result<std:tuple<...>, Error>
         auto tuple,
-        F&& function,
-        Rest&&... other_functions
+        F function,
+        Rest... other_functions
       ) const requires option_type<decltype(function())>
       {
         // tuple.take_unchecked();
@@ -910,8 +873,8 @@ namespace crab {
       constexpr auto operator()(
         // Tuple : Result<std:tuple<...>, Error>
         auto tuple,
-        F&& function,
-        Rest&&... other_functions
+        F function,
+        Rest... other_functions
       ) const requires(not option_type<decltype(function())>)
       {
         // tuple.take_unchecked();
@@ -965,8 +928,8 @@ namespace crab {
   template<std::invocable... F>
   constexpr auto fallible(const F... fallible
   ) -> Option<std::tuple<option::decay_fallible_function<F>...>> {
-    return crab::option::fallible{}( //
-      Option<std::tuple<>>{std::make_tuple()},
+    return option::fallible{}(
+      Option{std::make_tuple()},
       fallible...
     );
   }

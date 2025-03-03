@@ -189,6 +189,23 @@ private:
 
 public:
 
+  constexpr Result(const T& from): /* NOLINT(*explicit*) */
+      Result{Ok{from}} {
+    static_assert(
+      std::copyable<T>,
+      "Cannot create result with const ref ok type with a non-copyable ok type"
+    );
+  }
+
+  constexpr Result(const E& from): /* NOLINT(*explicit*) */
+      Result{Err{from}} {
+    static_assert(
+      std::copyable<E>,
+      "Cannot create result with const ref err type with a non-copyable err "
+      "type"
+    );
+  }
+
   constexpr Result(T&& from): /* NOLINT(*explicit*) */
       Result{Ok{std::forward<T>(from)}} {}
 
@@ -214,7 +231,7 @@ public:
   constexpr auto operator=(const Result& res) -> Result& {
     static_assert(
       is_copyable,
-      "Cannot copy a result with a non-copyable Err or Ok type"
+      "cannot copy a result with a non-copyable err or ok type"
     );
     if (&res == this) {
       return *this;

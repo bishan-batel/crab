@@ -176,7 +176,8 @@ public:
    * is none, After this, the value has been 'taken out' of this option, after
    * this method is called this option is 'None'
    */
-  [[nodiscard]] constexpr auto take_unchecked(
+  [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] constexpr auto
+  take_unchecked(
     const std::source_location loc = std::source_location::current()
   ) -> T {
     debug_assert_transparent(
@@ -194,10 +195,11 @@ public:
    * After this, the value has been 'taken out' of this option, after this
    * method is called this option is 'None'
    */
-  [[nodiscard]] constexpr auto take_or_default() const
-    -> T&& requires std::constructible_from<T>
+  [[nodiscard]]
+  constexpr auto take_or_default() const
+    -> T&& requires std::constructible_from<T> and std::copyable<T>
   {
-    return is_some() ? take_unchecked() : T{};
+    return is_some() ? unwrap() : T{};
   }
 
   /**
@@ -265,7 +267,33 @@ public:
    * exists, else returns a default value
    * @param default_value
    */
-  [[nodiscard]] constexpr auto take_or(T default_value) -> T {
+  [[nodiscard]] constexpr auto take_or(T default_value) && -> T {
+    return std::move(*this).take_or([default_value = std::move(default_value)] {
+      return default_value;
+    });
+  }
+
+  /**
+   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
+   * exists, else uses 'F' to compute & create a default value
+   * @param default_generator Function to create the default value
+   */
+  template<std::invocable F>
+  [[nodiscard]] constexpr auto take_or(F&& default_generator) && -> T {
+    return is_some() ? T{std::move(*this).unwrap()} : T{default_generator()};
+  }
+
+  /**
+   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
+   * exists, else returns a default value
+   * @param default_value
+   */
+  [[nodiscard]] constexpr auto take_or(T default_value) & -> T {
+    static_assert(
+      std::is_trivially_copyable_v<T>,
+      "Cannot take_or a lvalue Option<T> when T is not trivially copyable, try "
+      "moving then calling unwrap"
+    );
     return this->take_or([default_value = std::move(default_value)] {
       return default_value;
     });
@@ -277,11 +305,13 @@ public:
    * @param default_generator Function to create the default value
    */
   template<std::invocable F>
-  [[nodiscard]] constexpr auto take_or(F&& default_generator) -> T
-    requires std::is_copy_constructible_v<T>
-         and std::convertible_to<std::invoke_result_t<F>, T>
-  {
-    return is_some() ? T{take_unchecked()} : T{default_generator()};
+  [[nodiscard]] constexpr auto take_or(F&& default_generator) & -> T {
+    static_assert(
+      std::is_trivially_copyable_v<T>,
+      "Cannot take_or a lvalue Option<T> when T is not trivially copyable, try "
+      "moving then calling unwrap"
+    );
+    return is_some() ? T{unwrap()} : T{default_generator()};
   }
 
   /**
@@ -293,7 +323,24 @@ public:
     const std::source_location loc = std::source_location::current()
   ) && -> T&& {
     debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
-    return take_unchecked();
+    return std::get<T>(std::exchange(value, crab::None{}));
+  }
+
+  /**
+   * @brief Takes value out of the option and returns it, will error if option
+   * is none, After this, the value has been 'taken out' of this option, after
+   * this method is called this option is 'None'
+   */
+  [[nodiscard]] constexpr auto unwrap(
+    const std::source_location loc = std::source_location::current()
+  ) & -> T&& {
+    static_assert(
+      std::is_trivially_copyable_v<T>,
+      "Cannot unwrap a lvalue Option<T> when T is not trivially copyable, try "
+      "moving then calling unwrap"
+    );
+    debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
+    return std::get<T>(std::exchange(value, crab::None{}));
   }
 
   /**
@@ -366,8 +413,10 @@ public:
    * @param error Error to replace an instance of None
    */
   template<typename E>
-  [[nodiscard]] constexpr auto take_ok_or(E error) -> Result<T, E> {
-    return this->take_ok_or<E>([error = std::move(error)] { return error; });
+  [[nodiscard]] constexpr auto take_ok_or(E error) && -> Result<T, E> {
+    return std::move(*this).template take_ok_or<E>([error = std::move(error)] {
+      return error;
+    });
   }
 
   /**
@@ -379,9 +428,9 @@ public:
   template<typename E, std::invocable F>
   [[nodiscard]] constexpr auto take_ok_or( //
     F&& error_generator
-  ) -> Result<T, E> {
+  ) && -> Result<T, E> {
     if (is_some()) {
-      return take_unchecked();
+      return std::move(*this).unwrap();
     }
     return Result<T, E>(error_generator());
   }
@@ -411,7 +460,7 @@ public:
   ) && {
     using Returned = Option<crab::clean_invoke_result<F, T>>;
     if (is_some()) {
-      return Returned{mapper(take_unchecked())};
+      return Returned{mapper(std::move(*this).unwrap())};
     }
     return Returned{};
   }
@@ -450,7 +499,7 @@ public:
   [[nodiscard]] constexpr auto flat_map(const F& mapper) && {
     using Returned = crab::clean_invoke_result<F, T>;
     if (is_some()) {
-      return Returned{mapper(take_unchecked())};
+      return Returned{mapper(std::move(*this).unwrap())};
     }
     return Returned{crab::None{}};
   }
@@ -477,7 +526,7 @@ public:
   requires std::constructible_from<T, crab::None>
   [[nodiscard]] constexpr auto flatten() && -> T {
     if (is_some()) {
-      return take_unchecked();
+      return std::move(*this).unwrap();
     }
     return crab::None{};
   }
@@ -519,7 +568,7 @@ public:
       return crab::None{};
     }
 
-    T value{take_unchecked()};
+    T value{std::move(*this).unwrap()};
 
     if (not static_cast<bool>(func(static_cast<const T&>(value)))) {
       return crab::None{};
@@ -593,8 +642,8 @@ public:
     }
 
     return std::make_tuple(
-      take_unchecked(),
-      std::move(other.take_unchecked())...
+      std::move(*this).unwrap(),
+      std::move(other).unwrap()...
     );
   }
 
@@ -796,7 +845,7 @@ namespace crab {
    */
   template<typename T>
   constexpr auto unwrap(Option<T>&& from) -> T {
-    return from.take_unchecked();
+    return std::move<T>(from).unwrap();
   }
 
   namespace option {
@@ -824,16 +873,16 @@ namespace crab {
         // multiple types of errors in fallible chain.");
 
         using ReturnOk = decltype(std::tuple_cat(
-          tuple.take_unchecked(),
-          std::make_tuple(function().take_unchecked())
+          std::move(tuple).unwrap(),
+          std::make_tuple(function().unwrap())
         ));
 
         // using Return = std::invoke_result_t<decltype(operator()),
         // Result<ReturnOk, Error>, Rest...>;
         using Return = decltype(operator()(
           Option<ReturnOk>{std::tuple_cat(
-            tuple.take_unchecked(),
-            std::make_tuple(function().take_unchecked())
+            std::move(tuple).unwrap(),
+            std::make_tuple(function().unwrap())
           )},
           other_functions...
         ));
@@ -850,8 +899,8 @@ namespace crab {
 
         return operator()(
           Option<ReturnOk>{std::tuple_cat(
-            tuple.take_unchecked(),
-            std::make_tuple(result.take_unchecked())
+            std::move(tuple).unwrap(),
+            std::make_tuple(std::move(result).unwrap())
           )},
           other_functions...
         );
@@ -870,14 +919,15 @@ namespace crab {
         using O = decltype(function());
 
         using ReturnOk = decltype(std::tuple_cat(
-          tuple.take_unchecked(),
+          std::move(tuple).unwrap(),
           std::make_tuple(function())
         ));
 
         using Return = decltype(operator()(
-          Option<ReturnOk>{
-            std::tuple_cat(tuple.take_unchecked(), std::make_tuple(function()))
-          },
+          Option<ReturnOk>{std::tuple_cat(
+            std::move(tuple).unwrap(),
+            std::make_tuple(function())
+          )},
           other_functions...
         ));
 
@@ -889,7 +939,7 @@ namespace crab {
 
         return operator()(
           Option<ReturnOk>{std::tuple_cat(
-            tuple.take_unchecked(),
+            std::move(tuple).unwrap(),
             std::make_tuple(std::move(result))
           )},
           other_functions...

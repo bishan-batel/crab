@@ -573,7 +573,7 @@ public:
     }
 
     RcMut<Derived> casted = RcMut<Derived>::from_rc_interior_unchecked( //
-      crab::unwrap(std::move(inner))
+      std::move(inner).unwrap()
     );
 
     debug_assert(
@@ -656,13 +656,9 @@ public:
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> const Contained* {
-    return raw_ptr();
-  }
+  [[nodiscard]] auto operator->() const -> Contained* { return raw_ptr(); }
 
-  [[nodiscard]] auto operator*() const -> const Contained& {
-    return *raw_ptr();
-  }
+  [[nodiscard]] auto operator*() const -> Contained& { return *raw_ptr(); }
 
   [[nodiscard]] auto operator->() -> Contained* { return raw_ptr(); }
 

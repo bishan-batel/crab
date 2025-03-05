@@ -53,7 +53,7 @@ TEST_CASE("Rc/RcMut") {
 
       REQUIRE(not original.is_unique());
       REQUIRE(original.get_ref_count() == 2);
-      REQUIRE_NOTHROW(returned.take_unchecked());
+      REQUIRE_NOTHROW(std::move(returned).unwrap());
       REQUIRE(original.is_unique());
     }
 
@@ -63,7 +63,7 @@ TEST_CASE("Rc/RcMut") {
 
       REQUIRE(not original.is_unique());
       REQUIRE(original.get_ref_count() == 2);
-      REQUIRE_NOTHROW(returned.take_unchecked());
+      REQUIRE_NOTHROW(std::move(returned).unwrap());
       REQUIRE(original.is_unique());
     }
   }

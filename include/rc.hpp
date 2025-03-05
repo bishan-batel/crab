@@ -274,7 +274,7 @@ public:
     }
 
     Rc<Derived> casted =
-      Rc<Derived>::from_rc_interior_unchecked(inner.take_unchecked());
+      Rc<Derived>::from_rc_interior_unchecked(std::move(inner).unwrap());
 
     debug_assert(
       interior->is_data_valid(),

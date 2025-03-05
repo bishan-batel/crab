@@ -163,7 +163,7 @@ namespace crab::ref {
 
 namespace crab::ref {
   /**
-   *
+   * Converts a T* to a optional reference (these two types are isomorphic)
    */
   template<typename T>
   [[nodiscard]] constexpr Option<RefMut<T>> from_ptr(T* const from) {
@@ -173,6 +173,10 @@ namespace crab::ref {
     return crab::none;
   }
 
+  /**
+   * Converts a const T* to a optional reference (these two types are
+   * isomorphic)
+   */
   template<typename T>
   [[nodiscard]] constexpr Option<Ref<T>> from_ptr(const T* const from) {
     if (from) {

@@ -14,36 +14,35 @@ TEST_CASE("Option", "[option]") {
   Option<i32> a = crab::some(52);
 
   i32 took;
-  REQUIRE_NOTHROW(took = a.take_unchecked());
+  REQUIRE_NOTHROW(took = std::move(a).unwrap());
 
   REQUIRE(took == 52);
 
-  REQUIRE_THROWS(a.take_unchecked());
+  REQUIRE_THROWS(a.get_unchecked());
 
   a = crab::some(42);
-  REQUIRE(a.take_unchecked() == 42);
+  REQUIRE(std::move(a).unwrap() == 42);
 
-  REQUIRE_THROWS(a.take_unchecked());
+  REQUIRE_THROWS(std::move(a).unwrap());
 
   a = crab::some(42);
 
   SECTION("Nested Options") {
     Option<i32> nested = crab::some(10);
 
-    REQUIRE(nested.map([](auto x) { return 2 * x; }).take_unchecked() == 20);
+    REQUIRE(nested.map([](auto x) { return 2 * x; }).unwrap() == 20);
     REQUIRE(nested.map(crab::fn::identity).is_some());
 
     nested = 420;
 
     REQUIRE(
-      nested.flat_map([](auto x) { return crab::some(x); }).take_unchecked()
-      == 420
+      nested.flat_map([](auto x) { return crab::some(x); }).unwrap() == 420
     );
 
     auto opt = nested.flat_map([](auto x) { return crab::some(x); });
     REQUIRE(opt.is_some());
 
-    REQUIRE(crab::some(crab::some(420)).flatten().take_unchecked() == 420);
+    REQUIRE(crab::some(crab::some(420)).flatten().unwrap() == 420);
   }
 
   SECTION("Fallible Options") {
@@ -64,7 +63,7 @@ TEST_CASE("Option", "[option]") {
       REQUIRE((first and second));
       REQUIRE(a.is_some());
 
-      const auto [num1, num2] = a.take_unchecked();
+      const auto [num1, num2] = std::move(a).unwrap();
       REQUIRE(num1 == 10);
       REQUIRE(num2 == 22);
     }
@@ -136,18 +135,23 @@ TEST_CASE("Option", "[option]") {
 
           REQUIRE(val == crab::some(x));
 
-          const auto cmp_none = [&]() {
-            REQUIRE(val > crab::none);
-            REQUIRE(val < crab::none);
-            REQUIRE(val >= crab::none);
-            REQUIRE(val <= crab::none);
-          };
+          REQUIRE(val > crab::none);
+          REQUIRE_FALSE(val < crab::none);
+          REQUIRE(val >= crab::none);
+          REQUIRE_FALSE(val <= crab::none);
 
-          cmp_none();
+          REQUIRE(val != crab::none);
+          REQUIRE_FALSE(val == crab::none);
+
           val = crab::none;
-          cmp_none();
+
+          REQUIRE_FALSE(val > crab::none);
+          REQUIRE_FALSE(val < crab::none);
+          REQUIRE(val >= crab::none);
+          REQUIRE(val <= crab::none);
 
           REQUIRE(val == crab::none);
+          REQUIRE_FALSE(val != crab::none);
         },
         i,
         static_cast<f32>(i),

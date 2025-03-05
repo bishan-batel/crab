@@ -652,7 +652,12 @@ public:
       },
       "Cannot compare to options if the inner types are not comparable with >"
     );
-    if (is_none() or other.is_none()) {
+
+    if (is_none()) {
+      return false;
+    }
+
+    if (other.is_none()) {
       return true;
     }
 
@@ -668,7 +673,12 @@ public:
       },
       "Cannot compare to options if the inner types are not comparable with <"
     );
-    if (is_none() or other.is_none()) {
+
+    if (is_none()) {
+      return other.is_some();
+    }
+
+    if (other.is_none()) {
       return true;
     }
 
@@ -684,8 +694,13 @@ public:
       },
       "Cannot compare to options if the inner types are not comparable with >="
     );
-    if (is_none() or other.is_none()) {
-      return is_none() == other.is_none();
+
+    if (is_none()) {
+      return other.is_none();
+    }
+
+    if (other.is_none()) {
+      return true;
     }
 
     return get_unchecked() >= other.get_unchecked();
@@ -700,8 +715,13 @@ public:
       },
       "Cannot compare to options if the inner types are not comparable with <="
     );
-    if (is_none() or other.is_none()) {
-      return is_none() == other.is_none();
+
+    if (is_none()) {
+      return true;
+    }
+
+    if (other.is_none()) {
+      return false;
     }
 
     return get_unchecked() <= other.get_unchecked();
@@ -709,40 +729,72 @@ public:
 
   template<typename S>
   [[nodiscard]]
-  constexpr auto operator<=>(const Option<S>& other) const -> bool {
+  constexpr auto operator<=>(const Option<S>& other
+  ) const -> std::partial_ordering {
     static_assert(
       std::three_way_comparable_with<T, S>,
       "Cannot compare to options if the inner types are not comparable with <=>"
     );
-    if (is_none() or other.is_none()) {
-      return is_none() <=> other.is_none();
+
+    if (is_none() and other.is_none()) {
+      return std::partial_ordering::equivalent;
     }
 
-    return get_unchecked() <= other.get_unchecked();
+    // None < Some
+    if (is_none()) {
+      return std::partial_ordering::less;
+    }
+
+    // Some(T) > None
+    if (other.is_none()) {
+      return std::partial_ordering::greater;
+    }
+
+    return static_cast<std::partial_ordering>(
+      get_unchecked() <=> other.get_unchecked()
+    );
   };
 
+  /**
+   * @brief Option<T> == None only if the former is none
+   */
   [[nodiscard]] constexpr auto operator==(const crab::None&) const -> bool {
     return is_none();
   };
 
+  /**
+   * @brief Option<T> != None only if the former is some
+   */
   [[nodiscard]] constexpr auto operator!=(const crab::None&) const -> bool {
     return is_some();
   };
 
+  /**
+   * @brief Option<T> > None only if the former is some
+   */
   [[nodiscard]] constexpr auto operator>(const crab::None&) const -> bool {
-    return true;
+    return is_some();
   };
 
-  [[nodiscard]] constexpr auto operator<(const crab::None&) const -> bool {
-    return true;
-  };
-
+  /**
+   * @brief Option<T> >= None is always true
+   */
   [[nodiscard]] constexpr auto operator>=(const crab::None&) const -> bool {
     return true;
   };
 
+  /**
+   * @brief Option<T> < None is never true
+   */
+  [[nodiscard]] constexpr auto operator<(const crab::None&) const -> bool {
+    return false;
+  };
+
+  /**
+   * @brief Option<T> <= None is never true
+   */
   [[nodiscard]] constexpr auto operator<=(const crab::None&) const -> bool {
-    return true;
+    return is_none();
   };
 
 private:
@@ -928,9 +980,6 @@ namespace crab {
   template<std::invocable... F>
   constexpr auto fallible(const F... fallible
   ) -> Option<std::tuple<option::decay_fallible_function<F>...>> {
-    return option::fallible{}(
-      Option{std::make_tuple()},
-      fallible...
-    );
+    return option::fallible{}(Option{std::make_tuple()}, fallible...);
   }
 } // namespace crab

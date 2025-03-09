@@ -15,9 +15,8 @@ namespace crab {
     /**
      * @brief True if the given type is valid for use in Ref/RefMut<T>
      */
-    template<typename T> concept is_valid_type = not std::is_const_v<T>
-                                             and not std::is_reference_v<T>
-                                             and not std::is_volatile_v<T>;
+    template<typename T> concept is_valid_type =
+      not std::is_const_v<T> and not std::is_reference_v<T>;
   }
 
   /**

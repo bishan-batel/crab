@@ -48,8 +48,8 @@ TEST_CASE("Rc/RcMut") {
 
   SECTION("Downcast") {
     SECTION("Rc") {
-      Rc<ex::Base> original = crab::make_rc<ex::Derived>();
-      Option<Rc<ex::Derived>> returned = original.downcast<ex::Derived>();
+      Rc<Base> original = crab::make_rc<Derived>();
+      Option<Rc<Derived>> returned = original.downcast<Derived>();
 
       REQUIRE(not original.is_unique());
       REQUIRE(original.get_ref_count() == 2);
@@ -58,8 +58,8 @@ TEST_CASE("Rc/RcMut") {
     }
 
     SECTION("RcMut") {
-      RcMut<ex::Base> original = crab::make_rc_mut<ex::Derived>();
-      Option<RcMut<ex::Derived>> returned = original.downcast<ex::Derived>();
+      RcMut<Base> original = crab::make_rc_mut<Derived>();
+      Option<RcMut<Derived>> returned = original.downcast<Derived>();
 
       REQUIRE(not original.is_unique());
       REQUIRE(original.get_ref_count() == 2);

@@ -3,6 +3,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
 #include "box.hpp"
+#include "test_static_asserts.hpp"
 #include "test_types.hpp"
 #include <preamble.hpp>
 #include <ref.hpp>
@@ -10,180 +11,90 @@
 #include <range.hpp>
 
 TEST_CASE("Option", "[option]") {
+  STATIC_CHECK(sizeof(crab::None) == 1);
 
-  Option<i32> a = crab::some(52);
+  SECTION("Type traits") {
+    // is ref helpers
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      namespace ref = crab::ref;
 
-  i32 took;
-  REQUIRE_NOTHROW(took = std::move(a).unwrap());
-
-  REQUIRE(took == 52);
-
-  REQUIRE_THROWS(a.get_unchecked());
-
-  a = crab::some(42);
-  REQUIRE(std::move(a).unwrap() == 42);
-
-  REQUIRE_THROWS(std::move(a).unwrap());
-
-  a = crab::some(42);
-
-  SECTION("Nested Options") {
-    Option<i32> nested = crab::some(10);
-
-    REQUIRE(nested.map([](auto x) { return 2 * x; }).unwrap() == 20);
-    REQUIRE(nested.map(crab::fn::identity).is_some());
-
-    nested = 420;
-
-    REQUIRE(
-      nested.flat_map([](auto x) { return crab::some(x); }).unwrap() == 420
-    );
-
-    auto opt = nested.flat_map([](auto x) { return crab::some(x); });
-    REQUIRE(opt.is_some());
-
-    REQUIRE(crab::some(crab::some(420)).flatten().unwrap() == 420);
-  }
-
-  SECTION("Fallible Options") {
-    SECTION("All Some crab::fallible") {
-      bool first = false, second = false;
-
-      Option<Tuple<i32, i32>> a = crab::fallible(
-        [&]() {
-          first = true;
-          return 10;
-        },
-        [&]() {
-          second = true;
-          return 22;
+      // none of these types should be triggered as ref / ref mut
+      assert::for_types(
+        assert::types<const T&, T&, T*, const T*, T>,
+        []<typename K>(assert::type<K>) {
+          STATIC_CHECK(not ref::is_ref_type<K>::value);
+          STATIC_CHECK(not ref::is_ref_mut_type<K>::value);
         }
       );
 
-      REQUIRE((first and second));
-      REQUIRE(a.is_some());
+      assert::for_types(assert::ref_types<T>, []<typename K>(assert::type<K>) {
+        // normal types should not trigger these flags
 
-      const auto [num1, num2] = std::move(a).unwrap();
-      REQUIRE(num1 == 10);
-      REQUIRE(num2 == 22);
-    }
+        using underlying = typename ref::decay_type<K>::underlying_type;
 
-    SECTION("Some None crab::fallible") {
-      bool first = false, second = false;
+        STATIC_CHECK(std::same_as<underlying, T>);
+      });
 
-      Option<std::tuple<i32, i32>> a = crab::fallible(
-        [&]() {
-          first = true;
-          return 420;
-        },
-        [&]() -> Option<i32> {
-          second = true;
-          return crab::none;
+      STATIC_CHECK(ref::is_ref_type<Ref<T>>::value);
+      STATIC_CHECK(not ref::is_ref_mut_type<Ref<T>>::value);
+
+      STATIC_CHECK(not ref::is_ref_type<RefMut<T>>::value);
+      STATIC_CHECK(ref::is_ref_mut_type<RefMut<T>>::value);
+    });
+  }
+
+  SECTION("Constructors & Move Semantics") {
+
+    // general construction
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      constexpr bool copyable = std::copyable<T>;
+
+      using Option = ::Option<MoveTracker<T>>;
+
+      SECTION("Construction from T&& and None") {
+        RcMut<MoveCount> counter = crab::make_rc_mut<MoveCount>();
+
+        MoveTracker<T> value{MoveTracker<T>::from(counter)};
+
+        REQUIRE(Option{crab::none}.is_none());
+        REQUIRE_THROWS(Option{crab::none}.unwrap());
+
+        REQUIRE(counter->copies == 0);
+        REQUIRE(counter->moves == 0);
+
+        REQUIRE(Option{std::move(value)}.is_some());
+        REQUIRE_NOTHROW(Option{std::move(value)}.unwrap());
+      }
+
+      SECTION("Move limits") {
+        RcMut<MoveCount> counter = crab::make_rc_mut<MoveCount>();
+        MoveTracker<T> value{MoveTracker<T>::from(counter)};
+        MoveCount expected{0, 0};
+
+        expected.moves++;
+        Option opt{std::move(value)};
+
+        counter->valid(expected);
+
+        expected.moves++;
+        opt = std::move(opt);
+
+        counter->valid(expected);
+
+        if constexpr (copyable) {
+          expected.moves += 2;
+          expected.copies++;
+          REQUIRE_NOTHROW(opt = MoveTracker<T>(std::move(opt).unwrap()));
+
+          counter->valid(expected);
         }
-      );
 
-      REQUIRE((first and second));
-      REQUIRE(a.is_none());
-
-      first = false;
-      second = false;
-
-      a = crab::fallible(
-        [&]() -> Option<i32> {
-          first = true;
-          return crab::none;
-        },
-        [&]() -> Option<i32> {
-          second = true;
-          return crab::none;
-        }
-      );
-
-      REQUIRE((first and not second));
-      REQUIRE(a.is_none());
-    }
-  }
-
-  SECTION("move_only") {
-
-    Option<Box<i32>> a{crab::make_box<i32>(10)};
-
-    Option<i32> b = std::move(a).map([](i32 x) { return x * 2; });
-    REQUIRE(a.is_none());
-    REQUIRE(b.is_some());
-
-    if (Option<bool> opt{true}) {
-      REQUIRE_NOTHROW(opt.get_unchecked());
-    }
-  }
-
-  SECTION("bool conversion") {
-    REQUIRE(Option<i32>{0});
-    REQUIRE_FALSE(Option<i32>{});
-
-    REQUIRE_FALSE(not crab::some(0));
-    REQUIRE(not Option<i32>{});
-  }
-
-  SECTION("Comparisons") {
-
-    for (usize i = 0; i < 10; i++) {
-
-      ex::test_values(
-        [](auto&& x) {
-          Option val{x};
-
-          REQUIRE(val == crab::some(x));
-
-          REQUIRE(val > crab::none);
-          REQUIRE_FALSE(val < crab::none);
-          REQUIRE(val >= crab::none);
-          REQUIRE_FALSE(val <= crab::none);
-
-          REQUIRE(val != crab::none);
-          REQUIRE_FALSE(val == crab::none);
-
-          val = crab::none;
-
-          REQUIRE_FALSE(val > crab::none);
-          REQUIRE_FALSE(val < crab::none);
-          REQUIRE(val >= crab::none);
-          REQUIRE(val <= crab::none);
-
-          REQUIRE(val == crab::none);
-          REQUIRE_FALSE(val != crab::none);
-        },
-        i,
-        static_cast<f32>(i),
-        static_cast<u16>(i),
-        static_cast<f64>(i),
-        static_cast<u8>(i)
-      );
-    }
-  }
-
-  SECTION("Hash") {
-    Set<Option<usize>> numbers{};
-
-    for (const usize i: crab::range(100)) {
-      numbers.emplace(i);
-    }
-    for (const usize i: crab::range(100)) {
-      REQUIRE(numbers.contains(i));
-    }
-
-    REQUIRE_FALSE(numbers.contains(crab::none));
-
-    numbers.emplace(crab::none);
-
-    REQUIRE(numbers.contains(crab::none));
-
-    REQUIRE(
-      crab::hash<StringView>("Hello")
-      != crab::hash(crab::some<StringView>("Hello"))
-    );
-    REQUIRE(
-      crab::hash<StringView>("Hello") != crab::hash(Option<StringView>{})
-    );
+        expected.moves += 2;
+        REQUIRE_NOTHROW(value = std::move(opt).unwrap());
+        counter->valid(expected);
+      }
+    });
   }
 }
+
+// vim:

@@ -9,7 +9,7 @@ TEST_CASE("fn") {
   SECTION("constant") {
 
     // call test on each of these test typestype here
-    ex::test_values(
+    test_values(
       []<typename T>(T&& x) {
         const auto generator = crab::fn::constant(std::forward<T>(x));
 
@@ -37,7 +37,7 @@ TEST_CASE("fn") {
   }
 
   SECTION("identity") {
-    ex::test_values(
+    test_values(
       []<typename T>(T&& x) {
         REQUIRE(crab::fn::identity(x) == x);
 

@@ -67,6 +67,12 @@ namespace crab::ref {
   };
 
   template<typename T>
+  struct decay_type<Ref<T>> : decay_type<const T&> {};
+
+  template<typename T>
+  struct decay_type<RefMut<T>> : decay_type<T&> {};
+
+  template<typename T>
   struct is_ref_type : std::false_type {};
 
   template<typename T>

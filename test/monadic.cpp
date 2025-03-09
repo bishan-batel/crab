@@ -10,7 +10,7 @@ consteval auto consteval_test() -> void {
 
   std::ignore = number.filter([](i32 x) { return x % 2 == 0; });
 
-  Option<ex::MoveOnly> moved{ex::MoveOnly{"value"}};
+  Option<MoveOnly> moved{MoveOnly{"value"}};
   std::ignore = std::move(moved).filter(crab::fn::constant(true));
 }
 
@@ -45,13 +45,13 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move") {
-      Option<ex::MoveOnly> value{ex::MoveOnly{"message"}};
+      Option<MoveOnly> value{MoveOnly{"message"}};
 
-      constexpr auto not_empty = [](const ex::MoveOnly& x) {
+      constexpr auto not_empty = [](const MoveOnly& x) {
         return not x.get_name().empty();
       };
 
-      Option<ex::MoveOnly> moved = std::move(value).filter(not_empty);
+      Option<MoveOnly> moved = std::move(value).filter(not_empty);
       REQUIRE(value.is_none());
       REQUIRE_NOTHROW(moved.get_unchecked().get_name() == "message");
 
@@ -62,11 +62,9 @@ TEST_CASE("Monadic Operations (Option)") {
       // in gross lambda to force the static assert to happen in a
       // templated context
       [](const auto& ty) {
-        static_assert(
-          not requires { ty.filter([](const auto&) { return true; }); },
-          "Option<T>::filter's non-rvalue overload should not compile when T "
-          "is not copy constructible"
-        );
+        STATIC_REQUIRE(not requires {
+          ty.filter([](const auto&) { return true; });
+        });
       }(moved);
     }
   }
@@ -82,14 +80,14 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move-only") {
-      Option<ex::MoveOnly> number =
-        crab::then(true, []() { return ex::MoveOnly{"test"}; });
+      Option<MoveOnly> number =
+        crab::then(true, []() { return MoveOnly{"test"}; });
 
       REQUIRE_NOTHROW(
         number.is_some() and number.get_unchecked().get_name() == "test"
       );
 
-      number = crab::then(false, []() { return ex::MoveOnly{"test"}; });
+      number = crab::then(false, []() { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());
     }
   }
@@ -104,14 +102,14 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move-only") {
-      Option<ex::MoveOnly> number =
-        crab::unless(false, []() { return ex::MoveOnly{"test"}; });
+      Option<MoveOnly> number =
+        crab::unless(false, []() { return MoveOnly{"test"}; });
 
       REQUIRE_NOTHROW(
         number.is_some() and number.get_unchecked().get_name() == "test"
       );
 
-      number = crab::unless(true, []() { return ex::MoveOnly{"test"}; });
+      number = crab::unless(true, []() { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());
     }
   }
@@ -137,9 +135,9 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move only") {
-      Option<ex::MoveOnly> name{ex::MoveOnly{"Hello"}};
-      Option<RefMut<ex::MoveOnly>> ref = name.as_ref_mut();
-      Option<Ref<ex::MoveOnly>> ref_mut = name.as_ref();
+      Option<MoveOnly> name{MoveOnly{"Hello"}};
+      Option<RefMut<MoveOnly>> ref = name.as_ref_mut();
+      Option<Ref<MoveOnly>> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
       REQUIRE(ref.is_some());

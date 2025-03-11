@@ -200,7 +200,8 @@ public:
    */
   [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] constexpr auto
   take_unchecked(
-    const std::source_location loc = std::source_location::current()
+    [[maybe_unused]] const std::source_location loc =
+      std::source_location::current()
   ) -> T {
     debug_assert_transparent(
       is_some(),
@@ -314,7 +315,7 @@ public:
    * this method is called this option is 'None'
    */
   [[nodiscard]] constexpr auto unwrap(
-    const std::source_location loc = std::source_location::current()
+    [[maybe_unused]] const std::source_location loc = std::source_location::current()
   ) && -> T {
     debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
     return std::get<T>(std::exchange(value, crab::None{}));
@@ -325,7 +326,7 @@ public:
    * this option is none this will panic & crash.
    */
   [[nodiscard]] constexpr auto get_unchecked(
-    const std::source_location loc = std::source_location::current()
+ [[maybe_unused]]   const std::source_location loc = std::source_location::current()
   ) -> T& {
     debug_assert_transparent(
       is_some(),
@@ -340,7 +341,7 @@ public:
    * this option is none this will panic & crash.
    */
   [[nodiscard]] constexpr auto get_unchecked(
-    const std::source_location loc = std::source_location::current()
+ [[maybe_unused]]   const std::source_location loc = std::source_location::current()
   ) const -> const T& {
     debug_assert_transparent(
       is_some(),
@@ -811,7 +812,7 @@ private:
 
 namespace std {
   template<typename T>
-  struct std::hash<Option<T>> /*NOLINT*/ {
+  struct hash<Option<T>> /*NOLINT*/ {
     [[nodiscard]]
     auto operator()(const Option<T>& opt) const -> crab::hash_code {
       if (opt.is_none()) {

@@ -30,7 +30,7 @@ namespace crab {
 
   constexpr auto hash_code_mix(const hash_code seed, const hash_code next)
     -> hash_code {
-    return next + 0x9e3779b9 + (seed << 6) + (seed >> 2) ^ seed;
+    return (next + 0x9e3779b9 + (seed << 6) + (seed >> 2)) ^ seed;
   }
 
   template<into_hash_code First, into_hash_code... Args>

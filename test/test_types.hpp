@@ -24,7 +24,7 @@ struct MoveCount {
       );
       try {
         catchAssertionHandler.handleExpr(
-          Catch ::Decomposer() <= moves == expected.moves
+          (Catch ::Decomposer() <= moves) == expected.moves
         );
       } catch (...) {
         (catchAssertionHandler).handleUnexpectedInflightException();
@@ -42,7 +42,7 @@ struct MoveCount {
       );
       try {
         catchAssertionHandler.handleExpr(
-          Catch ::Decomposer() <= copies == expected.copies
+          (Catch ::Decomposer() <= copies) == expected.copies
         );
       } catch (...) {
         (catchAssertionHandler).handleUnexpectedInflightException();

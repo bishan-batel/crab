@@ -315,7 +315,8 @@ public:
    * this method is called this option is 'None'
    */
   [[nodiscard]] constexpr auto unwrap(
-    [[maybe_unused]] const std::source_location loc = std::source_location::current()
+    [[maybe_unused]] const std::source_location loc =
+      std::source_location::current()
   ) && -> T {
     debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
     return std::get<T>(std::exchange(value, crab::None{}));
@@ -326,7 +327,8 @@ public:
    * this option is none this will panic & crash.
    */
   [[nodiscard]] constexpr auto get_unchecked(
- [[maybe_unused]]   const std::source_location loc = std::source_location::current()
+    [[maybe_unused]] const std::source_location loc =
+      std::source_location::current()
   ) -> T& {
     debug_assert_transparent(
       is_some(),
@@ -341,7 +343,8 @@ public:
    * this option is none this will panic & crash.
    */
   [[nodiscard]] constexpr auto get_unchecked(
- [[maybe_unused]]   const std::source_location loc = std::source_location::current()
+    [[maybe_unused]] const std::source_location loc =
+      std::source_location::current()
   ) const -> const T& {
     debug_assert_transparent(
       is_some(),
@@ -635,7 +638,7 @@ public:
     }
 
     return get_unchecked() == other.get_unchecked();
-  };
+  }
 
   template<typename S>
   [[nodiscard]]
@@ -649,7 +652,7 @@ public:
     }
 
     return get_unchecked() != other.get_unchecked();
-  };
+  }
 
   template<typename S>
   [[nodiscard]]
@@ -670,7 +673,7 @@ public:
     }
 
     return get_unchecked() > other.get_unchecked();
-  };
+  }
 
   template<typename S>
   [[nodiscard]]
@@ -691,7 +694,7 @@ public:
     }
 
     return get_unchecked() < other.get_unchecked();
-  };
+  }
 
   template<typename S>
   [[nodiscard]]
@@ -712,7 +715,7 @@ public:
     }
 
     return get_unchecked() >= other.get_unchecked();
-  };
+  }
 
   template<typename S>
   [[nodiscard]]
@@ -733,7 +736,7 @@ public:
     }
 
     return get_unchecked() <= other.get_unchecked();
-  };
+  }
 
   template<typename S>
   [[nodiscard]]
@@ -761,49 +764,49 @@ public:
     return static_cast<std::partial_ordering>(
       get_unchecked() <=> other.get_unchecked()
     );
-  };
+  }
 
   /**
    * @brief Option<T> == None only if the former is none
    */
   [[nodiscard]] constexpr auto operator==(const crab::None&) const -> bool {
     return is_none();
-  };
+  }
 
   /**
    * @brief Option<T> != None only if the former is some
    */
   [[nodiscard]] constexpr auto operator!=(const crab::None&) const -> bool {
     return is_some();
-  };
+  }
 
   /**
    * @brief Option<T> > None only if the former is some
    */
   [[nodiscard]] constexpr auto operator>(const crab::None&) const -> bool {
     return is_some();
-  };
+  }
 
   /**
    * @brief Option<T> >= None is always true
    */
   [[nodiscard]] constexpr auto operator>=(const crab::None&) const -> bool {
     return true;
-  };
+  }
 
   /**
    * @brief Option<T> < None is never true
    */
   [[nodiscard]] constexpr auto operator<(const crab::None&) const -> bool {
     return false;
-  };
+  }
 
   /**
    * @brief Option<T> <= None is never true
    */
   [[nodiscard]] constexpr auto operator<=(const crab::None&) const -> bool {
     return is_none();
-  };
+  }
 
 private:
 

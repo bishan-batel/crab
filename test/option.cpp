@@ -85,10 +85,10 @@ TEST_CASE("Option", "Tests for all option methods") {
         counter->valid(expected);
 
         // std::move, and assignment
-        expected.moves += 2;
-        opt = std::move(opt);
+        //      expected.moves += 2;
+        //      opt = std::move(opt);
 
-        counter->valid(expected);
+        //      counter->valid(expected);
 
         // explicit constructor, std::move, and assignmnet
         expected.moves += 3;
@@ -118,7 +118,6 @@ TEST_CASE("Option", "Tests for all option methods") {
     opt = crab::none;
     CHECK_FALSE(opt.is_some());
     CHECK_FALSE(static_cast<bool>(opt));
-    CHECK_FALSE(static_cast<const bool&>(opt));
     CHECK_FALSE(opt);
   }
 

@@ -182,6 +182,13 @@ TEST_CASE("Option", "Tests for all option methods") {
   SECTION("map") {
     CHECK(Option{10}.map(crab::fn::constant(42)) == Option{42});
     CHECK(Option<i32>{}.map(crab::fn::constant(42)) == crab::none);
+
+    CHECK(Option<RefMut<Derived>>{}.map<Base>() == crab::none);
+    CHECK(Option<RefMut<Derived>>{}.map<Derived>() == crab::none);
+    CHECK(Option<RefMut<Derived>>{}.map<Derived>() == crab::none);
+    CHECK(
+      Option<RefMut<Base>>().flat_map(crab::fn::cast<Derived>) == crab::none
+    );
   }
 
   SECTION("as_ref/as_ref_mut") {

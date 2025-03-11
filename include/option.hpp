@@ -460,17 +460,30 @@ public:
    */
   template<std::invocable<T> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto map(
-
-    F mapper
-  ) const& {
+  [[nodiscard]] constexpr auto map(F mapper) const& {
     return copied().map(mapper);
+  }
+
+  template<typename Into>
+  requires std::convertible_to<T, Into> and std::copy_constructible<T>
+  [[nodiscard]] constexpr auto map() const& {
+    return copied().map([](T&& value) {
+      return static_cast<Into>(std::forward<T>(value));
+    });
+  }
+
+  template<typename Into>
+  requires std::convertible_to<T, Into>
+  [[nodiscard]] constexpr auto map() && {
+    return std::move(*this).map([](T&& value) {
+      return static_cast<Into>(std::forward<T>(value));
+    });
   }
 
   /**
    * @brief Shorthand for calling .map(...).flatten()
    */
-  template<std::invocable<T&&> F>
+  template<std::invocable<T> F>
   [[nodiscard]] constexpr auto flat_map(F mapper) && {
     using Returned = crab::clean_invoke_result<F, T>;
     if (is_some()) {

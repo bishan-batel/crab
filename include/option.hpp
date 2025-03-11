@@ -211,20 +211,6 @@ public:
   }
 
   /**
-   * @brief Takes value out of the option and returns it, if there is no
-   * contained value it will construct it
-   *
-   * After this, the value has been 'taken out' of this option, after this
-   * method is called this option is 'None'
-   */
-  [[nodiscard]]
-  constexpr auto take_or_default() const -> T
-    requires std::constructible_from<T> and std::copyable<T>
-  {
-    return is_some() ? unwrap() : T{};
-  }
-
-  /**
    * @brief Converts a 'const Option<T>' into a Option<Ref<T>>, to give optional
    * access to the actual referenced value inside.
    */
@@ -260,15 +246,53 @@ public:
   }
 
   /**
+   * @brief Consumes inner value and returns it, if this option was none this
+   * will instead return a new default constructed T
+   */
+  [[nodiscard]]
+  constexpr auto take_or_default() && -> T requires std::constructible_from<T>
+  {
+    return std::move(*this).take_or([]() { return T{}; });
+  }
+
+  /**
+   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
+   * exists, else returns a default value
+   * @param default_value
+   */
+  [[nodiscard]] constexpr auto take_or(T default_value) && -> T {
+    return is_some() ? T{std::move(*this).unwrap()} : std::move(default_value);
+  }
+
+  /**
+   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
+   * exists, else uses 'F' to compute & create a default value
+   * @param default_generator Function to create the default value
+   */
+  template<std::invocable F>
+  [[nodiscard]] constexpr auto take_or(F default_generator) && -> T {
+    return is_some() ? T{std::move(*this).unwrap()} : T{default_generator()};
+  }
+
+  /**
+   * @brief Is this option has a value, return a copy of that value. if
+   * this opton was none then this returns a default constructed T
+   */
+  [[nodiscard]]
+  constexpr auto get_or_default() const -> T
+    requires std::constructible_from<T> and std::copyable<T>
+  {
+    return get_or([]() { return T{}; });
+  }
+
+  /**
    * @brief Gets the contained value if exists, else returns a default value
    * @param default_value
    */
   [[nodiscard]] constexpr auto get_or(T default_value) const -> T
     requires std::copy_constructible<T>
   {
-    return this->get_or([default_value = std::move(default_value)] {
-      return default_value;
-    });
+    return is_some() ? T{get_unchecked()} : std::move(default_value);
   }
 
   /**
@@ -282,27 +306,6 @@ public:
          and std::convertible_to<std::invoke_result_t<F>, T>
   {
     return is_some() ? T{get_unchecked()} : T{default_generator()};
-  }
-
-  /**
-   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
-   * exists, else returns a default value
-   * @param default_value
-   */
-  [[nodiscard]] constexpr auto take_or(T default_value) && -> T {
-    return std::move(*this).take_or([default_value = std::move(default_value)] {
-      return default_value;
-    });
-  }
-
-  /**
-   * @brief Takes the contained value (like Option<T>::take_unchecked()) if
-   * exists, else uses 'F' to compute & create a default value
-   * @param default_generator Function to create the default value
-   */
-  template<std::invocable F>
-  [[nodiscard]] constexpr auto take_or(F default_generator) && -> T {
-    return is_some() ? T{std::move(*this).unwrap()} : T{default_generator()};
   }
 
   /**
@@ -357,7 +360,7 @@ public:
   [[nodiscard]] constexpr auto ok_or(E error) const -> Result<T, E>
     requires std::copy_constructible<T>
   {
-    return this->ok_or([error = std::move(error)] { return error; });
+    return is_some() ? Result<T, E>{get_unchecked()} : std::move(error);
   }
 
   /**
@@ -371,10 +374,7 @@ public:
     requires std::copy_constructible<T>
          and std::convertible_to<std::invoke_result_t<F>, E>
   {
-    if (is_some()) {
-      return get_unchecked();
-    }
-    return error_generator();
+    return is_some() ? Result<T, E>{get_unchecked()} : error_generator();
   }
 
   /**
@@ -386,9 +386,10 @@ public:
    */
   template<typename E>
   [[nodiscard]] constexpr auto take_ok_or(E error) && -> Result<T, E> {
-    return std::move(*this).template take_ok_or<E>([error = std::move(error)] {
-      return error;
-    });
+    if (is_some()) {
+      return Result<T, E>{std::move(*this).unwrap()};
+    }
+    return Result<T, E>(std::move(error));
   }
 
   /**
@@ -401,7 +402,7 @@ public:
   [[nodiscard]] constexpr auto take_ok_or(F error_generator
   ) && -> Result<T, E> {
     if (is_some()) {
-      return std::move(*this).unwrap();
+      return Result<T, E>{std::move(*this).unwrap()};
     }
     return Result<T, E>(error_generator());
   }

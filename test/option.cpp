@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <result.hpp>
 #include <option.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
@@ -10,7 +11,9 @@
 #include <crab/fn.hpp>
 #include <range.hpp>
 
-TEST_CASE("Option", "[option]") {
+TEST_CASE("Option", "Tests for all option methods") {
+  const auto life = crab::fn::constant(42);
+
   STATIC_CHECK(sizeof(crab::None) == 1);
 
   SECTION("Type traits") {
@@ -53,17 +56,22 @@ TEST_CASE("Option", "[option]") {
 
       SECTION("Construction from T&& and None") {
         RcMut<MoveCount> counter = crab::make_rc_mut<MoveCount>();
+        MoveCount expected{0, 0};
 
         MoveTracker<T> value{MoveTracker<T>::from(counter)};
 
-        REQUIRE(Option{crab::none}.is_none());
-        REQUIRE_THROWS(Option{crab::none}.unwrap());
+        CHECK(Option{crab::none}.is_none());
+        CHECK_THROWS(Option{crab::none}.unwrap());
 
-        REQUIRE(counter->copies == 0);
-        REQUIRE(counter->moves == 0);
+        counter->valid(expected);
 
-        REQUIRE(Option{std::move(value)}.is_some());
-        REQUIRE_NOTHROW(Option{std::move(value)}.unwrap());
+        CHECK(Option{std::move(value)}.is_some());
+        CHECK_NOTHROW(Option{std::move(value)}.unwrap());
+
+        if constexpr (copyable) {
+          CHECK(Option{value}.is_some());
+          CHECK_NOTHROW(Option{value}.unwrap());
+        }
       }
 
       SECTION("Move limits") {
@@ -76,24 +84,105 @@ TEST_CASE("Option", "[option]") {
 
         counter->valid(expected);
 
-        expected.moves++;
+        // std::move, and assignment
+        expected.moves += 2;
         opt = std::move(opt);
 
         counter->valid(expected);
 
+        // explicit constructor, std::move, and assignmnet
+        expected.moves += 3;
+        CHECK_NOTHROW(opt = MoveTracker<T>(std::move(opt).unwrap()));
+
         if constexpr (copyable) {
+
+          // rvalue from made copy, then assignment
           expected.moves += 2;
           expected.copies++;
-          REQUIRE_NOTHROW(opt = MoveTracker<T>(std::move(opt).unwrap()));
+          CHECK_NOTHROW(opt = Option(opt));
 
           counter->valid(expected);
         }
-
-        expected.moves += 2;
-        REQUIRE_NOTHROW(value = std::move(opt).unwrap());
-        counter->valid(expected);
       }
     });
+  }
+
+  SECTION("Bool conversion") {
+    Option<i32> opt{0};
+
+    CHECK(opt.is_some());
+    CHECK(static_cast<bool>(opt));
+    CHECK(static_cast<const bool&>(opt));
+    CHECK(opt);
+
+    opt = crab::none;
+    CHECK_FALSE(opt.is_some());
+    CHECK_FALSE(static_cast<bool>(opt));
+    CHECK_FALSE(static_cast<const bool&>(opt));
+    CHECK_FALSE(opt);
+  }
+
+  SECTION("take_or variants") {
+    CHECK(Option{10}.take_or_default() == 10);
+    CHECK(Option<i32>{}.take_or_default() == 0);
+
+    CHECK(Option{MoveOnly{"moment"}}.take_or_default().get_name() == "moment");
+    CHECK(Option<MoveOnly>{}.take_or_default().get_name() == "");
+
+    CHECK(Option{10}.take_or(42) == 10);
+    CHECK(Option<i32>{}.take_or(42) == 42);
+
+    CHECK(Option{10}.take_or(life) == 10);
+    CHECK(Option<i32>{}.take_or(life) == life());
+
+    const auto gen = []() { return MoveOnly{"default"}; };
+
+    CHECK(Option{MoveOnly{"name"}}.take_or(gen()).get_name() == "name");
+    CHECK(Option<MoveOnly>{}.take_or(gen()).get_name() == "default");
+
+    CHECK(Option{MoveOnly{"name"}}.take_or(gen).get_name() == "name");
+    CHECK(Option<MoveOnly>{}.take_or(gen).get_name() == "default");
+  }
+
+  SECTION("get_or variants") {
+    CHECK(Option{10}.get_or(42) == 10);
+    CHECK(Option<i32>{}.get_or(42) == 42);
+
+    CHECK(Option{10}.get_or_default() == 10);
+    CHECK(Option<i32>{}.get_or_default() == 0);
+
+    CHECK(Option<String>{"what"}.get_or_default() == "what");
+    CHECK(Option<String>{}.get_or_default() == "");
+  }
+
+  SECTION("as_ref and as_ref_mut") {
+    Option<i32> value{10};
+    CHECK(value.is_some());
+
+    CHECK_NOTHROW(*value.as_ref().unwrap() == 10);
+    CHECK_NOTHROW(*value.as_ref_mut().unwrap() = 42);
+    CHECK(value == Option{42});
+  }
+
+  SECTION("Functor methods between Option and Result") {
+    CHECK(Option{10}.ok_or("what").unwrap() == 10);
+    CHECK(Option<i32>{}.ok_or<String>("what").unwrap_err() == "what");
+
+    CHECK(Option{10}.take_ok_or<String>("what").unwrap() == 10);
+    CHECK(Option<i32>{}.take_ok_or<String>("what").unwrap_err() == "what");
+  }
+
+  SECTION("filter") {
+    CHECK(Option{10}.filter(crab::fn::is_even).is_some());
+    CHECK(Option<i32>{}.filter(crab::fn::is_even).is_none());
+
+    CHECK(Option{10}.filter(crab::fn::is_odd).is_none());
+    CHECK(Option<i32>{}.filter(crab::fn::is_odd).is_none());
+  }
+
+  SECTION("map") {
+    CHECK(Option{10}.map(crab::fn::constant(42)) == Option{42});
+    CHECK(Option<i32>{}.map(crab::fn::constant(42)) == crab::none);
   }
 }
 

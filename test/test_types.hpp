@@ -10,9 +10,47 @@ struct MoveCount {
   usize moves{0};
   usize copies{0};
 
-  auto valid(const MoveCount& expected) const -> void {
-    CHECK(moves == expected.moves);
-    CHECK(copies == expected.copies);
+  auto valid(
+    const MoveCount& expected,
+    std::source_location loc = std::source_location::current()
+  ) const -> void {
+    do {
+      (void)__builtin_constant_p(moves == expected.moves);
+      Catch ::AssertionHandler catchAssertionHandler(
+        "CHECK"_catch_sr,
+        ::Catch ::SourceLineInfo(loc.file_name(), loc.line()),
+        "moves == expected.moves"_catch_sr,
+        Catch ::ResultDisposition ::ContinueOnFailure
+      );
+      try {
+        catchAssertionHandler.handleExpr(
+          Catch ::Decomposer() <= moves == expected.moves
+        );
+      } catch (...) {
+        (catchAssertionHandler).handleUnexpectedInflightException();
+      }
+      catchAssertionHandler.complete();
+    } while ((void)0,
+             (false) && static_cast<const bool&>(!!(moves == expected.moves)));
+    do {
+      (void)__builtin_constant_p(copies == expected.copies);
+      Catch ::AssertionHandler catchAssertionHandler(
+        "CHECK"_catch_sr,
+        ::Catch ::SourceLineInfo(loc.file_name(), loc.line()),
+        "copies == expected.copies"_catch_sr,
+        Catch ::ResultDisposition ::ContinueOnFailure
+      );
+      try {
+        catchAssertionHandler.handleExpr(
+          Catch ::Decomposer() <= copies == expected.copies
+        );
+      } catch (...) {
+        (catchAssertionHandler).handleUnexpectedInflightException();
+      }
+      catchAssertionHandler.complete();
+    } while ((void)0,
+             (false) && static_cast<const bool&>(!!(copies == expected.copies))
+    );
   }
 };
 

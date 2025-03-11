@@ -34,7 +34,7 @@ namespace crab::fn {
   /**
    * Predicate for whether the input is even
    */
-  constexpr auto is_even = [](const auto& x) -> bool { return x % 2 = 0; };
+  constexpr auto is_even = [](const auto& x) -> bool { return x % 2 == 0; };
 
   /**
    * Predicate for whether the input is odd

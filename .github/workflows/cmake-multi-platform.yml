@@ -26,12 +26,12 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         #os: [ubuntu-latest]
         build_type: [Debug, Release]
-        c_compiler: [clang, gcc, cl]
-        # include:
-        #   - os: windows-latest
-        #     c_compiler: [gcc, clang, cl]
-        #   - os: ubuntu-latest
-        #     c_compiler: [gcc, clang]
+        c_compiler: [clang, gcc]
+        include:
+           - os: windows-latest
+             c_compiler: [gcc, clang]
+           - os: ubuntu-latest
+             c_compiler: [gcc, clang]
         exclude:
           # - os: windows-latest
           #   c_compiler: clang
@@ -73,4 +73,4 @@ jobs:
       # Execute tests defined by the CMake configuration.
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: |
-        ./bin/gooscript-tests 
+        ./build/tests/crab-tests 

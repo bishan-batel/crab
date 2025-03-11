@@ -184,5 +184,42 @@ TEST_CASE("Option", "Tests for all option methods") {
     CHECK(Option{10}.map(crab::fn::constant(42)) == Option{42});
     CHECK(Option<i32>{}.map(crab::fn::constant(42)) == crab::none);
   }
-}
 
+  SECTION("as_ref/as_ref_mut") {
+    SECTION("copyable") {
+      Option<String> name{"Hello"};
+      Option<RefMut<String>> ref = name.as_ref_mut();
+      Option<Ref<String>> ref_mut = name.as_ref();
+
+      REQUIRE(name.is_some());
+      REQUIRE(ref.is_some());
+      REQUIRE(ref_mut.is_some());
+
+      REQUIRE(*ref.get_unchecked() == "Hello");
+      REQUIRE(*ref_mut.get_unchecked() == "Hello");
+
+      name.get_unchecked() += " World";
+
+      REQUIRE(*ref.get_unchecked() == "Hello World");
+      REQUIRE(*ref_mut.get_unchecked() == "Hello World");
+    }
+
+    SECTION("move only") {
+      Option<MoveOnly> name{MoveOnly{"Hello"}};
+      Option<RefMut<MoveOnly>> ref = name.as_ref_mut();
+      Option<Ref<MoveOnly>> ref_mut = name.as_ref();
+
+      REQUIRE(name.is_some());
+      REQUIRE(ref.is_some());
+      REQUIRE(ref_mut.is_some());
+
+      REQUIRE(ref.get_unchecked()->get_name() == "Hello");
+      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello");
+
+      name.get_unchecked().set_name("Hello World");
+
+      REQUIRE(ref.get_unchecked()->get_name() == "Hello World");
+      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello World");
+    }
+  }
+}

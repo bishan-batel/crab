@@ -186,4 +186,3 @@ TEST_CASE("Option", "Tests for all option methods") {
   }
 }
 
-// vim:

@@ -290,7 +290,7 @@ public:
    */
   template<std::predicate<const T&> F>
   [[nodiscard]] constexpr auto is_ok_and(F&& functor) const -> bool {
-    return is_ok() and functor(get_unchecked());
+    return is_ok() and std::invoke(functor, get_unchecked());
   }
 
   /**
@@ -299,7 +299,7 @@ public:
    */
   template<std::predicate<const E&> F>
   [[nodiscard]] constexpr auto is_err_and(F&& functor) const -> bool {
-    return is_err() and functor(get_err_unchecked());
+    return is_err() and std::invoke(functor, get_err_unchecked());
   }
 
   /**
@@ -506,7 +506,7 @@ public:
     ensure_valid(loc);
 
     if (is_ok()) {
-      return Result<R, E>{functor(std::move(*this).unwrap(loc))};
+      return Result<R, E>{std::invoke(functor, std::move(*this).unwrap(loc))};
     }
 
     return Result<R, E>{std::move(*this).unwrap_err(loc)};
@@ -528,7 +528,9 @@ public:
     ensure_valid(loc);
 
     if (is_err()) {
-      return Result<T, R>{functor(std::move(*this).unwrap_err(loc))};
+      return Result<T, R>{
+        std::invoke(functor, std::move(*this).unwrap_err(loc)),
+      };
     }
 
     return Result<T, R>{std::move(*this).unwrap(loc)};
@@ -604,7 +606,7 @@ public:
       return Returned{std::move(*this).unwrap_err(loc)};
     }
 
-    return Returned{functor(std::move(*this).unwrap(loc))};
+    return Returned{std::invoke(functor, std::move(*this).unwrap(loc))};
   }
 
   /**
@@ -734,11 +736,11 @@ namespace crab {
         auto tuple,
         F&& function,
         const Rest... other_functions
-      ) const requires is_result_type_v<decltype(function())>
+      ) const requires is_result_type_v<decltype(std::invoke(function))>
       {
         // tuple.take_unchecked();
 
-        using R = decltype(function());
+        using R = decltype(std::invoke(function));
         using FOkType = typename R::OkType;
 
         static_assert(
@@ -748,12 +750,12 @@ namespace crab {
 
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
-          std::make_tuple(function().unwrap())
+          std::make_tuple(std::invoke(function).unwrap())
         ));
         using Return = decltype(operator()(
           Result<ReturnOk, Error>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(function().unwrap())
+            std::make_tuple(std::invoke(function).unwrap())
           )},
           other_functions...
         ));
@@ -762,7 +764,7 @@ namespace crab {
           return Return{std::move(tuple).unwrap_err()};
         }
 
-        Result<FOkType, Error> result = function();
+        Result<FOkType, Error> result = std::invoke(function);
 
         if (result.is_err()) {
           return Return{std::move(result).unwrap_err()};
@@ -784,20 +786,20 @@ namespace crab {
         F&& function,
         const Rest... other_functions
       ) const
-        requires(ok_type<decltype(function())> and not is_result_type_v<decltype(function())>)
+        requires(ok_type<decltype(std::invoke(function))> and not is_result_type_v<decltype(function())>)
       {
         // tuple.take_unchecked();
 
-        using FOkType = decltype(function());
+        using FOkType = decltype(std::invoke(function));
 
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
-          std::make_tuple(function())
+          std::make_tuple(std::invoke(function))
         ));
         using Return = decltype(operator()(
           Result<ReturnOk, Error>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(function())
+            std::make_tuple(std::invoke(function))
           )},
           other_functions...
         ));
@@ -806,7 +808,7 @@ namespace crab {
           return Return{std::move(tuple).unwrap_err()};
         }
 
-        FOkType result = function();
+        FOkType result{std::invoke(function)};
 
         return operator()(
           Result<ReturnOk, Error>{std::tuple_cat(

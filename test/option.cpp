@@ -177,6 +177,12 @@ TEST_CASE("Option", "Tests for all option methods") {
 
     CHECK(Option{10}.filter(crab::fn::is_odd).is_none());
     CHECK(Option<i32>{}.filter(crab::fn::is_odd).is_none());
+
+    CHECK(Option<String>{""}.filter(&String::empty).is_some());
+    CHECK(Option<String>{}.filter(&String::empty).is_none());
+    CHECK(Option<String>{""}.filter(&String::empty).is_some());
+    CHECK(Option<String>{"moment"}.map(&String::size) == Option<usize>(6));
+    CHECK(Option<String>{}.map(&String::size) == Option<usize>());
   }
 
   SECTION("map") {

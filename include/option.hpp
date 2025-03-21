@@ -234,18 +234,6 @@ public:
     return Option<RefMut<T>>{RefMut<T>{get_unchecked()}};
   }
 
-  friend constexpr auto operator<<(std::ostream& os, const Option& opt)
-    -> std::ostream& {
-    if (opt.is_none()) {
-      return os << "None";
-    }
-    os << "Some(";
-    os << opt.get_unchecked();
-    os << ")";
-
-    return os;
-  }
-
   /**
    * @brief Consumes inner value and returns it, if this option was none this
    * will instead return a new default constructed T
@@ -272,7 +260,8 @@ public:
    */
   template<std::invocable F>
   [[nodiscard]] constexpr auto take_or(F default_generator) && -> T {
-    return is_some() ? T{std::move(*this).unwrap()} : T{default_generator()};
+    return is_some() ? T{std::move(*this).unwrap()}
+                     : T{std::invoke(default_generator)};
   }
 
   /**
@@ -306,7 +295,7 @@ public:
     requires std::copy_constructible<T>
          and std::convertible_to<std::invoke_result_t<F>, T>
   {
-    return is_some() ? T{get_unchecked()} : T{default_generator()};
+    return is_some() ? T{get_unchecked()} : T{std::invoke(default_generator)};
   }
 
   /**
@@ -378,7 +367,8 @@ public:
     requires std::copy_constructible<T>
          and std::convertible_to<std::invoke_result_t<F>, E>
   {
-    return is_some() ? Result<T, E>{get_unchecked()} : error_generator();
+    return is_some() ? Result<T, E>{get_unchecked()}
+                     : std::invoke(error_generator);
   }
 
   /**
@@ -408,7 +398,7 @@ public:
     if (is_some()) {
       return Result<T, E>{std::move(*this).unwrap()};
     }
-    return Result<T, E>(error_generator());
+    return Result<T, E>(std::invoke(error_generator));
   }
 
   /**
@@ -434,7 +424,7 @@ public:
   [[nodiscard]] constexpr auto map(F mapper) && {
     using Returned = Option<crab::clean_invoke_result<F, T>>;
     if (is_some()) {
-      return Returned{mapper(std::move(*this).unwrap())};
+      return Returned{std::invoke(mapper, std::move(*this).unwrap())};
     }
     return Returned{};
   }
@@ -487,7 +477,7 @@ public:
   [[nodiscard]] constexpr auto flat_map(F mapper) && {
     using Returned = crab::clean_invoke_result<F, T>;
     if (is_some()) {
-      return Returned{mapper(std::move(*this).unwrap())};
+      return Returned{std::invoke(mapper, std::move(*this).unwrap())};
     }
     return Returned{crab::None{}};
   }
@@ -501,7 +491,7 @@ public:
     using Returned = crab::clean_invoke_result<F, T>;
 
     if (is_some()) {
-      return Returned{mapper(T{get_unchecked()})};
+      return Returned{std::invoke(mapper, get_unchecked())};
     }
     return Returned{crab::None{}};
   }
@@ -551,14 +541,18 @@ public:
    * will return Some, else None
    */
   template<std::predicate<const T&> F>
-  [[nodiscard]] constexpr auto filter(F func) && -> Option {
+  [[nodiscard]] constexpr auto filter(F predicate) && -> Option {
     if (is_none()) {
       return crab::None{};
     }
 
     T value{std::move(*this).unwrap()};
 
-    if (not static_cast<bool>(func(static_cast<const T&>(value)))) {
+    const bool passed{
+      static_cast<bool>(std::invoke(predicate, static_cast<const T&>(value))),
+    };
+
+    if (not passed) {
       return crab::None{};
     }
 
@@ -571,14 +565,18 @@ public:
    */
   template<std::predicate<const T&> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto filter(F func) const& -> Option<T> {
+  [[nodiscard]] constexpr auto filter(F predicate) const& -> Option<T> {
     if (is_none()) {
       return crab::None{};
     }
 
     T value{get_unchecked()};
 
-    if (not static_cast<bool>(func(static_cast<const T&>(value)))) {
+    const bool passed{
+      static_cast<bool>(std::invoke(predicate, static_cast<const T&>(value))),
+    };
+
+    if (not passed) {
       return crab::None{};
     }
 
@@ -591,14 +589,18 @@ public:
    */
   template<std::predicate<const T&> F>
   requires std::copy_constructible<T>
-  [[nodiscard]] constexpr auto filter(F func) & -> Option<T> {
+  [[nodiscard]] constexpr auto filter(F predicate) & -> Option<T> {
     if (is_none()) {
       return crab::None{};
     }
 
     T value{get_unchecked()};
 
-    if (not static_cast<bool>(func(static_cast<T&>(value)))) {
+    const bool passed{
+      static_cast<bool>(std::invoke(predicate, static_cast<T&>(value))),
+    };
+
+    if (not passed) {
       return crab::None{};
     }
 
@@ -826,6 +828,23 @@ private:
   std::variant<T, crab::None> value;
 };
 
+template<typename T>
+constexpr auto operator<<(std::ostream& os, const Option<T>& opt)
+  -> std::ostream& {
+  if (opt.is_none()) {
+    return os << "None";
+  }
+  os << "Some(";
+  if constexpr (requires { os << opt.get_unchecked(); }) {
+    os << opt.get_unchecked();
+  } else {
+    os << typeid(T).name();
+  }
+  os << ")";
+
+  return os;
+}
+
 namespace std {
   template<typename T>
   struct hash<Option<T>> /*NOLINT*/ {
@@ -862,7 +881,7 @@ namespace crab {
     if (not cond) {
       return Option<crab::clean_invoke_result<F>>{};
     }
-    return Option<crab::clean_invoke_result<F>>{func()};
+    return Option<crab::clean_invoke_result<F>>{std::invoke(func)};
   }
 
   /**
@@ -874,7 +893,7 @@ namespace crab {
     if (cond) {
       return Option<crab::clean_invoke_result<F>>{};
     }
-    return Option<crab::clean_invoke_result<F>>{func()};
+    return Option<crab::clean_invoke_result<F>>{std::invoke(func)};
   }
 
   /**
@@ -913,7 +932,7 @@ namespace crab {
 
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
-          std::make_tuple(function().unwrap())
+          std::make_tuple(std::invoke(function).unwrap())
         ));
 
         // using Return = std::invoke_result_t<decltype(operator()),
@@ -921,7 +940,7 @@ namespace crab {
         using Return = decltype(operator()(
           Option<ReturnOk>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(function().unwrap())
+            std::make_tuple(std::invoke(function).unwrap())
           )},
           other_functions...
         ));
@@ -930,7 +949,7 @@ namespace crab {
           return Return{crab::none};
         }
 
-        Option<Contained> result = function();
+        Option<Contained> result = std::invoke(function);
 
         if (result.is_none()) {
           return Return{crab::none};
@@ -951,21 +970,21 @@ namespace crab {
         auto tuple,
         F function,
         Rest... other_functions
-      ) const requires(not option_type<decltype(function())>)
+      ) const requires(not option_type<decltype(std::invoke(function))>)
       {
         // tuple.take_unchecked();
 
-        using O = decltype(function());
+        using O = decltype(std::invoke(function));
 
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
-          std::make_tuple(function())
+          std::make_tuple(std::invoke(function))
         ));
 
         using Return = decltype(operator()(
           Option<ReturnOk>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(function())
+            std::make_tuple(std::invoke(function))
           )},
           other_functions...
         ));
@@ -974,7 +993,7 @@ namespace crab {
           return Return{crab::none};
         }
 
-        O result = function();
+        O result = std::invoke(function);
 
         return operator()(
           Option<ReturnOk>{std::tuple_cat(

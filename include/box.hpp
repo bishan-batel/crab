@@ -218,7 +218,8 @@ public:
       return {};
     }
 
-    return Box<Derived>{std::exchange(obj, nullptr)};
+    obj = nullptr;
+    return Box<Derived>::wrap_unchecked(std::exchange(ptr, nullptr));
   }
 
 private:

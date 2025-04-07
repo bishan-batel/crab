@@ -29,6 +29,7 @@
           nativeBuildInputs = with pkgs; [
             clang
             clang-tools
+            llvm
           ];
 
         };

@@ -492,7 +492,7 @@ public:
 
   /**
    * @brief Converts a 'const Option<T>' or 'Option<T>&' into a
-   * Option<RefMut<T>>, to give optional access to the actual referenced value
+   * Option<T&>, to give optional access to the actual referenced value
    * inside.
    */
   [[nodiscard]] constexpr auto as_ref_mut() requires(not is_ref)
@@ -764,6 +764,36 @@ public:
       return Returned{std::invoke(mapper, get_unchecked())};
     }
     return Returned{crab::None{}};
+  }
+
+  /**
+   * @brief Equivalent of flat_map but for the 'None' type
+   */
+  template<std::invocable F>
+  [[nodiscard]] constexpr auto or_else(F mapper) && {
+    using Returned = crab::clean_invoke_result<F, T>;
+
+    if (is_some()) {
+      return Returned{std::move(*this).unwrap()};
+    }
+
+    return Returned{std::invoke(mapper)};
+  }
+
+  /**
+   * @brief Equivalent of flat_map but for the 'None' type
+   */
+  template<std::invocable F>
+  requires std::copy_constructible<T>
+  [[nodiscard]] constexpr auto or_else(F mapper) const& {
+    return copied().or_else(std::forward<F>(mapper));
+    using Returned = crab::clean_invoke_result<F, T>;
+
+    if (is_some()) {
+      return Returned{get_unchecked()};
+    }
+
+    return Returned{std::invoke(mapper)};
   }
 
   /**

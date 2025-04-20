@@ -758,12 +758,7 @@ public:
   template<std::invocable<T> F>
   requires std::copy_constructible<T>
   [[nodiscard]] constexpr auto flat_map(F mapper) const& {
-    using Returned = crab::clean_invoke_result<F, T>;
-
-    if (is_some()) {
-      return Returned{std::invoke(mapper, get_unchecked())};
-    }
-    return Returned{crab::None{}};
+    return copied().flat_map(std::forward<F>(mapper));
   }
 
   /**
@@ -787,13 +782,6 @@ public:
   requires std::copy_constructible<T>
   [[nodiscard]] constexpr auto or_else(F mapper) const& {
     return copied().or_else(std::forward<F>(mapper));
-    using Returned = crab::clean_invoke_result<F, T>;
-
-    if (is_some()) {
-      return Returned{get_unchecked()};
-    }
-
-    return Returned{std::invoke(mapper)};
   }
 
   /**

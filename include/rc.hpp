@@ -84,8 +84,7 @@ namespace crab::rc {
         delete data;
       }
 
-      template<typename Derived = Contained>
-      requires std::is_base_of_v<Contained, Derived>
+      template<std::derived_from<Contained> Derived = Contained>
       [[nodiscard]] auto raw_ptr() const -> Derived* {
         debug_assert(
           data != nullptr,
@@ -102,10 +101,11 @@ namespace crab::rc {
 
       template<std::derived_from<Contained> Derived>
       [[nodiscard]] auto downcast() const -> Option<RcInterior<Derived>*> {
-        if (dynamic_cast<Derived*>(this->data) == nullptr) {
-          return none;
+        if (dynamic_cast<Derived*>(this->data)) {
+          return some(std::bit_cast<RcInterior<Derived>*>(this));
         }
-        return some(std::bit_cast<RcInterior<Derived>*>(this));
+
+        return crab::none;
       }
     };
   } // namespace helper
@@ -267,31 +267,19 @@ public:
    */
   template<std::derived_from<Contained> Derived>
   auto downcast() const -> Option<Rc<Derived>> {
-    auto inner = get_interior()->template downcast<Derived>();
-
-    if (inner.is_none()) {
-      return crab::none;
-    }
-
-    Rc<Derived> casted =
-      Rc<Derived>::from_rc_interior_unchecked(std::move(inner).unwrap());
-
-    debug_assert(
-      interior->is_data_valid(),
-      "Invalid use of Rc<T>, copied from an invalidated Rc, most likely a "
-      "use-after-move"
+    return get_interior()->template downcast<Derived>().map(
+      [](crab::rc::helper::RcInterior<Derived>* interior) {
+        interior->increment_ref_count();
+        return Rc<Derived>::from_rc_interior_unchecked(interior);
+      }
     );
-
-    casted.get_interior()->increment_ref_count();
-
-    return casted;
   }
 
   /**
    * Copy assignment
    */
   auto operator=(const Rc& from) -> Rc& {
-    if (&from == this) {
+    if (&from == this or from.interior == interior) {
       return *this;
     }
 
@@ -306,7 +294,7 @@ public:
    * Move assignment
    */
   auto operator=(Rc&& from) noexcept -> Rc& {
-    if (&from == this) {
+    if (&from == this or from.interior == interior) {
       return *this;
     }
 
@@ -540,12 +528,8 @@ public:
    * @brief Converts RcMut<Derived> -> RcMut<Base>
    */
   template<class Base>
+  requires std::derived_from<Contained, Base>
   auto upcast() const -> RcMut<Base> {
-    static_assert(
-      std::derived_from<Contained, Base>,
-      "Cannot upcast to a Base that Contained does not derive from"
-    );
-
     crab::rc::helper::RcInterior<Base>* i =
       get_interior()->template upcast<Base>();
     RcMut<Base> casted = RcMut<Base>::from_rc_interior_unchecked(i);
@@ -566,25 +550,12 @@ public:
    */
   template<std::derived_from<Contained> Derived>
   auto downcast() const -> Option<RcMut<Derived>> {
-    auto inner = get_interior()->template downcast<Derived>();
-
-    if (inner.is_none()) {
-      return crab::none;
-    }
-
-    RcMut<Derived> casted = RcMut<Derived>::from_rc_interior_unchecked( //
-      std::move(inner).unwrap()
+    return get_interior()->template downcast<Derived>().map(
+      [](crab::rc::helper::RcInterior<Derived>* interior) {
+        interior->increment_ref_count();
+        return RcMut<Derived>::from_rc_interior_unchecked(interior);
+      }
     );
-
-    debug_assert(
-      interior->is_data_valid(),
-      "Invalid use of RcMut<T>, copied from an invalidated RcMut, most likely "
-      "a use-after-move"
-    );
-
-    casted.get_interior()->increment_ref_count();
-
-    return casted;
   }
 
   /**
@@ -708,7 +679,7 @@ public:
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a reason to fuck with Rc directly
    */
-  auto get_interior() const -> Interior* {
+  [[nodiscard]] auto get_interior() const -> Interior* {
     debug_assert(
       is_valid(),
       "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the "
@@ -721,7 +692,7 @@ public:
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a very good reason for messing with the invariants of Rc
    */
-  auto get_interior() -> Interior*& {
+  [[nodiscard]] auto get_interior() -> Interior*& {
     debug_assert(
       is_valid(),
       "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the "

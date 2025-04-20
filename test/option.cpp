@@ -16,36 +16,6 @@ TEST_CASE("Option", "Tests for all option methods") {
 
   STATIC_CHECK(sizeof(crab::None) == 1);
 
-  SECTION("Type traits") {
-    // is ref helpers
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-      namespace ref = crab::ref;
-
-      // none of these types should be triggered as ref / ref mut
-      assert::for_types(
-        assert::types<const T&, T&, T*, const T*, T>,
-        []<typename K>(assert::type<K>) {
-          STATIC_CHECK(not ref::is_ref_type<K>::value);
-          STATIC_CHECK(not ref::is_ref_mut_type<K>::value);
-        }
-      );
-
-      assert::for_types(assert::ref_types<T>, []<typename K>(assert::type<K>) {
-        // normal types should not trigger these flags
-
-        using underlying = typename ref::decay_type<K>::underlying_type;
-
-        STATIC_CHECK(std::same_as<underlying, T>);
-      });
-
-      STATIC_CHECK(ref::is_ref_type<Ref<T>>::value);
-      STATIC_CHECK(not ref::is_ref_mut_type<Ref<T>>::value);
-
-      STATIC_CHECK(not ref::is_ref_type<RefMut<T>>::value);
-      STATIC_CHECK(ref::is_ref_mut_type<RefMut<T>>::value);
-    });
-  }
-
   SECTION("Constructors & Move Semantics") {
 
     // general construction
@@ -158,8 +128,8 @@ TEST_CASE("Option", "Tests for all option methods") {
     Option<i32> value{10};
     CHECK(value.is_some());
 
-    CHECK_NOTHROW(*value.as_ref().unwrap() == 10);
-    CHECK_NOTHROW(*value.as_ref_mut().unwrap() = 42);
+    CHECK_NOTHROW(value.as_ref().unwrap() == 10);
+    CHECK_NOTHROW(value.as_ref_mut().unwrap() = 42);
     CHECK(value == Option{42});
   }
 
@@ -233,6 +203,29 @@ TEST_CASE("Option", "Tests for all option methods") {
       REQUIRE(ref.get_unchecked()->get_name() == "Hello World");
       REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello World");
     }
-  }
 
+    SECTION("reference types") {
+
+      assert::for_types<i32&, const i32&>([]<typename T>(assert::type<T>) {
+        Option<T> a;
+
+        REQUIRE(a.is_none());
+        REQUIRE_THROWS(a.get_unchecked());
+
+        i32 i = 10;
+        i32 j = 10;
+
+        a = i;
+
+        REQUIRE(a.is_some());
+        CHECK(a.get_unchecked() == i);
+        CHECK(a.get_unchecked() == 10);
+
+        CHECK(a != crab::none);
+        CHECK(a == Option<T>{a});
+        CHECK(a == Option<T>{i});
+        CHECK(a == Option<T>{j});
+      });
+    }
+  }
 }

@@ -10,6 +10,7 @@
 
 #include <concepts>
 #include <crab/type_traits.hpp>
+#include <functional>
 #include <iostream>
 #include <type_traits>
 #include <utility>
@@ -17,8 +18,6 @@
 
 #include "crab/debug.hpp"
 #include "hash.hpp"
-
-#define _CRAB_NO_STD_VARIANT 1
 
 namespace crab {
   /**
@@ -90,7 +89,6 @@ namespace crab::ref {
   struct is_ref_mut_type<RefMut<T>> : std::true_type {};
 } // namespace crab::ref
 
-#if _CRAB_NO_STD_VARIANT
 namespace crab::option {
 
   template<typename T>
@@ -365,11 +363,13 @@ namespace crab::option {
   };
 
   template<typename T>
-  using Storage = typename storage_selector<T>::type;
+  using Storage = std::conditional_t<
+    std::is_reference_v<T>,
+    GenericStorage<std::reference_wrapper<std::remove_reference_t<T>>>,
+    GenericStorage<T>>;
+  // using Storage = typename storage_selector<T>::type;
 
 }
-
-#endif
 
 /**
  * Represents a value that could be None, this is almost
@@ -381,54 +381,53 @@ template<typename T>
 class Option final {
 public:
 
-  // using decay = crab::ref::decay_type<T>;
-  // using T = typename decay::type;
-  // using UnderlyingType = typename decay::underlying_type;
   using Contained = T;
 
   using NestedT = T;
   static constexpr usize nested_depth{0};
 
+  static constexpr bool is_ref = std::is_reference_v<T>;
+  static constexpr bool is_const_ref = is_ref and std::is_const_v<T>;
+  static constexpr bool is_mut_ref = is_ref and not std::is_const_v<T>;
+
+  // NOLINTBEGIN(*explicit*)
   /**
    * @brief Create an option that wraps Some(T)
    */
-  constexpr Option(const T& from) /*NOLINT(*explicit*)*/ noexcept:
-      value{from} {}
-
-  // Option(UnderlyingType &from) noexcept requires (decay::is_const_ref)
-  //   : value(T{from}) {}
-  //
-  // Option(RefMut<UnderlyingType> from) noexcept requires (decay::is_const_ref)
-  //   : value(T{from}) {}
-  //
-  // Option(Option<UnderlyingType&> from) noexcept requires
-  // (decay::is_const_ref)
-  //   : value(unit{}) {
-  //   if (from) {
-  //     value = T{from.take_unchecked()};
-  //   } else {
-  //     value = crab::None{};
-  //   }
-  // }
+  constexpr Option(const T& from) noexcept: value{from} {}
 
   /**
    * @brief Create an option that wraps Some(T)
    */
-  constexpr Option(T&& from) /*NOLINT(*explicit*)*/ noexcept:
-      value{std::forward<T>(from)} {}
+  constexpr Option(T&& from) noexcept requires(not is_ref)
+      : value{std::forward<T>(from)} {}
 
   /**
    * @brief Create an empty option
    */
-  constexpr Option(crab::None none = {}) /*NOLINT(*explicit*)*/ noexcept:
-      value{none} {}
+  constexpr Option(crab::None none = {}) noexcept: value{none} {}
+
+  [[nodiscard]] constexpr operator Option<RefMut<std::remove_cvref_t<T>>>()
+    requires(is_mut_ref)
+  {
+    return map<RefMut<std::remove_cvref_t<T>>>();
+  }
+
+  [[nodiscard]] constexpr operator Option<Ref<std::remove_cvref_t<T>>>()
+    requires(is_ref)
+  {
+    return map<Ref<std::remove_cvref_t<T>>>();
+  }
+
+  // NOLINTEND(*explicit*)
 
   /**
    * @brief Reassign option to Some(T),
    * If this option previously contained Some(K), the previous value is
    * discarded and is replaced by Some(T)
    */
-  constexpr auto operator=(T&& from) -> Option& {
+  constexpr auto operator=(T&& from) -> Option& requires(not is_ref)
+  {
     value = std::forward<T>(from);
     return *this;
   }
@@ -469,51 +468,26 @@ public:
    * @brief Whether this option contains a value
    */
   [[nodiscard]] constexpr auto is_some() const -> bool {
-#if _CRAB_NO_STD_VARIANT
     return value.in_use();
-#else
-    return std::holds_alternative<T>(value);
-#endif
   }
 
   /**
    * @brief Whether this option does not contain a value
    */
   [[nodiscard]] constexpr auto is_none() const -> bool {
-#if _CRAB_NO_STD_VARIANT
     return not value.in_use();
-#else
-    return std::holds_alternative<crab::None>(value);
-#endif
-  }
-
-  /**
-   * @brief Takes value out of the option and returns it, will error if option
-   * is none, After this, the value has been 'taken out' of this option, after
-   * this method is called this option is 'None'
-   */
-  [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] constexpr auto
-  take_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
-  ) -> T {
-    debug_assert_transparent(
-      is_some(),
-      "Cannot take value from a empty option.",
-      loc
-    );
-    return std::get<T>(std::exchange(value, crab::None{}));
   }
 
   /**
    * @brief Converts a 'const Option<T>' into a Option<Ref<T>>, to give optional
    * access to the actual referenced value inside.
    */
-  [[nodiscard]] constexpr auto as_ref() const -> Option<Ref<T>> {
+  [[nodiscard]] constexpr auto as_ref() const requires(not is_ref)
+  {
     if (is_none()) {
-      return crab::None{};
+      return Option<const T&>{};
     }
-    return Option<Ref<T>>{Ref<T>{get_unchecked()}};
+    return Option<const T&>{get_unchecked()};
   }
 
   /**
@@ -521,11 +495,12 @@ public:
    * Option<RefMut<T>>, to give optional access to the actual referenced value
    * inside.
    */
-  [[nodiscard]] constexpr auto as_ref_mut() -> Option<RefMut<T>> {
+  [[nodiscard]] constexpr auto as_ref_mut() requires(not is_ref)
+  {
     if (is_none()) {
-      return crab::None{};
+      return Option<T&>{};
     }
-    return Option<RefMut<T>>{RefMut<T>{get_unchecked()}};
+    return Option<T&>{get_unchecked()};
   }
 
   /**
@@ -543,7 +518,7 @@ public:
    * exists, else returns a default value
    * @param default_value
    */
-  [[nodiscard]] constexpr auto take_or(T default_value) && -> T {
+  [[nodiscard]] constexpr auto take_or(T&& default_value) && -> T {
     return is_some() ? T{std::move(*this).unwrap()} : std::move(default_value);
   }
 
@@ -602,11 +577,7 @@ public:
       std::source_location::current()
   ) && -> T {
     debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
-#if _CRAB_NO_STD_VARIANT
     return std::exchange(value, crab::None{}).value();
-#else
-    return std::get<T>(std::exchange(value, crab::None{}));
-#endif
   }
 
   /**
@@ -623,11 +594,7 @@ public:
       loc
     );
 
-#if _CRAB_NO_STD_VARIANT
     return value.value();
-#else
-    return std::get<T>(value);
-#endif
   }
 
   /**
@@ -643,11 +610,7 @@ public:
       "cannot get_unchecked a none option",
       loc
     );
-#if _CRAB_NO_STD_VARIANT
     return value.value();
-#else
-    return std::get<T>(value);
-#endif
   }
 
   /**
@@ -1135,11 +1098,7 @@ public:
 
 private:
 
-#if _CRAB_NO_STD_VARIANT
   crab::option::Storage<T> value;
-#else
-  std::variant<T, crab::None> value;
-#endif
 };
 
 template<typename T>

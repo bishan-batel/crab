@@ -225,7 +225,34 @@ TEST_CASE("Option", "Tests for all option methods") {
         CHECK(a == Option<T>{a});
         CHECK(a == Option<T>{i});
         CHECK(a == Option<T>{j});
+
+        REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 10);
       });
+
+      Option<i32&> a;
+
+      REQUIRE(a.is_none());
+      REQUIRE_THROWS(a.get_unchecked());
+
+      i32 i = 10;
+      i32 j = 10;
+
+      a = i;
+
+      a.get_unchecked() = 11;
+
+      REQUIRE(a.is_some());
+      CHECK(a.get_unchecked() == i);
+      CHECK(a.get_unchecked() == 11);
+
+      CHECK(a != crab::none);
+      CHECK(a == Option<i32&>{a});
+      CHECK(a == Option<i32&>{i});
+      CHECK(a != Option<i32&>{j});
+
+      REQUIRE_NOTHROW(a.filter(crab::fn::constant(true)));
+
+      REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 11);
     }
   }
 }

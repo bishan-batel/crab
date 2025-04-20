@@ -44,51 +44,6 @@ class Result;
 template<typename T>
 class Option;
 
-namespace crab::ref {
-  template<typename T>
-  struct decay_type {
-    using type = T;
-    using underlying_type = T;
-    using identity = T;
-    static constexpr auto is_const_ref = false;
-    static constexpr auto is_ref = false;
-  };
-
-  template<typename T>
-  struct decay_type<T&> {
-    using type = RefMut<typename decay_type<T>::type>;
-    using underlying_type = T;
-    static constexpr auto is_const_ref = false;
-    static constexpr auto is_ref = true;
-  };
-
-  template<typename T>
-  struct decay_type<const T&> {
-    using type = Ref<typename decay_type<T>::type>;
-    using underlying_type = T;
-    static constexpr auto is_const_ref = true;
-    static constexpr auto is_ref = true;
-  };
-
-  template<typename T>
-  struct decay_type<Ref<T>> : decay_type<const T&> {};
-
-  template<typename T>
-  struct decay_type<RefMut<T>> : decay_type<T&> {};
-
-  template<typename T>
-  struct is_ref_type : std::false_type {};
-
-  template<typename T>
-  struct is_ref_type<Ref<T>> : std::true_type {};
-
-  template<typename T>
-  struct is_ref_mut_type : std::false_type {};
-
-  template<typename T>
-  struct is_ref_mut_type<RefMut<T>> : std::true_type {};
-} // namespace crab::ref
-
 namespace crab::option {
 
   template<typename T>
@@ -394,13 +349,13 @@ public:
   /**
    * @brief Create an option that wraps Some(T)
    */
-  constexpr Option(const T& from) noexcept: value{from} {}
+  constexpr Option(const T& from) noexcept requires(not is_ref)
+      : value{from} {}
 
   /**
    * @brief Create an option that wraps Some(T)
    */
-  constexpr Option(T&& from) noexcept requires(not is_ref)
-      : value{std::forward<T>(from)} {}
+  constexpr Option(T&& from) noexcept: value{std::forward<T>(from)} {}
 
   /**
    * @brief Create an empty option
@@ -519,7 +474,8 @@ public:
    * @param default_value
    */
   [[nodiscard]] constexpr auto take_or(T&& default_value) && -> T {
-    return is_some() ? T{std::move(*this).unwrap()} : std::move(default_value);
+    return is_some() ? T{std::move(*this).unwrap()}
+                     : std::forward<Contained>(default_value);
   }
 
   /**
@@ -728,7 +684,7 @@ public:
   requires std::convertible_to<T, Into> and std::copy_constructible<T>
   [[nodiscard]] constexpr auto map() const& {
     return copied().map([](T&& value) {
-      return static_cast<Into>(std::forward<T>(value));
+      return static_cast<Into>(std::forward<Contained>(value));
     });
   }
 
@@ -736,7 +692,7 @@ public:
   requires std::convertible_to<T, Into>
   [[nodiscard]] constexpr auto map() && {
     return std::move(*this).map([](T&& value) {
-      return static_cast<Into>(std::forward<T>(value));
+      return static_cast<Into>(std::forward<Contained>(value));
     });
   }
 
@@ -844,7 +800,7 @@ public:
       return crab::None{};
     }
 
-    return Option{std::move(value)};
+    return Option{std::forward<Contained>(value)};
   }
 
   /**
@@ -868,7 +824,7 @@ public:
       return crab::None{};
     }
 
-    return Option{std::move(value)};
+    return Option{std::forward<Contained>(value)};
   }
 
   /**
@@ -892,7 +848,7 @@ public:
       return crab::None{};
     }
 
-    return Option{std::move(value)};
+    return Option{std::forward<Contained>(value)};
   }
 
   /**

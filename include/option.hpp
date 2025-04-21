@@ -11,6 +11,7 @@
 #include <concepts>
 #include <crab/type_traits.hpp>
 #include <functional>
+#include <initializer_list>
 #include <iostream>
 #include <type_traits>
 #include <utility>
@@ -1167,7 +1168,7 @@ namespace crab {
         auto tuple,
         F function,
         Rest... other_functions
-      ) const requires option_type<decltype(function())>
+      ) const requires option_type<std::invoke_result_t<F>>
       {
         // tuple.take_unchecked();
 
@@ -1268,8 +1269,8 @@ namespace crab {
   } // namespace option
 
   template<std::invocable... F>
-  constexpr auto fallible(const F... fallible
-  ) -> Option<std::tuple<option::decay_fallible_function<F>...>> {
+  constexpr auto fallible(const F... fallible) {
     return option::fallible{}(Option{std::make_tuple()}, fallible...);
   }
+
 } // namespace crab

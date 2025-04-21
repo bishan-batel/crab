@@ -19,6 +19,7 @@ add_executable(crab-tests
         monadic.cpp
         fn.cpp
         ref.cpp
+        fallible.cpp
 )
 target_link_libraries(crab-tests PRIVATE Catch2::Catch2WithMain crab)
 target_compile_options(crab-tests PRIVATE -Wall -Werror -Wpedantic -Wextra -O1)

@@ -689,7 +689,7 @@ public:
   template<typename Into>
   requires std::convertible_to<T, Into>
   [[nodiscard]] constexpr auto map() && {
-    return std::move(*this).map([](T&& value) {
+    return std::move(*this).map([](T&& value) -> Into {
       return static_cast<Into>(std::forward<Contained>(value));
     });
   }

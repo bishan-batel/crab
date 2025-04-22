@@ -683,7 +683,7 @@ public:
   template<typename Into>
   requires std::convertible_to<T, Into> and std::copy_constructible<T>
   [[nodiscard]] constexpr auto map() const& {
-    return copied().map<Into>()
+    return copied().template map<Into>();
   }
 
   template<typename Into>

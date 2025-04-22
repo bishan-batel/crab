@@ -683,9 +683,7 @@ public:
   template<typename Into>
   requires std::convertible_to<T, Into> and std::copy_constructible<T>
   [[nodiscard]] constexpr auto map() const& {
-    return copied().map([](T&& value) {
-      return static_cast<Into>(std::forward<Contained>(value));
-    });
+    return copied().map<Into>()
   }
 
   template<typename Into>
@@ -701,7 +699,7 @@ public:
    */
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto flat_map(F mapper) && {
-    using Returned = crab::clean_invoke_result<F, T>;
+    using Returned = std::invoke_result_t<F, T>;
     if (is_some()) {
       return Returned{std::invoke(mapper, std::move(*this).unwrap())};
     }
@@ -1126,9 +1124,9 @@ namespace crab {
   template<std::invocable F>
   [[nodiscard]] constexpr auto then(const bool cond, F&& func) {
     if (not cond) {
-      return Option<crab::clean_invoke_result<F>>{};
+      return Option<std::invoke_result_t<F>>{};
     }
-    return Option<crab::clean_invoke_result<F>>{std::invoke(func)};
+    return Option<std::invoke_result_t<F>>{std::invoke(func)};
   }
 
   /**
@@ -1138,9 +1136,9 @@ namespace crab {
   [[nodiscard]] constexpr auto unless(const bool cond, F&& func)
     -> Option<std::invoke_result_t<F>> {
     if (cond) {
-      return Option<crab::clean_invoke_result<F>>{};
+      return Option<std::invoke_result_t<F>>{};
     }
-    return Option<crab::clean_invoke_result<F>>{std::invoke(func)};
+    return Option<std::invoke_result_t<F>>{std::invoke(func)};
   }
 
   /**

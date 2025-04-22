@@ -59,13 +59,13 @@ namespace crab::option {
 
     explicit constexpr Inner( //
       T&& value
-    ) noexcept(std::is_copy_constructible_v<T>):
+    ) noexcept(std::is_nothrow_move_constructible_v<T>):
         use_flag{true} {
       std::construct_at<T, T&&>(address(), std::forward<T>(value));
     }
 
     explicit constexpr Inner(const T& value
-    ) noexcept(std::is_copy_constructible_v<T>)
+    ) noexcept(std::is_nothrow_copy_constructible_v<T>)
       requires std::is_copy_assignable_v<T>
         : use_flag{true} {
       std::construct_at<T, const T&>(address(), value);
@@ -176,11 +176,7 @@ namespace crab::option {
       return *this;
     }
 
-    constexpr ~Inner() {
-      if (in_use()) {
-        std::destroy_at(address());
-      }
-    }
+    constexpr ~Inner() { destroy(); }
 
     [[nodiscard]] constexpr auto in_use() const -> bool { return use_flag; }
 
@@ -241,7 +237,7 @@ namespace crab::option {
       return *this;
     }
 
-    auto operator=(const crab::None&) -> GenericStorage& {
+    auto operator=(const None&) -> GenericStorage& {
       inner.destroy();
       return *this;
     }
@@ -406,7 +402,11 @@ public:
       value{std::move(from.value)} {}
 
   constexpr auto operator=(Option&& opt) noexcept -> Option& {
-    value = std::move(opt.value);
+    if (opt.is_some()) {
+      value = std::forward<Option>(opt).unwrap();
+    } else {
+      value = crab::None{};
+    }
     return *this;
   }
 

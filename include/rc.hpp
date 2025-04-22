@@ -283,9 +283,14 @@ public:
       return *this;
     }
 
+    if (from.interior == interior) {
+      return *this;
+    }
+
     destruct();
 
     interior = from.interior;
+    interior->increment_ref_count();
 
     return *this;
   }
@@ -566,9 +571,14 @@ public:
       return *this;
     }
 
+    if (from.interior == interior) {
+      return *this;
+    }
+
     destruct();
 
     interior = from.interior;
+    interior->increment_ref_count();
 
     return *this;
   }

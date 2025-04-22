@@ -144,17 +144,19 @@ namespace crab::option {
       }
 
       if (in_use()) {
-        value() = std::move(from).value();
+        value() = std::forward<Inner>(from).value();
       } else {
         use_flag = true;
-        std::construct_at<T, T&&>(address(), std::move(from).value());
+        std::construct_at<T, T&&>(address(), std::forward<Inner>(from).value());
       }
       return *this;
     }
 
     constexpr auto operator=( //
       const Inner& from
-    ) noexcept(std::is_nothrow_copy_assignable_v<T>) -> Inner& {
+    ) noexcept(std::is_nothrow_copy_assignable_v<T>)
+      -> Inner& requires std::is_copy_assignable_v<T>
+    {
       if (&from == this) {
         return *this;
       }

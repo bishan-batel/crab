@@ -648,7 +648,7 @@ public:
    */
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto map(F mapper) && {
-    using Returned = Option<crab::clean_invoke_result<F, T>>;
+    using Returned = Option<std::invoke_result_t<F, T>>;
     if (is_some()) {
       return Returned{std::invoke(mapper, std::move(*this).unwrap())};
     }
@@ -699,7 +699,7 @@ public:
    */
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto flat_map(F mapper) && {
-    using Returned = std::invoke_result_t<F, T>;
+    using Returned = crab::clean_invoke_result<F, T>;
     if (is_some()) {
       return Returned{std::invoke(mapper, std::move(*this).unwrap())};
     }

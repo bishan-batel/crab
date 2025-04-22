@@ -11,7 +11,6 @@
 #include <concepts>
 #include <crab/type_traits.hpp>
 #include <functional>
-#include <initializer_list>
 #include <iostream>
 #include <type_traits>
 #include <utility>
@@ -876,10 +875,10 @@ public:
       return crab::None{};
     }
 
-    return std::make_tuple(
+    return std::tuple<T, Vals...>{
       std::move(*this).unwrap(),
       std::move(other).unwrap()...
-    );
+    };
   }
 
   ///
@@ -1168,7 +1167,7 @@ namespace crab {
         auto tuple,
         F function,
         Rest... other_functions
-      ) const requires option_type<std::invoke_result_t<F>>
+      ) const requires option_type<decltype(function())>
       {
         // tuple.take_unchecked();
 
@@ -1180,7 +1179,7 @@ namespace crab {
 
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
-          std::make_tuple(std::invoke(function).unwrap())
+          std::tuple<Contained>{std::invoke(function).unwrap()}
         ));
 
         // using Return = std::invoke_result_t<decltype(operator()),
@@ -1188,7 +1187,7 @@ namespace crab {
         using Return = decltype(operator()(
           Option<ReturnOk>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(std::invoke(function).unwrap())
+            std::tuple<Contained>(std::invoke(function).unwrap())
           )},
           other_functions...
         ));
@@ -1206,7 +1205,7 @@ namespace crab {
         return operator()(
           Option<ReturnOk>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(std::move(result).unwrap())
+            std::tuple<Contained>(std::move(result).unwrap())
           )},
           other_functions...
         );
@@ -1226,13 +1225,13 @@ namespace crab {
 
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
-          std::make_tuple(std::invoke(function))
+          std::tuple<O>(std::invoke(function))
         ));
 
         using Return = decltype(operator()(
           Option<ReturnOk>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(std::invoke(function))
+            std::tuple<O>(std::invoke(function))
           )},
           other_functions...
         ));
@@ -1246,7 +1245,7 @@ namespace crab {
         return operator()(
           Option<ReturnOk>{std::tuple_cat(
             std::move(tuple).unwrap(),
-            std::make_tuple(std::move(result))
+            std::tuple<O>(std::move(result))
           )},
           other_functions...
         );
@@ -1272,5 +1271,4 @@ namespace crab {
   constexpr auto fallible(const F... fallible) {
     return option::fallible{}(Option{std::make_tuple()}, fallible...);
   }
-
 } // namespace crab

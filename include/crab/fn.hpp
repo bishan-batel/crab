@@ -45,51 +45,51 @@ namespace crab::fn {
 
   template<typename Derived>
   struct cast_s final {
-    [[nodiscard]] constexpr auto operator()(auto& value
-    ) const -> Option<RefMut<Derived>>
+
+    [[nodiscard]]
+    constexpr auto operator()(auto& value) const
       requires(not std::is_const_v<decltype(value)>)
     {
       return crab::ref::cast<Derived>(value);
     }
 
-    [[nodiscard]] constexpr auto operator()(const auto& value
-    ) const -> Option<Ref<Derived>> {
+    [[nodiscard]] constexpr auto operator()(const auto& value) const {
       return crab::ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(RefMut<T> value
-    ) const -> Option<RefMut<Derived>> {
-      return operator()(*value);
+    [[nodiscard]] constexpr auto operator()(RefMut<T> value) const {
+      return crab::ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(Ref<T> value
-    ) const -> Option<Ref<Derived>> {
-      return operator()(*value);
+    [[nodiscard]]
+    constexpr auto operator()(Ref<T> value) const -> Option<Ref<Derived>> {
+      return crab::ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(RcMut<T> value
-    ) const -> Option<RcMut<Derived>> {
+    [[nodiscard]]
+    constexpr auto operator()(RcMut<T> value) const -> Option<RcMut<Derived>> {
       return value.template downcast<T>();
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(Rc<T> value
-    ) const -> Option<Rc<Derived>> {
+    [[nodiscard]]
+    constexpr auto operator()(Rc<T> value) const -> Option<Rc<Derived>> {
       return value.template downcast<T>();
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(const Box<T>& value
-    ) const -> Option<Ref<Derived>> {
+    [[nodiscard]]
+    constexpr auto operator()(const Box<T>& value
+    ) const -> Option<const Derived&> {
       return operator()(*value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(Box<T>& value
-    ) const -> Option<RefMut<Derived>> {
+    [[nodiscard]]
+    constexpr auto operator()(Box<T>& value) const -> Option<Derived&> {
       return operator()(*value);
     }
   };

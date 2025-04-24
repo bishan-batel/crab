@@ -22,20 +22,20 @@ namespace crab::rc {
       using type = std::atomic<usize>;
     };
 
-    template<typename Contained, bool thread_safe = false>
+    template<typename T, bool thread_safe = false>
     class RcInterior final {
       using Counter = typename RcCounter<thread_safe>::type;
 
       Counter weak_ref_count;
       Counter ref_count;
-      Contained* data;
+      T* data;
 
     public:
 
       RcInterior(
         const usize ref_count,
         const usize weak_ref_count,
-        Contained* const data
+        T* const data
       ):
           weak_ref_count{weak_ref_count}, ref_count{ref_count}, data{data} {}
 
@@ -64,11 +64,11 @@ namespace crab::rc {
       }
 
       [[nodiscard]] auto should_free_data() const -> bool {
-        return ref_count == 0 and weak_ref_count == 0 and is_data_valid();
+        return ref_count == 0 and is_data_valid();
       }
 
       [[nodiscard]] auto should_free_self() const -> bool {
-        return ref_count == 0 and is_data_valid();
+        return ref_count == 0 and is_data_valid() and weak_ref_count == 0;
       }
 
       auto free_data() const -> void {
@@ -84,7 +84,7 @@ namespace crab::rc {
         delete data;
       }
 
-      template<std::derived_from<Contained> Derived = Contained>
+      template<std::derived_from<T> Derived = T>
       [[nodiscard]] auto raw_ptr() const -> Derived* {
         debug_assert(
           data != nullptr,
@@ -94,18 +94,23 @@ namespace crab::rc {
       }
 
       template<typename Base>
-      requires std::derived_from<Contained, Base>
+      requires std::derived_from<T, Base>
       [[nodiscard]] auto upcast() const -> RcInterior<Base>* {
         return std::bit_cast<RcInterior<Base>*>(this);
       }
 
-      template<std::derived_from<Contained> Derived>
+      template<std::derived_from<T> Derived>
       [[nodiscard]] auto downcast() const -> Option<RcInterior<Derived>*> {
-        if (dynamic_cast<Derived*>(this->data)) {
+        if (dynamic_cast<Derived*>(data)) {
           return some(std::bit_cast<RcInterior<Derived>*>(this));
         }
 
         return crab::none;
+      }
+
+      [[nodiscard]] auto release() -> Box<T> {
+        decrement_ref_count();
+        return Box<T>::wrap_unchecked(std::exchange(data, nullptr));
       }
     };
   } // namespace helper
@@ -115,9 +120,9 @@ namespace crab::rc {
  * @brief Reference Counting for a value of type T on the heap, equivalent to
  * std::shared_ptr but with prevented interior mutability.
  */
-template<typename Contained>
+template<typename T>
 class Rc final {
-  using Interior = crab::rc::helper::RcInterior<Contained>;
+  using Interior = crab::rc::helper::RcInterior<T>;
 
   Interior* interior;
 
@@ -159,7 +164,7 @@ public:
    * wrapper
    */
   [[nodiscard]]
-  static auto from_owned_unchecked(Contained* box) -> Rc {
+  static auto from_owned_unchecked(T* box) -> Rc {
     return Rc{
       new Interior{1, 0, box}
     };
@@ -203,34 +208,34 @@ public:
   /**
    * @brief Copy constructor from a RcMut<Derived> -> RcMut<Base>
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   Rc(const Rc<Derived>& from): // NOLINT(*-explicit-constructor)
-      interior{from.get_interior()->template upcast<Contained>()} {
+      interior{from.get_interior()->template upcast<T>()} {
     get_interior()->increment_ref_count();
   }
 
   /**
    * @brief Move constructor from a RcMut<Derived> -> RcMut<Base>
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   Rc(Rc<Derived>&& from): // NOLINT(*-explicit-constructor)
-      interior{std::exchange(from.get_interior(), nullptr)
-                 ->template upcast<Contained>()} {}
+      interior{std::exchange(from.get_interior(), nullptr)->template upcast<T>()
+      } {}
 
   /**
    * @brief Converts an singlely-owned box into a shared pointer
    */
-  Rc(Box<Contained> from): // NOLINT(*-explicit-constructor)
+  Rc(Box<T> from): // NOLINT(*-explicit-constructor)
       interior{
-        new Interior{1, 0, Box<Contained>::unwrap(std::move(from))}
+        new Interior{1, 0, Box<T>::unwrap(std::move(from))}
   } {}
 
   /**
    * @brief Converts an singlely-owned box into a shared pointer upcast
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   Rc(Box<Derived> from): // NOLINT(*-explicit-constructor)
-      Rc{Box<Contained>{std::forward<Box<Derived>>(from)}} {}
+      Rc{Box<T>{std::forward<Box<Derived>>(from)}} {}
 
   /**
    * @brief Destructor
@@ -243,7 +248,7 @@ public:
   template<typename Base>
   auto upcast() const -> Rc<Base> {
     static_assert(
-      std::derived_from<Contained, Base>,
+      std::derived_from<T, Base>,
       "Cannot upcast to a Base that Contained does not derive from"
     );
 
@@ -265,7 +270,7 @@ public:
   /**
    * @brief Attempts to convert Rc<Base> -> Rc<Derived>
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   auto downcast() const -> Option<Rc<Derived>> {
     return get_interior()->template downcast<Derived>().map(
       [](crab::rc::helper::RcInterior<Derived>* interior) {
@@ -313,36 +318,32 @@ public:
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator const Contained&() const { // NOLINT(*-explicit-constructor)
+  operator const T&() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to a pointer to the contained value
    */
-  operator const Contained*() const { // NOLINT(*-explicit-constructor)
+  operator const T*() const { // NOLINT(*-explicit-constructor)
     return raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator Ref<Contained>() const { // NOLINT(*-explicit-constructor)
+  operator Ref<T>() const { // NOLINT(*-explicit-constructor)
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> const Contained* {
-    return raw_ptr();
-  }
+  [[nodiscard]] auto operator->() const -> const T* { return raw_ptr(); }
 
-  [[nodiscard]] auto operator*() const -> const Contained& {
-    return *raw_ptr();
-  }
+  [[nodiscard]] auto operator*() const -> const T& { return *raw_ptr(); }
 
   /**
    * @brief Gets a Ref<T> object to the value inside.
    */
-  [[nodiscard]] auto as_ref() const -> Ref<Contained> { return *raw_ptr(); }
+  [[nodiscard]] auto as_ref() const -> Ref<T> { return *raw_ptr(); }
 
   /**
    * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
@@ -370,12 +371,12 @@ public:
   /**
    * @brief Returns a reference to the underlying data
    */
-  [[nodiscard]] auto get() const -> const Contained& { return *raw_ptr(); }
+  [[nodiscard]] auto get() const -> const T& { return *raw_ptr(); }
 
   /**
    * @brief Returns a raw pointer to the underlying data
    */
-  [[nodiscard]] auto raw_ptr() const -> const Contained* {
+  [[nodiscard]] auto raw_ptr() const -> const T* {
     return get_interior()->raw_ptr();
   }
 
@@ -383,7 +384,7 @@ public:
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a very good reason for messing with the invariants of Rc
    */
-  auto get_interior() const -> Interior* {
+  [[nodiscard]] auto get_interior() const -> Interior* {
     debug_assert(
       is_valid(),
       "Invalid use of Rc<T>, Interior is nullptr - this is most likely the "
@@ -394,9 +395,9 @@ public:
 
   /**
    * @brief UNSAFE: Gets raw pointer to the RcInterior, do not use this unless
-   * you have a reason to fuck with Rc directly
+   * you have a reason to mess with Rc directly
    */
-  auto get_interior() -> Interior*& {
+  [[nodiscard]] auto get_interior() -> Interior*& {
     debug_assert(
       is_valid(),
       "Invalid use of Rc<T>, Interior is nullptr - this is most likely the "
@@ -404,11 +405,19 @@ public:
     );
     return interior;
   }
+
+  /**
+   * @brief  Attempts to take ownership of the shared value, this will only
+   * suceed if this is the only reference to the instance.
+   */
+  [[nodiscard]] auto try_release() && -> Option<Box<T>> {
+    return std::exchange(interior, nullptr)->release();
+  }
 };
 
-template<typename Contained>
+template<typename T>
 class RcMut final {
-  using Interior = crab::rc::helper::RcInterior<Contained>;
+  using Interior = crab::rc::helper::RcInterior<T>;
 
   Interior* interior;
 
@@ -450,7 +459,7 @@ public:
    * wrapper
    */
   [[nodiscard]]
-  static auto from_owned_unchecked(Contained* box) -> RcMut {
+  static auto from_owned_unchecked(T* box) -> RcMut {
     return RcMut{
       new Interior{1, 0, box}
     };
@@ -495,34 +504,34 @@ public:
   /**
    * @brief Copy constructor from a RcMut<Derived> -> RcMut<Base>
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   RcMut(const RcMut<Derived>& from): // NOLINT(*-explicit-constructor)
-      interior{from.get_interior()->template upcast<Contained>()} {
+      interior{from.get_interior()->template upcast<T>()} {
     get_interior()->increment_ref_count();
   }
 
   /**
    * @brief Move constructor from a RcMut<Derived> -> RcMut<Base>
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   RcMut(RcMut<Derived>&& from): // NOLINT(*-explicit-constructor)
-      interior{std::exchange(from.get_interior(), nullptr)
-                 ->template upcast<Contained>()} {}
+      interior{std::exchange(from.get_interior(), nullptr)->template upcast<T>()
+      } {}
 
   /**
    * @brief Converts an singlely-owned box into a shared pointer
    */
-  RcMut(Box<Contained> from): // NOLINT(*-explicit-constructor)
+  RcMut(Box<T> from): // NOLINT(*-explicit-constructor)
       interior{
-        new Interior{1, 0, Box<Contained>::unwrap(std::move(from))}
+        new Interior{1, 0, Box<T>::unwrap(std::move(from))}
   } {}
 
   /**
    * @brief Converts an singlely-owned box into a shared pointer upcast
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   RcMut(Box<Derived> from): // NOLINT(*-explicit-constructor)
-      RcMut<Contained>{Box<Contained>{std::move(from)}} {}
+      RcMut<T>{Box<T>{std::move(from)}} {}
 
   /**
    * @brief Destructor
@@ -533,7 +542,7 @@ public:
    * @brief Converts RcMut<Derived> -> RcMut<Base>
    */
   template<class Base>
-  requires std::derived_from<Contained, Base>
+  requires std::derived_from<T, Base>
   auto upcast() const -> RcMut<Base> {
     crab::rc::helper::RcInterior<Base>* i =
       get_interior()->template upcast<Base>();
@@ -553,7 +562,7 @@ public:
   /**
    * @brief Attempts to convert RcMut<Base> -> RcMut<Derived>
    */
-  template<std::derived_from<Contained> Derived>
+  template<std::derived_from<T> Derived>
   auto downcast() const -> Option<RcMut<Derived>> {
     return get_interior()->template downcast<Derived>().map(
       [](crab::rc::helper::RcInterior<Derived>* interior) {
@@ -601,8 +610,8 @@ public:
   /**
    * Converts to an immutable Rc<T>
    */
-  operator Rc<Contained>() const { // NOLINT(*-explicit-constructor)
-    auto rc = Rc<Contained>::from_rc_interior_unchecked(get_interior());
+  operator Rc<T>() const { // NOLINT(*-explicit-constructor)
+    auto rc = Rc<T>::from_rc_interior_unchecked(get_interior());
     get_interior()->increment_ref_count();
     return rc;
   }
@@ -611,7 +620,7 @@ public:
    * Converts to an immutable Rc<T>
    */
   template<typename Base>
-  requires std::derived_from<Contained, Base>
+  requires std::derived_from<T, Base>
   operator Rc<Base>() const { // NOLINT(*-explicit-constructor)
     return upcast<Base>();
   }
@@ -619,36 +628,36 @@ public:
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator Contained&() const { // NOLINT(*-explicit-constructor)
+  operator T&() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to a pointer to the contained value
    */
-  operator Contained*() const { // NOLINT(*-explicit-constructor)
+  operator T*() const { // NOLINT(*-explicit-constructor)
     return raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator RefMut<Contained>() const { // NOLINT(*-explicit-constructor)
+  operator RefMut<T>() const { // NOLINT(*-explicit-constructor)
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> Contained* { return raw_ptr(); }
+  [[nodiscard]] auto operator->() const -> T* { return raw_ptr(); }
 
-  [[nodiscard]] auto operator*() const -> Contained& { return *raw_ptr(); }
+  [[nodiscard]] auto operator*() const -> T& { return *raw_ptr(); }
 
-  [[nodiscard]] auto operator->() -> Contained* { return raw_ptr(); }
+  [[nodiscard]] auto operator->() -> T* { return raw_ptr(); }
 
-  [[nodiscard]] auto operator*() -> Contained& { return *raw_ptr(); }
+  [[nodiscard]] auto operator*() -> T& { return *raw_ptr(); }
 
   /**
    * @brief Gets a Ref<T> object to the value inside.
    */
-  [[nodiscard]] auto as_ref() const -> RefMut<Contained> { return *raw_ptr(); }
+  [[nodiscard]] auto as_ref() const -> RefMut<T> { return *raw_ptr(); }
 
   /**
    * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
@@ -676,18 +685,16 @@ public:
   /**
    * @brief Returns a reference to the underlying data
    */
-  [[nodiscard]] auto get() const -> Contained& { return *raw_ptr(); }
+  [[nodiscard]] auto get() const -> T& { return *raw_ptr(); }
 
   /**
    * @brief Returns a raw pointer to the underlying data
    */
-  [[nodiscard]] auto raw_ptr() const -> Contained* {
-    return get_interior()->raw_ptr();
-  }
+  [[nodiscard]] auto raw_ptr() const -> T* { return get_interior()->raw_ptr(); }
 
   /**
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
-   * a reason to fuck with Rc directly
+   * a reason to mess with Rc directly
    */
   [[nodiscard]] auto get_interior() const -> Interior* {
     debug_assert(
@@ -710,6 +717,14 @@ public:
     );
     return interior;
   }
+
+  /**
+   * @brief  Attempts to take ownership of the shared value, this will only
+   * suceed if this is the only reference to the instance.
+   */
+  [[nodiscard]] auto try_release() && -> Option<Box<T>> {
+    return std::exchange(interior, nullptr)->release();
+  }
 };
 
 namespace crab {
@@ -721,7 +736,7 @@ namespace crab {
    */
   template<typename T, typename... Args>
   requires std::constructible_from<T, Args...>
-  auto make_rc(Args&&... args) -> Rc<T> {
+  [[nodiscard]] auto make_rc(Args&&... args) -> Rc<T> {
     return Rc<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 
@@ -733,7 +748,7 @@ namespace crab {
    */
   template<typename T, typename... Args>
   requires std::constructible_from<T, Args...>
-  auto make_rc_mut(Args&&... args) -> RcMut<T> {
+  [[nodiscard]] auto make_rc_mut(Args&&... args) -> RcMut<T> {
     return RcMut<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 } // namespace crab

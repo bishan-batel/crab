@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <preamble.hpp>
 #include <utility>
 #include "box.hpp"
@@ -9,7 +10,7 @@ namespace crab::fn {
   /**
    * @brief Identity Function, f(x)=x forall x
    */
-  constexpr auto identity = []<typename T>(T&& x) -> T {
+  constexpr auto identity = []<typename T>(T&& x) {
     static_assert(
       std::move_constructible<T>,
       "Cannot create an identity function for a type that cannot be moved."
@@ -23,25 +24,20 @@ namespace crab::fn {
    *
    * @param x Any integer value to check
    */
-  constexpr auto constant = []<typename T>(T&& x) {
-    static_assert(
-      std::move_constructible<T>,
-      "Cannot create a constant function for a type that cannot be moved."
-    );
-    return [x = std::forward<T>(x)]<typename... Args>(Args&&...) {
-      return decltype(x){x};
-    };
+  constexpr auto constant = []<std::copy_constructible T>(T&& x) {
+    return
+      [x = std::forward<T>(x)]<typename... Args>(Args&&...) -> T { return x; };
   };
 
   /**
    * Predicate for whether the input is even
    */
-  constexpr auto is_even = [](const auto& x) -> bool { return x % 2 == 0; };
+  constexpr auto is_even = [](auto&& x) -> bool { return x % 2 == 0; };
 
   /**
    * Predicate for whether the input is odd
    */
-  constexpr auto is_odd = [](const auto& x) -> bool { return not is_even(x); };
+  constexpr auto is_odd = [](auto&& x) -> bool { return not is_even(x); };
 
   template<typename Derived>
   struct cast_s final {
@@ -108,16 +104,6 @@ namespace crab::fn {
    */
   template<typename Derived>
   inline static constexpr auto cast = cast_s<Derived>{};
-
-  template<typename T, typename R, typename... Args>
-  [[nodiscard]] constexpr auto method(R (T::*method)(Args&&...)) {
-    return [method](auto&& x, Args&&... args) {
-      RefMut<T> ref{x};
-      return ((*ref).*method)(std::forward<Args>(args)...);
-    };
-  }
-
   /// -------------------------------------------------------------------------
   /// Range Functions
-
 }

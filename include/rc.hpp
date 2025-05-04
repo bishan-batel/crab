@@ -12,19 +12,10 @@ namespace crab::rc {
   class Rc;
 
   namespace helper {
-    template<bool = false>
-    struct RcCounter final {
-      using type = usize;
-    };
-
-    template<>
-    struct RcCounter<true> final {
-      using type = std::atomic<usize>;
-    };
-
     template<typename T, bool thread_safe = false>
     class RcInterior final {
-      using Counter = typename RcCounter<thread_safe>::type;
+      using Counter =
+        std::conditional_t<thread_safe, std::atomic_size_t, usize>;
 
       Counter weak_ref_count;
       Counter ref_count;
@@ -81,7 +72,7 @@ namespace crab::rc {
           "Invalid use of Rc<T>: Data cannot be freed when there are existing "
           "references."
         );
-        delete data;
+        delete std::exchange(data, nullptr);
       }
 
       template<std::derived_from<T> Derived = T>

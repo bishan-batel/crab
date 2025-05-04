@@ -61,7 +61,7 @@ TEST_CASE("Option", "Tests for all option methods") {
         //
         if constexpr (copyable) {
           // rvalue from made copy, then assignment
-          expected.moves += 5;
+          expected.moves += 3;
           expected.copies++;
           CHECK_NOTHROW(opt = Option(opt));
 

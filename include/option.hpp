@@ -19,19 +19,6 @@
 #include "crab/debug.hpp"
 #include "hash.hpp"
 
-namespace crab {
-  /**
-   * @brief 0-sized* struct to give into Option<T> to create an empty Option
-   */
-  struct None {
-    constexpr None() = default;
-
-    [[nodiscard]] constexpr auto operator==(const None&) const -> bool {
-      return true;
-    }
-  };
-} // namespace crab
-
 template<crab::ref::is_valid_type T>
 class Ref;
 
@@ -43,6 +30,49 @@ class Result;
 
 template<typename T>
 class Option;
+
+namespace crab {
+  /**
+   * @brief 0-sized* struct to give into Option<T> to create an empty Option
+   */
+  struct None {
+    constexpr None() = default;
+
+    [[nodiscard]] constexpr auto operator==(const None&) const -> bool {
+      return true;
+    }
+  };
+
+  template<typename T>
+  struct is_crab_ref : std::false_type {};
+
+  template<typename T>
+  struct is_crab_ref<RefMut<T>> : std::true_type {};
+
+  template<typename T>
+  struct is_crab_ref_mut : std::false_type {};
+
+  template<typename T>
+  struct is_crab_ref_mut<RefMut<T>> : std::true_type {};
+
+  template<typename T>
+  struct ref_decay {
+    using type = T;
+  };
+
+  template<typename T>
+  struct ref_decay<Ref<T>> {
+    using type = const T&;
+  };
+
+  template<typename T>
+  struct ref_decay<RefMut<T>> {
+    using type = T&;
+  };
+
+  template<typename T>
+  constexpr bool is_craf_ref_v = is_crab_ref<T>::value;
+} // namespace crab
 
 namespace crab::option {
 
@@ -64,7 +94,8 @@ namespace crab::option {
       std::construct_at<T, T&&>(address(), std::forward<T>(value));
     }
 
-    explicit constexpr Inner(const T& value
+    explicit constexpr Inner( //
+      const T& value
     ) noexcept(std::is_nothrow_copy_constructible_v<T>)
       requires std::is_copy_assignable_v<T>
         : use_flag{true} {
@@ -206,6 +237,7 @@ namespace crab::option {
     }
   };
 
+  /*
   template<typename T>
   class GenericStorage {
     template<typename S>
@@ -260,59 +292,61 @@ namespace crab::option {
 
     Inner<T> inner;
   };
+  */
 
   template<typename T>
-  struct PtrStorage {
+  class GenericStorage {
     template<typename S>
     friend class Option;
 
   public:
 
-    constexpr explicit PtrStorage(T& value): inner{&value} {}
+    constexpr GenericStorage(): inner{None{}} {}
 
-    constexpr explicit PtrStorage(const crab::None& = crab::None{}):
-        inner{nullptr} {}
+    constexpr explicit GenericStorage(T&& value):
+        inner{std::forward<T>(value)} {}
 
-    auto operator=(T& value) -> PtrStorage& {
-      inner = &value;
+    constexpr explicit GenericStorage(const T& value)
+      requires std::is_copy_constructible_v<T>
+        : inner{value} {}
+
+    constexpr explicit GenericStorage(const crab::None&): GenericStorage{} {}
+
+    auto operator=(T&& value) -> GenericStorage& {
+      inner = std::forward<T>(value);
       return *this;
     }
 
-    auto operator=(const crab::None&) -> PtrStorage& {
-      inner = nullptr;
+    auto operator=( //
+      const T& value
+    ) -> GenericStorage& requires std::is_copy_assignable_v<T>
+    {
+      inner = value;
       return *this;
     }
 
-    [[nodiscard]] constexpr auto value() const& -> T& { return *inner; }
+    auto operator=(const None&) -> GenericStorage& {
+      inner = crab::None{};
+      return *this;
+    }
 
-    [[nodiscard]] constexpr auto value() & -> T& { return *inner; }
+    [[nodiscard]] constexpr auto value() const& -> const T& {
+      return std::get<T>(inner);
+    }
 
-    [[nodiscard]] constexpr auto value() && -> std::remove_const_t<T> {
-      return std::move(*inner);
+    [[nodiscard]] constexpr auto value() & -> T& { return std::get<T>(inner); }
+
+    [[nodiscard]] constexpr auto value() && -> T {
+      return std::get<T>(std::move(inner));
     }
 
     [[nodiscard]] constexpr auto in_use() const -> bool {
-      return inner != nullptr;
+      return not std::holds_alternative<None>(inner);
     }
 
   private:
 
-    T* inner;
-  };
-
-  template<typename T>
-  struct storage_selector {
-    using type = GenericStorage<T>;
-  };
-
-  template<typename T>
-  struct storage_selector<T&> {
-    using type = PtrStorage<T>;
-  };
-
-  template<typename T>
-  struct storage_selector<const T&> {
-    using type = PtrStorage<const T>;
+    std::variant<T, None> inner;
   };
 
   template<typename T>
@@ -370,6 +404,18 @@ public:
     requires(is_ref)
   {
     return map<Ref<std::remove_cvref_t<T>>>();
+  }
+
+  [[nodiscard]] constexpr operator Option<typename crab::ref_decay<T>::type>()
+    requires(crab::is_crab_ref<T>::value)
+  {
+    return map<const T&>();
+  }
+
+  [[nodiscard]] constexpr operator Option<typename crab::ref_decay<T>::type>()
+    requires(crab::is_crab_ref_mut<T>::value)
+  {
+    return map<T&>();
   }
 
   // NOLINTEND(*explicit*)

@@ -61,7 +61,7 @@ TEST_CASE("Option", "Tests for all option methods") {
         //
         if constexpr (copyable) {
           // rvalue from made copy, then assignment
-          expected.moves += 3;
+          expected.moves++;
           expected.copies++;
           CHECK_NOTHROW(opt = Option(opt));
 
@@ -118,17 +118,17 @@ TEST_CASE("Option", "Tests for all option methods") {
     CHECK(Option<String>{}.get_or_default() == "");
   }
 
-  SECTION("as_ref and as_ref_mut") {
+  SECTION("as_ref and as_mut") {
     Option<i32> value{10};
     CHECK(value.is_some());
 
     CHECK_NOTHROW(value.as_ref().unwrap() == 10);
-    CHECK_NOTHROW(value.as_ref_mut().unwrap() = 42);
+    CHECK_NOTHROW(value.as_mut().unwrap() = 42);
     CHECK(value == Option{42});
   }
 
   SECTION("Functor methods between Option and Result") {
-    CHECK(Option{10}.ok_or("what").unwrap() == 10);
+    CHECK(Option{10}.ok_or<const char*>("what").unwrap() == 10);
     CHECK(Option<i32>{}.ok_or<String>("what").unwrap_err() == "what");
 
     CHECK(Option{10}.take_ok_or<String>("what").unwrap() == 10);
@@ -161,10 +161,10 @@ TEST_CASE("Option", "Tests for all option methods") {
     );
   }
 
-  SECTION("as_ref/as_ref_mut") {
+  SECTION("as_ref/as_mut") {
     SECTION("copyable") {
       Option<String> name{"Hello"};
-      Option<RefMut<String>> ref = name.as_ref_mut();
+      Option<RefMut<String>> ref = name.as_mut();
       Option<Ref<String>> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
@@ -182,7 +182,7 @@ TEST_CASE("Option", "Tests for all option methods") {
 
     SECTION("move only") {
       Option<MoveOnly> name{MoveOnly{"Hello"}};
-      Option<RefMut<MoveOnly>> ref = name.as_ref_mut();
+      Option<RefMut<MoveOnly>> ref = name.as_mut();
       Option<Ref<MoveOnly>> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());

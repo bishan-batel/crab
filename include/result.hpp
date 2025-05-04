@@ -86,8 +86,10 @@ namespace crab::result {
    * @brief Thin wrapper over a value to be given to Result<T,E>(Ok)'s
    * constructor
    */
-  template<ok_type T>
+  template<typename T>
   struct Ok {
+    static_assert(ok_type<T>, "Ok<T> must satisfy ok_type");
+
     using Inner = T;
     T value;
 
@@ -98,8 +100,9 @@ namespace crab::result {
    * @brief Thin wrapper over a value to be given to Result<T,E>(Err)'s
    * constructor
    */
-  template<error_type E>
+  template<typename E>
   struct Err {
+    static_assert(error_type<E>, "Err<E> must satisfy ok_type");
     using Inner = E;
     E value;
 

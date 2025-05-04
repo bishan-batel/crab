@@ -8,10 +8,10 @@ struct IncompleteType;
 
 TEST_CASE("Type Traits") {
 
-  STATIC_REQUIRE(not crab::is_complete_type<IncompleteType>);
+  STATIC_REQUIRE(not crab::complete_type<IncompleteType>);
 
   assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-    STATIC_REQUIRE(crab::is_complete_type<String>);
+    STATIC_REQUIRE(crab::complete_type<String>);
   });
 }
 

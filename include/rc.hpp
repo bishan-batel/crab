@@ -2,6 +2,7 @@
 
 #include <atomic>
 #include <bit>
+#include <optional>
 #include <preamble.hpp>
 
 #include "box.hpp"
@@ -59,10 +60,10 @@ namespace crab::rc {
       }
 
       [[nodiscard]] auto should_free_self() const -> bool {
-        return ref_count == 0 and is_data_valid() and weak_ref_count == 0;
+        return ref_count == 0 and weak_ref_count == 0;
       }
 
-      auto free_data() const -> void {
+      auto free_data() -> void {
         debug_assert(
           is_data_valid(),
           "Invalid use of Rc<T>: Data cannot be double freed."
@@ -133,18 +134,20 @@ class Rc final {
    * Destructor operations for this class
    */
   auto destruct() -> void {
-    if (interior) {
-      interior->decrement_ref_count();
-
-      if (interior->should_free_data()) {
-        interior->free_data();
-      }
-
-      if (interior->should_free_self()) {
-        delete interior;
-      }
-      interior = nullptr;
+    if (interior == nullptr) {
+      return;
     }
+
+    interior->decrement_ref_count();
+
+    if (interior->should_free_data()) {
+      interior->free_data();
+    }
+
+    if (interior->should_free_self()) {
+      delete interior;
+    }
+    interior = nullptr;
   }
 
 public:

@@ -52,7 +52,7 @@ namespace crab::result {
    * @brief Converts a given error to its stringified representation.
    */
   template<error_type E>
-  constexpr auto error_to_string(const E& err) -> String {
+  [[nodiscard]] constexpr auto error_to_string(const E& err) {
     if constexpr (requires {
                     { err.what() } -> std::convertible_to<String>;
                   }) {
@@ -70,8 +70,11 @@ namespace crab::result {
     }
 
     else if constexpr (std::is_enum_v<E>) {
-      return String{typeid(E).name()} + "["
-           + std::to_string(static_cast<i64>(err)) + "]";
+      return std::format(
+        "{}[{}]",
+        typeid(E).name(),
+        static_cast<std::underlying_type_t<E>>(err)
+      );
     } else {
       return typeid(E).name();
     }
@@ -103,7 +106,9 @@ namespace crab::result {
   template<typename E>
   struct Err {
     static_assert(error_type<E>, "Err<E> must satisfy ok_type");
+
     using Inner = E;
+
     E value;
 
     constexpr explicit Err(E value): value(std::move(value)) {}
@@ -159,6 +164,8 @@ namespace crab::result {
 
 } // namespace crab::result
 
+// NOLINTBEGIN(*explicit*)
+
 template<typename T, typename E>
 class Result final {
   static_assert(
@@ -175,8 +182,14 @@ public:
   using Err = crab::result::Err<E>;
   using Ok = crab::result::Ok<T>;
 
+  /**
+   * "Err" type for this result, Result<T, E>::ErrType = E
+   */
   using ErrType = E;
 
+  /**
+   * "Ok" type for this result, Result<T, E>::OkType = T
+   */
   using OkType = T;
 
   static constexpr bool is_copyable = std::copyable<T> and std::copyable<E>;
@@ -192,16 +205,14 @@ private:
 
 public:
 
-  constexpr Result(const T& from): /* NOLINT(*explicit*) */
-      Result{Ok{from}} {
+  constexpr Result(const T& from): Result{Ok{from}} {
     static_assert(
       std::copyable<T>,
       "Cannot create result with const ref ok type with a non-copyable ok type"
     );
   }
 
-  constexpr Result(const E& from): /* NOLINT(*explicit*) */
-      Result{Err{from}} {
+  constexpr Result(const E& from): Result{Err{from}} {
     static_assert(
       std::copyable<E>,
       "Cannot create result with const ref err type with a non-copyable err "
@@ -209,19 +220,15 @@ public:
     );
   }
 
-  constexpr Result(T&& from): /* NOLINT(*explicit*) */
-      Result{Ok{std::forward<T>(from)}} {}
+  constexpr Result(T&& from): Result{Ok{std::forward<T>(from)}} {}
 
-  constexpr Result(E&& from): /* NOLINT(*explicit*) */
-      Result{Err{std::forward<E>(from)}} {}
+  constexpr Result(E&& from): Result{Err{std::forward<E>(from)}} {}
 
-  constexpr Result(Ok&& from): /* NOLINT(*explicit*) */
-      inner{std::forward<Ok>(from)} {}
+  constexpr Result(Ok&& from): inner{std::forward<Ok>(from)} {}
 
-  constexpr Result(Err&& from): /* NOLINT(*explicit*) */
-      inner{std::forward<Err>(from)} {}
+  constexpr Result(Err&& from): inner{std::forward<Err>(from)} {}
 
-  constexpr Result(Result&& from) noexcept: /* NOLINT(*explicit*) */
+  constexpr Result(Result&& from) noexcept:
       inner{std::exchange(from.inner, invalidated{})} {}
 
   constexpr Result(const Result& res): inner{res.inner} {
@@ -306,51 +313,11 @@ public:
   }
 
   /**
-   * @brief Move out the Ok value inside, this will panic & crash if there is no
-   * contained Ok value
-   */
-  [[deprecated("Prefer safer unwrap instead")]] [[nodiscard]] constexpr auto
-  take_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
-  ) -> T {
-    ensure_valid(loc);
-    debug_assert_transparent(
-      is_ok(),
-      std::format(
-        "Called take_unchecked on result with Error:\n{}",
-        crab::result::error_to_string(get_err_unchecked())
-      ),
-      loc
-    );
-    return std::get<Ok>(std::exchange(inner, invalidated{})).value;
-  }
-
-  /**
-   * @brief Move out the Error value inside, this will panic & crash if there is
-   * no contained Error value
-   */
-  [[deprecated("Prefer safer unwrap_err instead")]] [[nodiscard]] constexpr auto
-  take_err_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
-  ) -> E {
-    ensure_valid(loc);
-    debug_assert_transparent(
-      is_err(),
-      "Called take_err_unchecked on result with ok value",
-      loc
-    );
-    return std::get<Err>(std::exchange(inner, invalidated{})).value;
-  }
-
-  /**
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
   [[nodiscard]] constexpr auto get_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) -> T& {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -369,15 +336,10 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] constexpr auto get_err_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) -> E& {
     ensure_valid(loc);
-    debug_assert_transparent(
-      is_err(),
-      std::format("Called unwrap on Ok value"),
-      loc
-    );
+    debug_assert_transparent(is_err(), "Called unwrap with Ok value", loc);
     return std::get<Err>(inner).value;
   }
 
@@ -386,8 +348,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] constexpr auto get_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> const T& {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -406,21 +367,15 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] constexpr auto get_err_unchecked(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> const E& {
     ensure_valid(loc);
-    debug_assert_transparent(
-      is_err(),
-      std::format("Called unwrap on Ok value"),
-      loc
-    );
+    debug_assert_transparent(is_err(), "Called unwrap on Ok value", loc);
     return std::get<Err>(inner).value;
   }
 
   [[nodiscard]] constexpr auto unwrap(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && -> T {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -435,8 +390,7 @@ public:
   }
 
   [[nodiscard]] constexpr auto unwrap_err(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && -> E {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -451,8 +405,7 @@ public:
    * @brief Internal method for preventing use-after-movas
    */
   constexpr auto ensure_valid(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> void {
     debug_assert_transparent(
       not std::holds_alternative<invalidated>(inner),
@@ -470,8 +423,7 @@ public:
   }
 
   [[nodiscard]] constexpr auto copied(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> Result {
     static_assert(
       is_copyable,
@@ -480,11 +432,8 @@ public:
 
     ensure_valid(loc);
 
-    if (is_ok()) {
-      return Result{T{get_unchecked()}};
-    } else {
-      return Result{E{get_err_unchecked()}};
-    }
+    return is_ok() ? Result{OkType{get_unchecked()}}
+                   : Result{ErrType{get_err_unchecked()}};
   }
 
   // ===========================================================================
@@ -501,18 +450,19 @@ public:
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto map(
     F&& functor,
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && {
-    using R = crab::clean_invoke_result<F, T>;
+    using R = std::invoke_result_t<F, T>;
 
     ensure_valid(loc);
 
     if (is_ok()) {
-      return Result<R, E>{std::invoke(functor, std::move(*this).unwrap(loc))};
+      return Result<R, E>{
+        crab::result::Ok<R>{std::invoke(functor, std::move(*this).unwrap(loc))}
+      };
     }
 
-    return Result<R, E>{std::move(*this).unwrap_err(loc)};
+    return Result<R, E>{crab::result::Err<E>{std::move(*this).unwrap_err(loc)}};
   }
 
   /**
@@ -523,20 +473,21 @@ public:
   template<std::invocable<E> F>
   [[nodiscard]] constexpr auto map_err(
     F&& functor,
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && {
-    using R = crab::clean_invoke_result<F, E>;
+    using R = std::invoke_result_t<F, E>;
 
     ensure_valid(loc);
 
     if (is_err()) {
       return Result<T, R>{
-        std::invoke(functor, std::move(*this).unwrap_err(loc)),
+        crab::result::Err<R>{
+          std::invoke(functor, std::move(*this).unwrap_err(loc))
+        },
       };
     }
 
-    return Result<T, R>{std::move(*this).unwrap(loc)};
+    return Result<T, R>{crab::result::Ok<T>{std::move(*this).unwrap(loc)}};
   }
 
   /**
@@ -547,8 +498,7 @@ public:
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto map(
     F&& functor,
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -566,8 +516,7 @@ public:
   template<std::invocable<E> F>
   [[nodiscard]] constexpr auto map_err(
     F&& functor,
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -587,18 +536,17 @@ public:
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto and_then(
     F&& functor,
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && {
-    using Returned = crab::clean_invoke_result<F, T>;
+    using R = std::invoke_result_t<F, T>;
 
     static_assert(
-      crab::result::is_result_type_v<Returned>,
+      crab::result::is_result_type_v<R>,
       "and_then functor parameter must return a Result<T,E> type"
     );
 
     static_assert(
-      std::same_as<typename Returned::ErrType, ErrType>,
+      std::same_as<typename R::ErrType, ErrType>,
       "Returned result must have the same error as the original monadic "
       "context (must be a mapping from Result<T,E> -> Result<S,E> ) "
     );
@@ -606,10 +554,10 @@ public:
     ensure_valid(loc);
 
     if (is_err()) {
-      return Returned{std::move(*this).unwrap_err(loc)};
+      return R{Err{std::move(*this).unwrap_err(loc)}};
     }
 
-    return Returned{std::invoke(functor, std::move(*this).unwrap(loc))};
+    return std::invoke(functor, std::move(*this).unwrap(loc));
   }
 
   /**
@@ -620,8 +568,7 @@ public:
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto and_then(
     F&& functor,
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -639,16 +586,11 @@ public:
    * type to simply 'none'.
    */
   [[nodiscard]] constexpr auto ok(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && -> Option<T> {
     ensure_valid(loc);
 
-    if (is_ok()) {
-      return std::move(*this).unwrap(loc);
-    }
-
-    return {};
+    return is_ok() ? Option<T>{std::move(*this).unwrap(loc)} : Option<T>{};
   }
 
   /**
@@ -659,16 +601,11 @@ public:
    * to simply 'none'.
    */
   [[nodiscard]] constexpr auto err(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && -> Option<E> {
     ensure_valid(loc);
 
-    if (is_err()) {
-      return std::move(*this).unwrap_err(loc);
-    }
-
-    return {};
+    return is_err() ? Option<E>{std::move(*this).unwrap_err(loc)} : Option<E>{};
   }
 
   /**
@@ -679,8 +616,7 @@ public:
    * type to simply 'none'.
    */
   [[nodiscard]] constexpr auto ok(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const& -> Option<T> {
     static_assert(
       std::is_trivially_copyable_v<T>,
@@ -688,13 +624,8 @@ public:
       "using reductive monadic operations, you must call Result::copied() "
       "yourself."
     );
-    ensure_valid(loc);
 
-    if (is_ok()) {
-      return get_unchecked(loc);
-    }
-
-    return {};
+    return copied().ok(loc);
   }
 
   /**
@@ -705,8 +636,7 @@ public:
    * to simply 'none'.
    */
   [[nodiscard]] constexpr auto err(
-    [[maybe_unused]] const std::source_location loc =
-      std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const& -> Option<E> {
     static_assert(
       std::is_trivially_copyable_v<E>,
@@ -714,15 +644,12 @@ public:
       "using reductive monadic operations, you must call Result::copied() "
       "yourself."
     );
-    ensure_valid(loc);
 
-    if (is_err()) {
-      return get_err_unchecked(loc);
-    }
-
-    return {};
+    return copied().err(loc);
   }
 };
+
+// NOLINTEND(*explicit*)
 
 namespace crab {
   namespace result {

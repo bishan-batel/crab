@@ -65,10 +65,6 @@ namespace crab::rc {
 
       auto free_data() -> void {
         debug_assert(
-          is_data_valid(),
-          "Invalid use of Rc<T>: Data cannot be double freed."
-        );
-        debug_assert(
           should_free_data(),
           "Invalid use of Rc<T>: Data cannot be freed when there are existing "
           "references."
@@ -79,7 +75,7 @@ namespace crab::rc {
       template<std::derived_from<T> Derived = T>
       [[nodiscard]] auto raw_ptr() const -> Derived* {
         debug_assert(
-          data != nullptr,
+          is_data_valid(),
           "Invalid access of Rc<T> or RcMut<T>, data is nullptr"
         );
         return static_cast<Derived*>(data);
@@ -335,9 +331,9 @@ public:
   [[nodiscard]] auto operator*() const -> const T& { return *raw_ptr(); }
 
   /**
-   * @brief Gets a Ref<T> object to the value inside.
+   * @brief Gets a const reference object to the value inside.
    */
-  [[nodiscard]] auto as_ref() const -> Ref<T> { return *raw_ptr(); }
+  [[nodiscard]] auto as_ref() const -> const T& { return *raw_ptr(); }
 
   /**
    * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
@@ -351,10 +347,7 @@ public:
    * @brief How many references exist to the given resource
    */
   [[nodiscard]] auto get_ref_count() const -> usize {
-    if (not is_valid()) {
-      return 0;
-    }
-    return get_interior()->get_ref_count();
+    return not is_valid() ? 0 : get_interior()->get_ref_count();
   }
 
   /**
@@ -649,9 +642,9 @@ public:
   [[nodiscard]] auto operator*() -> T& { return *raw_ptr(); }
 
   /**
-   * @brief Gets a Ref<T> object to the value inside.
+   * @brief Gets a const reference to the value inside.
    */
-  [[nodiscard]] auto as_ref() const -> RefMut<T> { return *raw_ptr(); }
+  [[nodiscard]] auto as_ref() const -> T& { return *raw_ptr(); }
 
   /**
    * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
@@ -665,10 +658,7 @@ public:
    * @brief How many references exist to the given resource
    */
   [[nodiscard]] auto get_ref_count() const -> usize {
-    if (not is_valid()) {
-      return 0;
-    }
-    return get_interior()->get_ref_count();
+    return not is_valid() ? 0 : get_interior()->get_ref_count();
   }
 
   /**

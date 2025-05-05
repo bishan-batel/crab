@@ -52,10 +52,10 @@ namespace crab::debug {
         crab::debug::dbg_assert(source_location, #condition, (message));       \
     } while (false)
 
-  #define debug_assert(condition, message)                                     \
+  #define debug_assert(condition, ...)                                         \
     debug_assert_transparent(                                                  \
       condition,                                                               \
-      message,                                                                 \
+      std::format(__VA_ARGS__),                                                \
       std::source_location::current()                                          \
     )
 #else

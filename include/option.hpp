@@ -550,7 +550,7 @@ public:
    */
   template<std::invocable<T> F>
   [[nodiscard]] constexpr auto flat_map(F mapper) && {
-    using Returned = crab::clean_invoke_result<F, T>;
+    using Returned = std::invoke_result_t<F, T>;
     if (is_some()) {
       return Returned{std::invoke(mapper, std::move(*this).unwrap())};
     }
@@ -571,7 +571,7 @@ public:
    */
   template<std::invocable F>
   [[nodiscard]] constexpr auto or_else(F mapper) && {
-    using Returned = crab::clean_invoke_result<F, T>;
+    using Returned = std::invoke_result_t<F, T>;
 
     if (is_some()) {
       return Returned{std::move(*this).unwrap()};
@@ -961,8 +961,15 @@ namespace crab {
    * @brief Creates an Option<T> from some value T
    */
   template<typename T>
-  [[nodiscard]] constexpr auto some(T from) {
+  [[nodiscard]] constexpr auto some(std::type_identity_t<T> from) {
     return Option<std::remove_cvref_t<T>>{std::move(from)};
+  }
+
+  /**
+   * @brief Creates an Option<T> from some value T
+   */
+  [[nodiscard]] constexpr auto some(auto from) {
+    return Option<std::remove_cvref_t<decltype(from)>>{std::move(from)};
   }
 
   /**

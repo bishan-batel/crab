@@ -36,19 +36,6 @@ namespace crab {
    */
   template<typename T> concept complete_type = requires { sizeof(T); };
 
-  /**
-   * Type constructor for the invoke result of the given functor F with the
-   * arguments Args... without cvref qualifications
-   *
-   * eg.
-   * clean_invoke_result<i32&(i32), i32> -> i32
-   * clean_invoke_result<const i32&(i32), i32> -> i32
-   * clean_invoke_result<const volatile i32&(i32), i32> -> i32
-   */
-  template<typename F, typename... Args>
-  using clean_invoke_result =
-    std::remove_cvref_t<std::invoke_result_t<F, Args...>>;
-
   namespace helper {
     /**
      * Type predicate helper for if the given type T is an option type, false

@@ -99,6 +99,12 @@ namespace crab::result {
     constexpr explicit Ok(T value): value(std::move(value)) {}
   };
 
+  template<typename T>
+  struct Ok<T&> : Ok<std::reference_wrapper<T>> {
+    constexpr explicit Ok(T& value):
+        Ok<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
+  };
+
   /**
    * @brief Thin wrapper over a value to be given to Result<T,E>(Err)'s
    * constructor
@@ -112,6 +118,12 @@ namespace crab::result {
     E value;
 
     constexpr explicit Err(E value): value(std::move(value)) {}
+  };
+
+  template<typename T>
+  struct Err<T&> : Err<std::reference_wrapper<T>> {
+    constexpr explicit Err(T& value):
+        Err<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
   };
 
   template<typename>
@@ -192,6 +204,9 @@ public:
    */
   using OkType = T;
 
+  static constexpr bool is_same =
+    std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<E>>;
+
   static constexpr bool is_copyable = std::copyable<T> and std::copyable<E>;
 
   static constexpr bool is_trivially_copyable =
@@ -205,24 +220,29 @@ private:
 
 public:
 
-  constexpr Result(const T& from): Result{Ok{from}} {
-    static_assert(
-      std::copyable<T>,
-      "Cannot create result with const ref ok type with a non-copyable ok type"
-    );
-  }
+  // constexpr Result(const T& from) requires(not is_same)
+  //     : Result{Ok{from}} {
+  //   static_assert(
+  //     std::copyable<T> and not is_same,
+  //     "Cannot create result with const ref ok type with a non-copyable ok
+  //     type"
+  //   );
+  // }
 
-  constexpr Result(const E& from): Result{Err{from}} {
-    static_assert(
-      std::copyable<E>,
-      "Cannot create result with const ref err type with a non-copyable err "
-      "type"
-    );
-  }
+  // constexpr Result(const E& from) requires(not is_same)
+  //     : Result{Err{from}} {
+  //   static_assert(
+  //     std::copyable<E> and not is_same,
+  //     "Cannot create result with const ref err type with a non-copyable err "
+  //     "type"
+  //   );
+  // }
 
-  constexpr Result(T&& from): Result{Ok{std::forward<T>(from)}} {}
+  constexpr Result(T&& from) requires(not is_same)
+      : Result{Ok{std::forward<T>(from)}} {}
 
-  constexpr Result(E&& from): Result{Err{std::forward<E>(from)}} {}
+  constexpr Result(E&& from) requires(not is_same)
+      : Result{Err{std::forward<E>(from)}} {}
 
   constexpr Result(Ok&& from): inner{std::forward<Ok>(from)} {}
 
@@ -267,11 +287,13 @@ public:
     return *this;
   }
 
-  constexpr auto operator=(T&& from) -> Result& {
+  constexpr auto operator=(T&& from) -> Result& requires(not is_same)
+  {
     return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  constexpr auto operator=(E&& from) -> Result& {
+  constexpr auto operator=(E&& from) -> Result& requires(not is_same)
+  {
     return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
   }
 
@@ -665,7 +687,7 @@ namespace crab {
       constexpr auto operator()(
         auto tuple,
         F&& function,
-        const Rest... other_functions
+        Rest&&... other_functions
       ) const requires is_result_type_v<decltype(std::invoke(function))>
       {
         // tuple.take_unchecked();
@@ -682,12 +704,13 @@ namespace crab {
           std::move(tuple).unwrap(),
           std::make_tuple(std::invoke(function).unwrap())
         ));
+
         using Return = decltype(operator()(
           Result<ReturnOk, Error>{std::tuple_cat(
             std::move(tuple).unwrap(),
             std::make_tuple(std::invoke(function).unwrap())
           )},
-          other_functions...
+          std::forward<Rest>(other_functions)...
         ));
 
         if (tuple.is_err()) {
@@ -705,7 +728,7 @@ namespace crab {
             std::move(tuple).unwrap(),
             std::make_tuple(std::move(result).unwrap())
           )},
-          other_functions...
+          std::forward<Rest>(other_functions)...
         );
       }
 
@@ -714,39 +737,26 @@ namespace crab {
         // Tuple : Result<std:tuple<...>, Error>
         auto tuple,
         F&& function,
-        const Rest... other_functions
+        Rest&&... other_functions
       ) const
         requires(ok_type<decltype(std::invoke(function))> and not is_result_type_v<decltype(function())>)
       {
         // tuple.take_unchecked();
 
-        using FOkType = decltype(std::invoke(function));
-
         using ReturnOk = decltype(std::tuple_cat(
           std::move(tuple).unwrap(),
           std::make_tuple(std::invoke(function))
         ));
-        using Return = decltype(operator()(
-          Result<ReturnOk, Error>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::make_tuple(std::invoke(function))
-          )},
-          other_functions...
-        ));
 
-        if (tuple.is_err()) {
-          return Return{std::move(tuple).unwrap_err()};
-        }
-
-        FOkType result{std::invoke(function)};
-
-        return operator()(
-          Result<ReturnOk, Error>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::make_tuple(std::move(result))
-          )},
-          other_functions...
-        );
+        return std::move(tuple).and_then([&, this](auto tuple) {
+          return operator()(
+            Result<ReturnOk, Error>{std::tuple_cat(
+              std::move(tuple),
+              std::make_tuple(std::invoke(function))
+            )},
+            std::forward<Rest>(other_functions)...
+          );
+        });
       }
     };
 
@@ -776,24 +786,32 @@ namespace crab {
       Result<std::tuple<>, E>{
         std::make_tuple(),
       },
-      fallible...
+      std::forward<F>(fallible)...
     );
   }
 
   template<result::ok_type T>
-  [[nodiscard]] constexpr auto ok(T&& value) {
-    return result::Ok<std::remove_cvref_t<T>>{std::forward<T>(value)};
+  [[nodiscard]] constexpr auto ok(std::type_identity_t<T>&& value) {
+    return result::Ok<T>{std::forward<T>(value)};
   }
 
   template<result::error_type E>
-  [[nodiscard]] constexpr auto err(E&& value) {
-    return result::Err<std::remove_cvref_t<E>>{std::forward<E>(value)};
+  [[nodiscard]] constexpr auto err(std::type_identity_t<E>&& value) {
+    return result::Err<E>{std::forward<E>(value)};
+  }
+
+  [[nodiscard]] constexpr auto ok(auto value) {
+    return ok<std::remove_cvref_t<decltype(value)>>(std::move(value));
+  }
+
+  [[nodiscard]] constexpr auto err(auto value) {
+    return err<std::remove_cvref_t<decltype(value)>>(std::move(value));
   }
 
   template<typename T, typename E>
   [[nodiscard]] constexpr auto unwrap(
     Result<T, E>&& result,
-    [[maybe_unused]] std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) -> T {
     return std::forward<Result<T, E>>(result).unwrap(loc);
   }
@@ -801,7 +819,7 @@ namespace crab {
   template<typename T, typename E>
   [[nodiscard]] constexpr auto unwrap_err(
     Result<T, E>&& result,
-    [[maybe_unused]] std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) -> E {
     return std::forward<Result<T, E>>(result).unwrap_err(loc);
   }

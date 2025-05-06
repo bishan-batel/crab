@@ -204,6 +204,12 @@ private:
 
 public:
 
+  inline constexpr Result(const T& from) requires(not is_same and std::copyable<T>)
+      : Result{T{from}} {}
+
+  inline constexpr Result(const E& from) requires(not is_same and std::copyable<E>)
+      : Result{E{from}} {}
+
   inline constexpr Result(T&& from) requires(not is_same)
       : Result{Ok{std::forward<T>(from)}} {}
 

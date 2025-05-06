@@ -66,6 +66,21 @@ TEST_CASE("Option", "Tests for all option methods") {
           CHECK_NOTHROW(opt = Option(opt));
 
           counter->valid(expected);
+
+          CHECK_NOTHROW(opt = opt);
+          CHECK(opt.is_some());
+
+          counter->valid(expected);
+
+          Option copy{opt};
+          expected.copies++;
+          counter->valid(expected);
+
+          CHECK_NOTHROW(opt = copy);
+          expected.copies++;
+
+          counter->valid(expected);
+          CHECK(opt.is_some());
         }
       }
     });

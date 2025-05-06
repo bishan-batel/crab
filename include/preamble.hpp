@@ -1,8 +1,7 @@
 /**
- * Created by Kishan Patel (bishan.batel@protonmail.com, kishan.patel@digipen.edu) on 3/3/2024
+ * Created by Kishan Patel (bishan.batel@protonmail.com) on 3/3/2024
  */
 
-// ReSharper disable CppUnusedIncludeDirective
 #pragma once
 
 #include <cstdint>
@@ -18,146 +17,145 @@
 #include <utility>
 #include <vector>
 
-#define nameof(x) #x
-
-template<typename T>
-using Raw = T *;
-
 /**
- * \brief 32 Bit Floating Point Number
+ * @brief 32 Bit Floating Point Number
  */
 using f32 = float;
 
 /**
- * \brief 64 Bit Floating Point Number
+ * @brief 64 Bit Floating Point Number
  */
 using f64 = long double;
 
 /**
- * \brief Fix Sized Unsigned 8 Bit Integer (cannot be negative)
+ * @brief Fix Sized Unsigned 8 Bit Integer (cannot be negative)
  */
 using u8 = std::uint8_t;
 
 /**
- * \brief Fix Sized Unsigned 16 Bit Integer (cannot be negative)
+ * @brief Fix Sized Unsigned 16 Bit Integer (cannot be negative)
  */
 using u16 = std::uint16_t;
 
 /**
- * \brief Fix Sized Unsigned 32 Bit Integer (cannot be negative)
+ * @brief Fix Sized Unsigned 32 Bit Integer (cannot be negative)
  */
 using u32 = std::uint32_t;
 
 /**
- * \brief Fix Sized Unsigned 64 Bit Integer (cannot be negative)
+ * @brief Fix Sized Unsigned 64 Bit Integer (cannot be negative)
  */
-using u64 = unsigned long int;
-
+using u64 = std::uint64_t;
 /**
- * \brief Biggest Unsigned Integer type that the current platform can use
+ * @brief Biggest Unsigned Integer type that the current platform can use
  * (cannot be negative)
  */
 using umax = std::uintmax_t;
 
 /**
- * \brief Unsigned Integer for when referring to any form of memory size or
+ * @brief Unsigned Integer for when referring to any form of memory size or
  * offset (eg. an array length or index)
  */
 using usize = std::size_t;
+
 /**
- * \brief Unsigned Integer Pointer typically used for pointer arithmetic
+ * @brief Signed memory offset
+ */
+using ptrdiff = std::ptrdiff_t;
+/**
+ * @brief Unsigned Integer Pointer typically used for pointer arithmetic
  */
 using uptr = std::uintptr_t;
 
 /**
- * \brief Signed 8 bit Integer
+ * @brief Signed 8 bit Integer
  */
 using i8 = std::int8_t;
 
 /**
- * \brief Signed 16 bit Integer
+ * @brief Signed 16 bit Integer
  */
 using i16 = std::int16_t;
 
 /**
- * \brief Signed 32 bit Integer
+ * @brief Signed 32 bit Integer
  */
 using i32 = std::int32_t;
 
 /**
- * \brief Signed 64 bit Integer
+ * @brief Signed 64 bit Integer
  */
 using i64 = std::int64_t;
 
 /**
- * \brief Biggest Integer type that the current platform can use
+ * @brief Biggest Integer type that the current platform can use
  */
 using imax = std::intmax_t;
 
 /**
- * \brief Integer pointer typically used for pointer arithmetic
+ * @brief Integer pointer typically used for pointer arithmetic
  */
 using iptr = std::intptr_t;
 
 /**
- * \brief UTF-8 Encoded Character
+ * @brief UTF-8 Encoded Character
  */
 using char8 = char8_t;
 
 /**
- * \brief UTF-16 Encoded Character
+ * @brief UTF-16 Encoded Character
  */
 using char16 = char16_t;
 
 /**
- * \brief UTF-32 Encoded Character
+ * @brief UTF-32 Encoded Character
  */
 using char32 = char32_t;
 
 /**
- * \brief std::string, fat pointer to a heap allocated string
+ * @brief std::string, fat pointer to a heap allocated string
  */
 using String = std::string;
 
 /**
- * \brief UTF Encoded Character
+ * @brief UTF Encoded Character
  */
 using widechar = wchar_t;
 
 /**
- * \brief std::wstring, fat pointer to a heap allocated unicode string
+ * @brief std::wstring, fat pointer to a heap allocated unicode string
  */
 using WideString = std::wstring;
 
 /**
- * \brief Abstraction over any contiguous sequence of characters, always prefer this
- * over const String&
+ * @brief Abstraction over any contiguous sequence of characters, always prefer
+ * this over const String&
  */
 using StringView = std::string_view;
 
 /**
- * \brief Abstraction over any contiguous sequence of unicode characters, always prefer this
- * over const WideString&
+ * @brief Abstraction over any contiguous sequence of unicode characters, always
+ * prefer this over const WideString&
  */
 using WideStringView = std::wstring_view;
 
 /**
- * \brief std::stringstream
+ * @brief std::stringstream
  */
 using StringStream = std::stringstream;
 
 /**
- * \brief std::stringstream
+ * @brief std::stringstream
  */
 using OutStringStream = std::ostringstream;
 
 /**
- * \brief std::stringstream
+ * @brief std::stringstream
  */
 using InStringStream = std::istringstream;
 
 /**
- * \brief std::wstringstream
+ * @brief std::wstringstream
  */
 using WideStringStream = std::wstringstream;
 
@@ -168,13 +166,13 @@ template<typename F = void()>
 using Func = std::function<F>;
 
 /**
- * \brief std::tuple<T...> alias.
+ * @brief std::tuple<T...> alias.
  */
 template<typename... Types>
 using Tuple = std::tuple<Types...>;
 
 /**
- * \brief std::pair<T, S> alias.
+ * @brief std::pair<T, S> alias.
  */
 template<typename A, typename B>
 using Pair = std::pair<A, B>;
@@ -189,6 +187,7 @@ namespace ranges = std::ranges;
  */
 namespace views = std::ranges::views;
 
+#if !CRAB_NO_TYPEDEF_ARRAY
 /**
  * @brief Alias for std::array
  *
@@ -198,109 +197,150 @@ namespace views = std::ranges::views;
  */
 template<typename T, usize length>
 using SizedArray = std::array<T, length>;
+#endif
 
+#if !CRAB_NO_TYPEDEF_SPAN
 /**
- * \brief Abstraction over any contiguous sequence of elements
+ * @brief Abstraction over any contiguous sequence of elements
  */
 template<typename T, usize length = std::dynamic_extent>
 using Span = std::span<T, length>;
+#endif
 
+#if !CRAB_NO_TYPEDEF_VEC
 /**
- * \brief Heap allocated, dynamically sized list
+ * @brief Heap allocated, dynamically sized list
  */
 template<typename T>
 using Vec = std::vector<T>;
+#endif
 
+#if !CRAB_NO_TYPEDEF_SET
 /**
- * \brief Unordered set of elements
+ * @brief Unordered set of elements
  */
-template<typename T, typename Hash = std::hash<T>, typename Predicate = std::equal_to<T>>
+template<
+  typename T,
+  typename Hash = std::hash<T>,
+  typename Predicate = std::equal_to<T>>
 using Set = std::unordered_set<T, Hash, Predicate>;
+#endif
 
+#if !CRAB_NO_TYPEDEF_DICTIONARY
 /**
- * \brief Unordered key-value collection
+ * @brief Unordered key-value collection
  */
-template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Predicate = std::equal_to<Key>>
+template<
+  typename Key,
+  typename Value,
+  typename Hash = std::hash<Key>,
+  typename Predicate = std::equal_to<Key>>
 using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
+#endif
 
 /**
- * \brief 0 Sized Type
+ * @brief 0 Sized Type
  */
 struct unit {
   static const unit val;
 
   constexpr unit() = default;
 
-  [[nodiscard]] constexpr auto operator==(const unit &) const -> bool { return true; }
+  [[nodiscard]] constexpr auto operator==(const unit&) const -> bool {
+    return true;
+  }
 };
 
 constexpr unit unit::val{};
 
-inline auto operator<<(std::ostream &os, const unit &) -> std::ostream & { return os << "unit"; }
+constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
+  return os << "unit";
+}
 
 /**
- * \brief Literal for converting a degree literal -> radians
+ * @brief Literal for converting a degree literal -> radians
  */
-constexpr f32 operator""_deg(const f64 literal) { return static_cast<f32>(literal * std::numbers::pi / 180.f); }
+constexpr f32 operator""_deg(const f64 literal) {
+  return static_cast<f32>(literal * std::numbers::pi / 180.f);
+}
 
-constexpr f32 operator""_f32(const f64 literal) { return static_cast<f32>(literal); }
+constexpr f32 operator""_f32(const f64 literal) {
+  return static_cast<f32>(literal);
+}
 
 constexpr f64 operator""_f64(const f64 literal) { return literal; }
 
-#define crab_impl_literal(type)                                                                                        \
-  constexpr type operator""_##type(const unsigned long long literal) { return static_cast<type>(literal); } // NOLINT
+#define CRAB_USER_LITERAL(type)                                                \
+  constexpr type operator""_##type(const unsigned long long literal) {         \
+    return static_cast<type>(literal);                                         \
+  } // NOLINT
 
 /**
- * \brief Converts literal to an i16
+ * @brief Converts literal to an i8
  */
-crab_impl_literal(i16);
+CRAB_USER_LITERAL(i8);
 
 /**
- * \brief Converts literal to an i32
+ * @brief Converts literal to an i16
  */
-crab_impl_literal(i32);
+CRAB_USER_LITERAL(i16);
 
 /**
- * \brief Converts literal to an i64
+ * @brief Converts literal to an i32
  */
-crab_impl_literal(i64);
+CRAB_USER_LITERAL(i32);
 
 /**
- * \brief Converts literal to an imax
+ * @brief Converts literal to an i64
  */
-crab_impl_literal(imax);
+CRAB_USER_LITERAL(i64);
 
 /**
- * \brief Converts literal to an iptr
+ * @brief Converts literal to an imax
  */
-crab_impl_literal(iptr);
+CRAB_USER_LITERAL(imax);
 
 /**
- * \brief Converts literal to an u16
+ * @brief Converts literal to an iptr
  */
-crab_impl_literal(u16);
+CRAB_USER_LITERAL(iptr);
 
 /**
- * \brief Converts literal to an u32
+ * @brief Converts literal to an u8
  */
-crab_impl_literal(u32);
+CRAB_USER_LITERAL(u8);
 
 /**
- * \brief Converts literal to an u64
+ * @brief Converts literal to an u16
  */
-crab_impl_literal(u64);
+CRAB_USER_LITERAL(u16);
 
 /**
- * \brief Converts literal to an umax
+ * @brief Converts literal to an u32
  */
-crab_impl_literal(umax);
+CRAB_USER_LITERAL(u32);
 
 /**
- * \brief Converts literal to an uptr
+ * @brief Converts literal to an u64
  */
-crab_impl_literal(uptr);
+CRAB_USER_LITERAL(u64);
 
-#undef crab_impl_literal
+/**
+ * @brief Converts literal to an usize
+ */
+CRAB_USER_LITERAL(usize);
+
+/**
+ * @brief Converts literal to an umax
+ */
+CRAB_USER_LITERAL(umax);
+
+/**
+ * @brief Converts literal to an uptr
+ */
+CRAB_USER_LITERAL(uptr);
+
+#undef CRAB_USER_LITERAL
 
 // Pattern Matching
 namespace crab {

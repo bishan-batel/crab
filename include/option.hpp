@@ -13,14 +13,24 @@
 
 #include <concepts>
 #include <crab/type_traits.hpp>
+#include <cstddef>
 #include <functional>
 #include <iostream>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <variant>
 
 #include "crab/debug.hpp"
 #include "hash.hpp"
+
+/**
+ * @brief CRAB_OPTION_STD_VARIANT: whether crab should use std::variant as
+ * storage for the implementation of option
+ */
+#ifndef CRAB_OPTION_STD_VARIANT
+  #define CRAB_OPTION_STD_VARIANT false
+#endif
 
 namespace crab {
   /**
@@ -43,32 +53,51 @@ namespace crab {
 
 } // namespace crab
 
-namespace crab::option {
+/**
+ * Helper utilities for implementation of Option<T>, namely the
+ * internal storage method
+ */
+namespace crab::option::helper {
 
+#if CRAB_OPTION_STD_VARIANT
+  /**
+   * Generic tagged union storage for Option<T>, used as a
+   * thin abstraction over std::variant (or a custom implementation later)
+   */
   template<typename T>
-  class GenericStorage {
-    template<typename S>
-    friend class Option;
-
-  public:
-
+  struct GenericStorage {
+    /**
+     * Default initialises to none
+     */
     constexpr GenericStorage(): inner{None{}} {}
 
+    /**
+     * Initialise to Some(value)
+     */
     constexpr explicit GenericStorage(T&& value):
         inner{std::forward<T>(value)} {}
 
+    /**
+     * Copy initialise to Some(value)
+     */
     constexpr explicit GenericStorage(const T& value)
-      requires std::is_copy_constructible_v<T>
+      requires std::copy_constructible<T>
         : inner{value} {}
 
     constexpr explicit GenericStorage(const crab::None&): GenericStorage{} {}
 
-    auto operator=(T&& value) -> GenericStorage& {
+    /**
+     * Move reassign to Some(value)
+     */
+    constexpr auto operator=(T&& value) -> GenericStorage& {
       inner = std::forward<T>(value);
       return *this;
     }
 
-    auto operator=( //
+    /**
+     * Copy reassign to Some(value)
+     */
+    constexpr auto operator=( //
       const T& value
     ) -> GenericStorage& requires std::is_copy_assignable_v<T>
     {
@@ -76,7 +105,10 @@ namespace crab::option {
       return *this;
     }
 
-    auto operator=(const None&) -> GenericStorage& {
+    /**
+     * Reassign to None
+     */
+    constexpr auto operator=(const None&) -> GenericStorage& {
       inner = crab::None{};
       return *this;
     }
@@ -99,14 +131,225 @@ namespace crab::option {
 
     std::variant<T, None> inner;
   };
+#else
+  // #error Not using CRAB_OPTION_STD_VARIANT is unsupported currently
+
+  /**
+   * Generic tagged union storage for Option<T>
+   */
+  template<typename T>
+  struct GenericStorage {
+  private:
+
+    struct empty final {};
+
+  public:
+
+    /**
+     * Initialise to Some(value)
+     */
+    constexpr explicit GenericStorage(T&& value): in_use_flag{true} {
+      std::construct_at<T, T&&>(address(), std::forward<T>(value));
+    }
+
+    /**
+     * Copy initialise to Some(value)
+     */
+    constexpr explicit GenericStorage(const T& value)
+      requires std::copy_constructible<T>
+        : in_use_flag(true) {
+      std::construct_at<T, const T&>(address(), value);
+    }
+
+    /**
+     * Default initialises to none
+     */
+    constexpr explicit GenericStorage(const crab::None& = crab::none):
+        in_use_flag{false} {}
+
+    constexpr GenericStorage(const GenericStorage& from):
+        in_use_flag{from.in_use_flag} {
+      if (in_use()) {
+        std::construct_at<T, const T&>(address(), from.value());
+      }
+    }
+
+    constexpr GenericStorage(GenericStorage&& from) noexcept:
+        in_use_flag{from.in_use_flag} {
+      if (in_use()) {
+        std::construct_at<T, T&&>(address(), std::move(*from.address()));
+        std::destroy_at(from.address());
+        from.in_use_flag = false;
+      }
+    }
+
+    constexpr GenericStorage& operator=(const GenericStorage& from) {
+      if (&from == this) {
+        return *this;
+      }
+
+      if (from.in_use()) {
+        operator=(from.value());
+      } else {
+        operator=(None{});
+        return *this;
+      }
+
+      return *this;
+    }
+
+    constexpr GenericStorage& operator=( //
+      GenericStorage&& from
+    ) noexcept(std::is_nothrow_move_assignable_v<T>) {
+      if (not from.in_use()) {
+        operator=(None{});
+        return *this;
+      }
+
+      if (in_use_flag) {
+        *address() = std::move(from.value());
+      } else {
+        std::construct_at<T, T&&>(address(), std::move(from.value()));
+        in_use_flag = true;
+      }
+
+      std::destroy_at(from.address());
+      from.in_use_flag = false;
+
+      return *this;
+    }
+
+    constexpr ~GenericStorage() {
+
+      if (in_use_flag) {
+        std::destroy_at(address());
+      }
+    }
+
+    /**
+     * Move reassign to Some(value)
+     */
+    constexpr auto operator=( //
+      T&& value
+    ) noexcept(std::is_nothrow_move_assignable_v<T>) -> GenericStorage& {
+      if (in_use_flag) {
+        *address() = std::forward<T>(value);
+      } else {
+        std::construct_at<T, T&&>(address(), std::forward<T>(value));
+        in_use_flag = true;
+      }
+      return *this;
+    }
+
+    /**
+     * Copy reassign to Some(value)
+     */
+    constexpr auto operator=( //
+      const T& value
+    ) -> GenericStorage& requires std::is_copy_assignable_v<T>
+    {
+      if (in_use_flag) {
+        *address() = value;
+      } else {
+        std::construct_at<T, const T&>(address(), value);
+        in_use_flag = true;
+      }
+      return *this;
+    }
+
+    /**
+     * Reassign to None
+     */
+    constexpr auto operator=(const None&) -> GenericStorage& {
+
+      if (in_use_flag) {
+        std::destroy_at(address());
+        in_use_flag = false;
+      }
+
+      return *this;
+    }
+
+    [[nodiscard]] constexpr auto value() const& -> const T& {
+      return *address();
+    }
+
+    [[nodiscard]] constexpr auto value() & -> T& { return *address(); }
+
+    [[nodiscard]] constexpr auto value() && -> T {
+      T value = std::move(*address());
+      std::destroy_at(address());
+      return value;
+    }
+
+    [[nodiscard]] constexpr auto in_use() const -> bool { return in_use_flag; }
+
+  private:
+
+    [[nodiscard]] auto address() -> T* {
+      return reinterpret_cast<T*>(&bytes[0]);
+    };
+
+    [[nodiscard]] auto address() const -> const T* {
+      return reinterpret_cast<const T*>(&bytes[0]);
+    };
+
+    alignas(T) std::array<std::byte, sizeof(T)> bytes;
+    bool in_use_flag;
+  };
+
+#endif
+
+  template<typename T>
+  struct RefStorage {
+    constexpr explicit RefStorage(T& value): inner{&value} {}
+
+    constexpr explicit RefStorage(const None& = crab::none): inner{nullptr} {}
+
+    RefStorage(const RefStorage& from) = default;
+
+    RefStorage(RefStorage&& from) noexcept {
+      inner = std::exchange(from.inner, nullptr);
+    }
+
+    RefStorage& operator=(const RefStorage& from) = default;
+
+    RefStorage& operator=(RefStorage&& from) = default;
+
+    ~RefStorage() = default;
+
+    constexpr auto operator=(T& value) -> RefStorage& {
+      inner = &value;
+      return *this;
+    }
+
+    constexpr auto operator=(const None&) -> RefStorage& {
+      inner = nullptr;
+      return *this;
+    }
+
+    [[nodiscard]] constexpr auto value() const& -> T& { return *inner; }
+
+    [[nodiscard]] constexpr auto value() & -> T& { return *inner; }
+
+    [[nodiscard]] constexpr auto value() && -> T& {
+      return *std::exchange(inner, nullptr);
+    }
+
+    [[nodiscard]] constexpr auto in_use() const -> bool {
+      return inner != nullptr;
+    }
+
+  private:
+
+    T* inner;
+  };
 
   template<typename T>
   using Storage = std::conditional_t<
     std::is_reference_v<T>,
-    GenericStorage<std::reference_wrapper<std::remove_reference_t<T>>>,
+    RefStorage<std::remove_reference_t<T>>,
     GenericStorage<T>>;
-  // using Storage = typename storage_selector<T>::type;
-
 }
 
 /**
@@ -921,7 +1164,7 @@ public:
 
 private:
 
-  crab::option::Storage<T> value;
+  crab::option::helper::Storage<T> value;
 };
 
 template<typename T>
@@ -1010,97 +1253,48 @@ namespace crab {
       constexpr fallible() = default;
 
       // Identity
-      constexpr auto operator()(auto tuple) const { return tuple; }
-
-      // Pass with Result<T, E>
-      template<std::invocable F, std::invocable... Rest>
-      constexpr auto operator()(
-        // Tuple : Result<std:tuple<...>, Error>
-        auto tuple,
-        F function,
-        Rest... other_functions
-      ) const requires option_type<decltype(function())>
-      {
-        // tuple.take_unchecked();
-
-        using O = decltype(function());
-        using Contained = typename O::Contained;
-
-        // static_assert(std::same_as<typename R::ErrType, Error>, "Cannot
-        // have multiple types of errors in fallible chain.");
-
-        using ReturnOk = decltype(std::tuple_cat(
-          std::move(tuple).unwrap(),
-          std::tuple<Contained>{std::invoke(function).unwrap()}
-        ));
-
-        // using Return = std::invoke_result_t<decltype(operator()),
-        // Result<ReturnOk, Error>, Rest...>;
-        using Return = decltype(operator()(
-          Option<ReturnOk>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::tuple<Contained>(std::invoke(function).unwrap())
-          )},
-          other_functions...
-        ));
-
-        if (tuple.is_none()) {
-          return Return{crab::none};
-        }
-
-        Option<Contained> result = std::invoke(function);
-
-        if (result.is_none()) {
-          return Return{crab::none};
-        }
-
-        return operator()(
-          Option<ReturnOk>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::tuple<Contained>(std::move(result).unwrap())
-          )},
-          other_functions...
-        );
+      template<typename... T>
+      [[nodiscard]] constexpr auto operator()(Tuple<T...> tuple) const {
+        return Option{tuple};
       }
 
-      template<std::invocable F, std::invocable... Rest>
+      // Pass with Result<T, E>
+      template<typename PrevResults, std::invocable F, std::invocable... Rest>
+      requires option_type<std::invoke_result_t<F>>
+      [[nodiscard]] constexpr auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
+        F&& function,
+        Rest&&... other_functions
+      ) const {
+        return std::invoke(function)
+          .map([&]<typename R>(R&& result) {
+            return std::tuple_cat(
+              std::move(tuple),
+              Tuple<R>(std::forward<R>(result))
+            );
+          })
+          .flat_map([&](auto tuple) {
+            return operator()(
+              std::move(tuple),
+              std::forward<Rest>(other_functions)...
+            );
+          });
+      }
+
+      template<typename PrevResults, std::invocable F, std::invocable... Rest>
+      requires(not option_type<std::invoke_result_t<F>>)
       constexpr auto operator()(
-        // Tuple : Result<std:tuple<...>, Error>
-        auto tuple,
-        F function,
-        Rest... other_functions
-      ) const requires(not option_type<decltype(std::invoke(function))>)
-      {
-        // tuple.take_unchecked();
-
-        using O = decltype(std::invoke(function));
-
-        using ReturnOk = decltype(std::tuple_cat(
-          std::move(tuple).unwrap(),
-          std::tuple<O>(std::invoke(function))
-        ));
-
-        using Return = decltype(operator()(
-          Option<ReturnOk>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::tuple<O>(std::invoke(function))
-          )},
-          other_functions...
-        ));
-
-        if (tuple.is_none()) {
-          return Return{crab::none};
-        }
-
-        O result = std::invoke(function);
-
-        return operator()(
-          Option<ReturnOk>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::tuple<O>(std::move(result))
-          )},
-          other_functions...
-        );
+        PrevResults tuple /* Tuple<T...>*/,
+        F&& function,
+        Rest&&... other_functions
+      ) const {
+        return Option{operator()(
+          std::tuple_cat(
+            std::move(tuple),
+            Tuple<std::invoke_result_t<F>>(std::invoke(function))
+          ),
+          std::forward<Rest>(other_functions)...
+        )};
       }
     };
 
@@ -1108,12 +1302,7 @@ namespace crab {
 
   template<std::invocable... F>
   [[nodiscard]] constexpr auto fallible(F&&... fallible) {
-    return option::fallible{}(
-      Option{
-        std::make_tuple(),
-      },
-      std::forward<F>(fallible)...
-    );
+    return option::fallible{}(Tuple<>{}, std::forward<F>(fallible)...);
   }
 } // namespace crab
 

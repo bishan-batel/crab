@@ -265,7 +265,7 @@ struct unit {
   }
 };
 
-constexpr unit unit::val{};
+inline constexpr unit unit::val{};
 
 constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
   return os << "unit";

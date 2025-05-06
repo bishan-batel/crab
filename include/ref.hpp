@@ -4,6 +4,8 @@
 #include "crab/debug.hpp"
 #include "crab/type_traits.hpp"
 
+// NOLINGBEGIN(*explicit*)
+
 /**
  * Reference to some type T that is always NON NULL, use in place of 'const T&'
  * when applicable (for ex. inside template parameters)
@@ -20,18 +22,11 @@ public:
     return Ref(pointer);
   }
 
-  constexpr Ref(const T& ref): // NOLINT(*-explicit-constructor)
-      Ref(&ref) {}
+  constexpr Ref(const T& ref): Ref(&ref) {}
 
-  [[nodiscard]] constexpr operator const T&(
-  ) const { // NOLINT(*-explicit-constructor)
-    return get_ref();
-  };
+  [[nodiscard]] constexpr operator const T&() const { return get_ref(); };
 
-  [[nodiscard]] constexpr operator const T*(
-  ) const { // NOLINT(*-explicit-constructor)
-    return as_ptr();
-  };
+  [[nodiscard]] constexpr operator const T*() const { return as_ptr(); };
 
   [[nodiscard]] constexpr const T& operator*() const { return get_ref(); }
 
@@ -69,23 +64,17 @@ class RefMut final {
 
 public:
 
-  constexpr RefMut(T& ref): RefMut(&ref) {} // NOLINT(*-explicit-constructor)
+  constexpr RefMut(T& ref): RefMut(&ref) {}
 
   [[nodiscard]] constexpr static RefMut from_unchecked(T* const pointer) {
     return RefMut(pointer);
   }
 
-  [[nodiscard]] constexpr operator T&() const {
-    return get_mut_ref();
-  }; // NOLINT(*-explicit-constructor)
+  [[nodiscard]] constexpr operator T&() const { return get_mut_ref(); };
 
-  [[nodiscard]] constexpr operator T*() const {
-    return as_ptr();
-  }; // NOLINT(*-explicit-constructor)
+  [[nodiscard]] constexpr operator T*() const { return as_ptr(); };
 
-  [[nodiscard]] constexpr operator Ref<T>() const {
-    return as_ref();
-  }; // NOLINT(*-explicit-constructor)
+  [[nodiscard]] constexpr operator Ref<T>() const { return as_ref(); };
 
   [[nodiscard]] constexpr T& operator*() const { return get_mut_ref(); }
 
@@ -303,3 +292,5 @@ namespace crab::ref {
     return typeid(obj) == typeid(T);
   }
 } // namespace crab::ref
+
+// NOLINTEND(*explicit)

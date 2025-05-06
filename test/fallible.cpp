@@ -11,7 +11,7 @@ TEST_CASE("Fallible (Option)") {
     REQUIRE(non_zero(0).is_none());
     REQUIRE(non_zero(1).is_some());
 
-    Option<std::tuple<i32, u8>> tuple = crab::fallible( //
+    auto tuple = crab::fallible( //
       []() { return 0; },
       []() { return non_zero(1); }
     );
@@ -22,6 +22,11 @@ TEST_CASE("Fallible (Option)") {
     CHECK(crab::fallible( //
             []() { return 0; },
             []() { return non_zero(0); }
+    ).is_none());
+
+    CHECK(crab::fallible( //
+            []() { return non_zero(0); },
+            []() { return 0; }
     ).is_none());
   }
 }

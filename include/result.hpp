@@ -6,9 +6,9 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
+#include <preamble.hpp>
 #include <concepts>
 #include <format>
-#include <sstream>
 #include <type_traits>
 #include <variant>
 
@@ -42,9 +42,9 @@ namespace crab {
   };
 } // namespace crab
 
-namespace crab::result {
+namespace crab {
   /**
-   * @brief A valid error type.
+   * @brief A valid error type for use in Err<T> / Result<_, E>
    */
   template<typename E> concept error_type = std::move_constructible<E>;
 
@@ -52,7 +52,7 @@ namespace crab::result {
    * @brief Converts a given error to its stringified representation.
    */
   template<error_type E>
-  [[nodiscard]] constexpr auto error_to_string(const E& err) {
+  [[nodiscard]] inline constexpr auto error_to_string(const E& err) {
     if constexpr (requires {
                     { err.what() } -> std::convertible_to<String>;
                   }) {
@@ -101,7 +101,7 @@ namespace crab::result {
 
   template<typename T>
   struct Ok<T&> : Ok<std::reference_wrapper<T>> {
-    constexpr explicit Ok(T& value):
+    inline constexpr explicit Ok(T& value):
         Ok<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
   };
 
@@ -117,82 +117,66 @@ namespace crab::result {
 
     E value;
 
-    constexpr explicit Err(E value): value(std::move(value)) {}
+    inline constexpr explicit Err(E value): value(std::move(value)) {}
   };
 
   template<typename T>
   struct Err<T&> : Err<std::reference_wrapper<T>> {
-    constexpr explicit Err(T& value):
+    inline constexpr explicit Err(T& value):
         Err<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
   };
 
-  template<typename>
-  struct is_result_type {
-    static constexpr bool value = false;
-  };
+  namespace helper {
+    /**
+     * @brief Whether type T is the 'Ok' wrapper Ok<K>
+     */
+    template<typename>
+    struct is_crab_ok final : std::false_type {};
 
-  template<typename T, typename E>
-  struct is_result_type<Result<T, E>> {
-    static constexpr bool value = true;
-  };
+    /**
+     * @brief Whether type T is the 'Ok' wrapper Ok<K>
+     */
+    template<ok_type T>
+    struct is_crab_ok<Ok<T>> final : std::true_type {};
 
-  /**
-   * @brief Whether type T is a Result<>
-   */
-  template<typename T>
-  constexpr bool is_result_type_v = is_result_type<T>::value;
+    /**
+     * @brief Whether type T is the 'Err' wrapper Err<K>
+     */
+    template<typename>
+    struct is_crab_err final : std::false_type {};
 
-  /**
-   * @brief Whether type T is the 'Ok' wrapper Ok<K>
-   */
-  template<typename>
-  struct is_ok_type {
-    static constexpr bool value = false;
-  };
-
-  /**
-   * @brief Whether type T is the 'Ok' wrapper Ok<K>
-   */
-  template<ok_type T>
-  struct is_ok_type<Ok<T>> {
-    static constexpr bool value = true;
-  };
+    /**
+     * @brief Whether type T is the 'Err' wrapper Err<K>
+     */
+    template<error_type E>
+    struct is_crab_err<Err<E>> final : std::true_type {};
+  }
 
   /**
-   * @brief Whether type T is the 'Err' wrapper Err<K>
+   * Type predicate for if the given type is of the form crab::Ok<T>
    */
-  template<typename>
-  struct is_err_type {
-    static constexpr bool value = false;
-  };
+  template<typename T> concept crab_ok = helper::is_crab_ok<T>::value;
 
   /**
-   * @brief Whether type T is the 'Err' wrapper Err<K>
+   * Type predicate for if the given type is of the form crab::Err<T>
    */
-  template<error_type E>
-  struct is_err_type<Err<E>> {
-    static constexpr bool value = true;
-  };
-
-} // namespace crab::result
+  template<typename T> concept crab_err = helper::is_crab_err<T>::value;
+}
 
 // NOLINTBEGIN(*explicit*)
 
 template<typename T, typename E>
 class Result final {
   static_assert(
-    crab::result::ok_type<T>,
+    crab::ok_type<T>,
     "T is not a valid Ok type, must be move constructible."
   );
-  static_assert(crab::result::error_type<E>, "E is not a valid Err type.");
-};
+  static_assert(crab::error_type<E>, "E is not a valid Err type.");
 
-template<crab::result::ok_type T, crab::result::error_type E>
-class Result<T, E> final {
 public:
 
-  using Err = crab::result::Err<E>;
-  using Ok = crab::result::Ok<T>;
+  using Err = crab::Err<E>;
+  using Ok = crab::Ok<T>;
 
   /**
    * "Err" type for this result, Result<T, E>::ErrType = E
@@ -220,45 +204,27 @@ private:
 
 public:
 
-  // constexpr Result(const T& from) requires(not is_same)
-  //     : Result{Ok{from}} {
-  //   static_assert(
-  //     std::copyable<T> and not is_same,
-  //     "Cannot create result with const ref ok type with a non-copyable ok
-  //     type"
-  //   );
-  // }
-
-  // constexpr Result(const E& from) requires(not is_same)
-  //     : Result{Err{from}} {
-  //   static_assert(
-  //     std::copyable<E> and not is_same,
-  //     "Cannot create result with const ref err type with a non-copyable err "
-  //     "type"
-  //   );
-  // }
-
-  constexpr Result(T&& from) requires(not is_same)
+  inline constexpr Result(T&& from) requires(not is_same)
       : Result{Ok{std::forward<T>(from)}} {}
 
-  constexpr Result(E&& from) requires(not is_same)
+  inline constexpr Result(E&& from) requires(not is_same)
       : Result{Err{std::forward<E>(from)}} {}
 
-  constexpr Result(Ok&& from): inner{std::forward<Ok>(from)} {}
+  inline constexpr Result(Ok&& from): inner{std::forward<Ok>(from)} {}
 
-  constexpr Result(Err&& from): inner{std::forward<Err>(from)} {}
+  inline constexpr Result(Err&& from): inner{std::forward<Err>(from)} {}
 
-  constexpr Result(Result&& from) noexcept:
+  inline constexpr Result(Result&& from) noexcept:
       inner{std::exchange(from.inner, invalidated{})} {}
 
-  constexpr Result(const Result& res): inner{res.inner} {
+  inline constexpr Result(const Result& res): inner{res.inner} {
     static_assert(
       is_copyable,
       "Cannot copy a result with a non-copyable Err or Ok type"
     );
   }
 
-  constexpr auto operator=(const Result& res) -> Result& {
+  inline constexpr auto operator=(const Result& res) -> Result& {
     static_assert(
       is_copyable,
       "cannot copy a result with a non-copyable err or ok type"
@@ -272,44 +238,46 @@ public:
     return *this;
   }
 
-  constexpr auto operator=(Result&& res) noexcept -> Result& {
+  inline constexpr auto operator=(Result&& res) noexcept -> Result& {
     inner = std::exchange(res.inner, invalidated{});
     return *this;
   }
 
-  constexpr auto operator=(Ok&& from) -> Result& {
+  inline constexpr auto operator=(Ok&& from) -> Result& {
     inner = std::forward<Ok>(from);
     return *this;
   }
 
-  constexpr auto operator=(Err&& from) -> Result& {
+  inline constexpr auto operator=(Err&& from) -> Result& {
     inner = std::forward<Err>(from);
     return *this;
   }
 
-  constexpr auto operator=(T&& from) -> Result& requires(not is_same)
+  inline constexpr auto operator=(T&& from) -> Result& requires(not is_same)
   {
     return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  constexpr auto operator=(E&& from) -> Result& requires(not is_same)
+  inline constexpr auto operator=(E&& from) -> Result& requires(not is_same)
   {
     return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
   }
 
-  [[nodiscard]] constexpr explicit operator bool() const { return is_ok(); }
+  [[nodiscard]] inline constexpr explicit operator bool() const {
+    return is_ok();
+  }
 
   /**
    * @brief Does this result hold an ok value
    */
-  [[nodiscard]] constexpr auto is_ok() const -> bool {
+  [[nodiscard]] inline constexpr auto is_ok() const -> bool {
     return std::holds_alternative<Ok>(inner);
   }
 
   /**
    * @brief Does this result hold an err value
    */
-  [[nodiscard]] constexpr auto is_err() const -> bool {
+  [[nodiscard]] inline constexpr auto is_err() const -> bool {
     return std::holds_alternative<Err>(inner);
   }
 
@@ -321,7 +289,7 @@ public:
    * Result<i32,String>{10}.is_ok_and(crab::fn::odd) -> false
    */
   template<std::predicate<const T&> F>
-  [[nodiscard]] constexpr auto is_ok_and(F&& functor) const -> bool {
+  [[nodiscard]] inline constexpr auto is_ok_and(F&& functor) const -> bool {
     return is_ok() and std::invoke(functor, get_unchecked());
   }
 
@@ -330,7 +298,7 @@ public:
    * match with the given predicate
    */
   template<std::predicate<const E&> F>
-  [[nodiscard]] constexpr auto is_err_and(F&& functor) const -> bool {
+  [[nodiscard]] inline constexpr auto is_err_and(F&& functor) const -> bool {
     return is_err() and std::invoke(functor, get_err_unchecked());
   }
 
@@ -338,15 +306,15 @@ public:
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
-  [[nodiscard]] constexpr auto get_unchecked(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto get_unchecked(
+    std::source_location loc = std::source_location::current()
   ) -> T& {
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
       std::format(
         "Called unwrap on result with Error:\n{}",
-        crab::result::error_to_string(get_err_unchecked())
+        crab::error_to_string(get_err_unchecked())
       ),
       loc
     );
@@ -357,8 +325,8 @@ public:
    * @brief Gets a reference to the contained Error value, if there is no Error
    * value this will panic and crash.
    */
-  [[nodiscard]] constexpr auto get_err_unchecked(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto get_err_unchecked(
+    std::source_location loc = std::source_location::current()
   ) -> E& {
     ensure_valid(loc);
     debug_assert_transparent(is_err(), "Called unwrap with Ok value", loc);
@@ -369,15 +337,15 @@ public:
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
-  [[nodiscard]] constexpr auto get_unchecked(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto get_unchecked(
+    std::source_location loc = std::source_location::current()
   ) const -> const T& {
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
       std::format(
         "Called unwrap on result with Error:\n{}",
-        crab::result::error_to_string(get_err_unchecked())
+        crab::error_to_string(get_err_unchecked())
       ),
       loc
     );
@@ -388,31 +356,31 @@ public:
    * @brief Gets a reference to the contained Error value, if there is no Error
    * value this will panic and crash.
    */
-  [[nodiscard]] constexpr auto get_err_unchecked(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto get_err_unchecked(
+    std::source_location loc = std::source_location::current()
   ) const -> const E& {
     ensure_valid(loc);
     debug_assert_transparent(is_err(), "Called unwrap on Ok value", loc);
     return std::get<Err>(inner).value;
   }
 
-  [[nodiscard]] constexpr auto unwrap(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto unwrap(
+    std::source_location loc = std::source_location::current()
   ) && -> T {
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
       std::format(
         "Called unwrap on result with Error:\n{}",
-        crab::result::error_to_string(get_err_unchecked())
+        crab::error_to_string(get_err_unchecked())
       ),
       loc
     );
     return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
 
-  [[nodiscard]] constexpr auto unwrap_err(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto unwrap_err(
+    std::source_location loc = std::source_location::current()
   ) && -> E {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -426,8 +394,8 @@ public:
   /**
    * @brief Internal method for preventing use-after-movas
    */
-  constexpr auto ensure_valid(
-    const std::source_location loc = std::source_location::current()
+  inline constexpr auto ensure_valid(
+    std::source_location loc = std::source_location::current()
   ) const -> void {
     debug_assert_transparent(
       not std::holds_alternative<invalidated>(inner),
@@ -436,16 +404,18 @@ public:
     );
   }
 
-  friend constexpr auto operator<<(std::ostream& os, const Result& result)
-    -> std::ostream& {
+  inline friend constexpr auto operator<<(
+    std::ostream& os,
+    const Result& result
+  ) -> std::ostream& {
     if (result.is_err()) {
       return os << "Err(" << result.get_err_unchecked() << ")";
     }
     return os << "Ok(" << result.get_unchecked() << ")";
   }
 
-  [[nodiscard]] constexpr auto copied(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto copied(
+    std::source_location loc = std::source_location::current()
   ) const -> Result {
     static_assert(
       is_copyable,
@@ -470,9 +440,9 @@ public:
    * @return
    */
   template<std::invocable<T> F>
-  [[nodiscard]] constexpr auto map(
+  [[nodiscard]] inline constexpr auto map(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) && {
     using R = std::invoke_result_t<F, T>;
 
@@ -480,11 +450,11 @@ public:
 
     if (is_ok()) {
       return Result<R, E>{
-        crab::result::Ok<R>{std::invoke(functor, std::move(*this).unwrap(loc))}
+        crab::Ok<R>{std::invoke(functor, std::move(*this).unwrap(loc))}
       };
     }
 
-    return Result<R, E>{crab::result::Err<E>{std::move(*this).unwrap_err(loc)}};
+    return Result<R, E>{crab::Err<E>{std::move(*this).unwrap_err(loc)}};
   }
 
   /**
@@ -493,9 +463,9 @@ public:
    * @return
    */
   template<std::invocable<E> F>
-  [[nodiscard]] constexpr auto map_err(
+  [[nodiscard]] inline constexpr auto map_err(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) && {
     using R = std::invoke_result_t<F, E>;
 
@@ -503,13 +473,11 @@ public:
 
     if (is_err()) {
       return Result<T, R>{
-        crab::result::Err<R>{
-          std::invoke(functor, std::move(*this).unwrap_err(loc))
-        },
+        crab::Err<R>{std::invoke(functor, std::move(*this).unwrap_err(loc))},
       };
     }
 
-    return Result<T, R>{crab::result::Ok<T>{std::move(*this).unwrap(loc)}};
+    return Result<T, R>{crab::Ok<T>{std::move(*this).unwrap(loc)}};
   }
 
   /**
@@ -518,9 +486,9 @@ public:
    * @return
    */
   template<std::invocable<T> F>
-  [[nodiscard]] constexpr auto map(
+  [[nodiscard]] inline constexpr auto map(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -536,9 +504,9 @@ public:
    * @return
    */
   template<std::invocable<E> F>
-  [[nodiscard]] constexpr auto map_err(
+  [[nodiscard]] inline constexpr auto map_err(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -556,14 +524,14 @@ public:
    * If the mapped function is Ok(type M), it returns Result<M, Error>
    */
   template<std::invocable<T> F>
-  [[nodiscard]] constexpr auto and_then(
+  [[nodiscard]] inline constexpr auto and_then(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) && {
     using R = std::invoke_result_t<F, T>;
 
     static_assert(
-      crab::result::is_result_type_v<R>,
+      crab::result_type<R>,
       "and_then functor parameter must return a Result<T,E> type"
     );
 
@@ -588,9 +556,9 @@ public:
    * Result<M, Error>
    */
   template<std::invocable<T> F>
-  [[nodiscard]] constexpr auto and_then(
+  [[nodiscard]] inline constexpr auto and_then(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    std::source_location loc = std::source_location::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -607,8 +575,8 @@ public:
    * This function is for use when wanting to abstract away any specific error
    * type to simply 'none'.
    */
-  [[nodiscard]] constexpr auto ok(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto ok(
+    std::source_location loc = std::source_location::current()
   ) && -> Option<T> {
     ensure_valid(loc);
 
@@ -622,8 +590,8 @@ public:
    * This function is for use when wanting to abstract away any specific Ok type
    * to simply 'none'.
    */
-  [[nodiscard]] constexpr auto err(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto err(
+    std::source_location loc = std::source_location::current()
   ) && -> Option<E> {
     ensure_valid(loc);
 
@@ -637,8 +605,8 @@ public:
    * This function is for use when wanting to abstract away any specific error
    * type to simply 'none'.
    */
-  [[nodiscard]] constexpr auto ok(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto ok(
+    std::source_location loc = std::source_location::current()
   ) const& -> Option<T> {
     static_assert(
       std::is_trivially_copyable_v<T>,
@@ -657,8 +625,8 @@ public:
    * This function is for use when wanting to abstract away any specific Ok type
    * to simply 'none'.
    */
-  [[nodiscard]] constexpr auto err(
-    const std::source_location loc = std::source_location::current()
+  [[nodiscard]] inline constexpr auto err(
+    std::source_location loc = std::source_location::current()
   ) const& -> Option<E> {
     static_assert(
       std::is_trivially_copyable_v<E>,
@@ -677,139 +645,119 @@ namespace crab {
   namespace result {
     template<error_type Error>
     struct fallible {
-      constexpr fallible() = default;
 
-      // Identity
-      constexpr auto operator()(auto tuple) const { return tuple; }
+      template<typename... T>
+      [[nodiscard]] inline constexpr auto operator()(Tuple<T...> tuple) const {
+        return Result<Tuple<T...>, Error>{std::forward<Tuple<T...>>(tuple)};
+      }
 
-      // Pass with Result<T, E>
-      template<std::invocable F, std::invocable... Rest>
-      constexpr auto operator()(
-        auto tuple,
+      template<typename PrevResults, std::invocable F, std::invocable... Rest>
+      requires result_type<std::invoke_result_t<F>>
+      [[nodiscard]] inline constexpr auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
         F&& function,
         Rest&&... other_functions
-      ) const requires is_result_type_v<decltype(std::invoke(function))>
-      {
-        // tuple.take_unchecked();
+      ) const {
+        return std::invoke(function).and_then([&]<typename R>(R&& result) {
+          return operator()(
+            std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),
+            std::forward<Rest>(other_functions)...
+          );
+        });
+      }
 
-        using R = decltype(std::invoke(function));
-        using FOkType = typename R::OkType;
+      template<typename PrevResults, std::invocable F, std::invocable... Rest>
+      requires(option_type<std::invoke_result_t<F>> and std::is_default_constructible_v<Error>)
+      [[nodiscard]] inline constexpr auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
+        F&& function,
+        Rest&&... other_functions
+      ) const {
+        return std::invoke(function)
+          .template ok_or<Error>([] -> Error { return Error{}; })
+          .flat_map([&]<typename R>(R&& result) {
+            return operator()(
+              std::tuple_cat(
+                std::move(tuple),
+                Tuple<R>(std::forward<R>(result))
+              ),
+              std::forward<Rest>(other_functions)...
+            );
+          });
+      }
 
-        static_assert(
-          std::same_as<typename R::ErrType, Error>,
-          "Cannot have multiple types of errors in fallible chain."
-        );
-
-        using ReturnOk = decltype(std::tuple_cat(
-          std::move(tuple).unwrap(),
-          std::make_tuple(std::invoke(function).unwrap())
-        ));
-
-        using Return = decltype(operator()(
-          Result<ReturnOk, Error>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::make_tuple(std::invoke(function).unwrap())
-          )},
-          std::forward<Rest>(other_functions)...
-        ));
-
-        if (tuple.is_err()) {
-          return Return{std::move(tuple).unwrap_err()};
-        }
-
-        Result<FOkType, Error> result = std::invoke(function);
-
-        if (result.is_err()) {
-          return Return{std::move(result).unwrap_err()};
-        }
-
+      template<typename PrevResults, std::invocable F, std::invocable... Rest>
+      requires(not result_type<std::invoke_result_t<F>>)
+      inline constexpr auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
+        F&& function,
+        Rest&&... other_functions
+      ) const {
         return operator()(
-          Result<ReturnOk, Error>{std::tuple_cat(
-            std::move(tuple).unwrap(),
-            std::make_tuple(std::move(result).unwrap())
-          )},
+          std::tuple_cat(
+            std::move(tuple),
+            Tuple<std::invoke_result_t<F>>(std::invoke(function))
+          ),
           std::forward<Rest>(other_functions)...
         );
       }
 
-      template<std::invocable F, std::invocable... Rest>
-      constexpr auto operator()(
-        // Tuple : Result<std:tuple<...>, Error>
-        auto tuple,
-        F&& function,
+      template<typename PrevResults, typename V, typename... Rest>
+      requires(not std::invocable<V> and not result_type<V>)
+      inline constexpr auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
+        V&& value,
         Rest&&... other_functions
-      ) const
-        requires(ok_type<decltype(std::invoke(function))> and not is_result_type_v<decltype(function())>)
-      {
-        // tuple.take_unchecked();
+      ) const {
+        return operator()(
+          std::tuple_cat(std::move(tuple), Tuple<V>{std::forward<V>(value)}),
+          std::forward<Rest>(other_functions)...
+        );
+      }
 
-        using ReturnOk = decltype(std::tuple_cat(
-          std::move(tuple).unwrap(),
-          std::make_tuple(std::invoke(function))
-        ));
-
-        return std::move(tuple).and_then([&, this](auto tuple) {
+      template<typename PrevResults, typename V, typename... Rest>
+      requires(not std::invocable<V>)
+      inline constexpr auto operator()(
+        PrevResults tuple, /* Tuple<T...>*/
+        Result<V, Error> value,
+        Rest&&... other_functions
+      ) const {
+        return std::move(value).and_then([&]<typename R>(R&& result) {
           return operator()(
-            Result<ReturnOk, Error>{std::tuple_cat(
-              std::move(tuple),
-              std::make_tuple(std::invoke(function))
-            )},
+            std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),
             std::forward<Rest>(other_functions)...
           );
         });
       }
     };
 
-    template<typename>
-    struct decay_fallible {};
-
-    template<ok_type T>
-    struct decay_fallible<T> {
-      using type = T;
-    };
-
-    template<ok_type T, error_type E>
-    struct decay_fallible<Result<T, E>> {
-      using type = T;
-    };
-
-    template<std::invocable F>
-    using decay_fallible_function =
-      typename decay_fallible<std::invoke_result_t<F>>::type;
   } // namespace result
 
-  template<result::error_type E, std::invocable... F>
-  constexpr auto fallible( //
-    F&&... fallible
-  ) -> Result<std::tuple<result::decay_fallible_function<F>...>, E> {
-    return result::fallible<E>{}(
-      Result<std::tuple<>, E>{
-        std::make_tuple(),
-      },
-      std::forward<F>(fallible)...
-    );
+  template<error_type E, std::invocable... F>
+  inline constexpr auto fallible(F&&... fallible) {
+    return result::fallible<E>{}(Tuple<>{}, std::forward<F>(fallible)...);
   }
 
-  template<result::ok_type T>
-  [[nodiscard]] constexpr auto ok(std::type_identity_t<T>&& value) {
-    return result::Ok<T>{std::forward<T>(value)};
+  template<ok_type T>
+  [[nodiscard]] inline constexpr auto ok(std::type_identity_t<T>&& value) {
+    return Ok<T>{std::forward<T>(value)};
   }
 
-  template<result::error_type E>
-  [[nodiscard]] constexpr auto err(std::type_identity_t<E>&& value) {
-    return result::Err<E>{std::forward<E>(value)};
+  template<error_type E>
+  [[nodiscard]] inline constexpr auto err(std::type_identity_t<E>&& value) {
+    return Err<E>{std::forward<E>(value)};
   }
 
-  [[nodiscard]] constexpr auto ok(auto value) {
+  [[nodiscard]] inline constexpr auto ok(auto value) {
     return ok<std::remove_cvref_t<decltype(value)>>(std::move(value));
   }
 
-  [[nodiscard]] constexpr auto err(auto value) {
+  [[nodiscard]] inline constexpr auto err(auto value) {
     return err<std::remove_cvref_t<decltype(value)>>(std::move(value));
   }
 
   template<typename T, typename E>
-  [[nodiscard]] constexpr auto unwrap(
+  [[nodiscard]] inline constexpr auto unwrap(
     Result<T, E>&& result,
     std::source_location loc = std::source_location::current()
   ) -> T {
@@ -817,7 +765,7 @@ namespace crab {
   }
 
   template<typename T, typename E>
-  [[nodiscard]] constexpr auto unwrap_err(
+  [[nodiscard]] inline constexpr auto unwrap_err(
     Result<T, E>&& result,
     std::source_location loc = std::source_location::current()
   ) -> E {

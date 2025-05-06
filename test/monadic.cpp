@@ -5,8 +5,8 @@
 #include <crab/fn.hpp>
 
 consteval auto consteval_test() -> void {
-  Option<i32> number = crab::unless(false, []() { return 2; });
-  number = crab::unless(true, []() { return 2; });
+  Option<i32> number = crab::unless(false, [] { return 2; });
+  number = crab::unless(true, [] { return 2; });
 
   std::ignore = number.filter([](i32 x) { return x % 2 == 0; });
 
@@ -71,47 +71,46 @@ TEST_CASE("Monadic Operations (Option)") {
 
   SECTION("crab::then") {
     SECTION("copyable") {
-      Option<i32> number = crab::then(true, []() { return 2; });
+      Option<i32> number = crab::then(true, [] { return 2; });
 
       REQUIRE_NOTHROW(number.is_some() and number.get_unchecked() == 2);
 
-      number = crab::then(false, []() { return 2; });
+      number = crab::then(false, [] { return 2; });
       REQUIRE(number.is_none());
     }
 
     SECTION("move-only") {
       Option<MoveOnly> number =
-        crab::then(true, []() { return MoveOnly{"test"}; });
+        crab::then(true, [] { return MoveOnly{"test"}; });
 
       REQUIRE_NOTHROW(
         number.is_some() and number.get_unchecked().get_name() == "test"
       );
 
-      number = crab::then(false, []() { return MoveOnly{"test"}; });
+      number = crab::then(false, [] { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());
     }
   }
 
   SECTION("crab::unless") {
     SECTION("copyable") {
-      Option<i32> number = crab::unless(false, []() { return 2; });
+      Option<i32> number = crab::unless(false, [] { return 2; });
       REQUIRE_NOTHROW(number.is_some() and number.get_unchecked() == 2);
 
-      number = crab::unless(true, []() { return 2; });
+      number = crab::unless(true, [] { return 2; });
       REQUIRE(number.is_none());
     }
 
     SECTION("move-only") {
       Option<MoveOnly> number =
-        crab::unless(false, []() { return MoveOnly{"test"}; });
+        crab::unless(false, [] { return MoveOnly{"test"}; });
 
       REQUIRE_NOTHROW(
         number.is_some() and number.get_unchecked().get_name() == "test"
       );
 
-      number = crab::unless(true, []() { return MoveOnly{"test"}; });
+      number = crab::unless(true, [] { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());
     }
   }
-
 }

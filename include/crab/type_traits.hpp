@@ -14,13 +14,11 @@ template<typename T, typename E>
 class Result;
 
 namespace crab {
-  namespace result {
-    template<typename T>
-    struct Ok;
+  template<typename T>
+  struct Ok;
 
-    template<typename E>
-    struct Err;
-  }
+  template<typename E>
+  struct Err;
 
   namespace ref {
     /**
@@ -41,7 +39,7 @@ namespace crab {
      * Type predicate helper for if the given type T is an option type, false
      * for most types
      */
-    template<typename T>
+    template<typename>
     struct is_option_type : std::false_type {};
 
     /**
@@ -50,12 +48,25 @@ namespace crab {
      */
     template<typename T>
     struct is_option_type<Option<T>> : std::true_type {};
+
+    template<typename>
+    struct is_result_type : std::false_type {};
+
+    template<typename T, typename E>
+    struct is_result_type<Result<T, E>> : std::true_type {};
+
   } // namespace option
 
   /**
    * Type predicate for if the given type T is some form of crab Option
    */
   template<typename T> concept option_type = helper::is_option_type<T>::value;
+
+  /**
+   * Type predicate for if the given type T is some form of crab Result
+   */
+  template<typename T> concept result_type = helper::is_result_type<T>::value;
+
 } // namespace crab
 
 template<crab::ref::is_valid_type T>

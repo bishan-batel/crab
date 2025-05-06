@@ -9,13 +9,9 @@
 #include <numbers>
 #include <ostream>
 #include <ranges>
-#include <set>
-#include <span>
+#include <sstream>
 #include <string>
-#include <unordered_map>
-#include <unordered_set>
 #include <utility>
-#include <vector>
 
 /**
  * @brief 32 Bit Floating Point Number
@@ -188,6 +184,7 @@ namespace ranges = std::ranges;
 namespace views = std::ranges::views;
 
 #if !CRAB_NO_TYPEDEF_ARRAY
+  #include <array>
 /**
  * @brief Alias for std::array
  *
@@ -200,6 +197,8 @@ using SizedArray = std::array<T, length>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_SPAN
+  #include <span>
+
 /**
  * @brief Abstraction over any contiguous sequence of elements
  */
@@ -208,6 +207,8 @@ using Span = std::span<T, length>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_VEC
+  #include <vector>
+
 /**
  * @brief Heap allocated, dynamically sized list
  */
@@ -216,6 +217,7 @@ using Vec = std::vector<T>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_SET
+  #include <unordered_set>
 /**
  * @brief Unordered set of elements
  */
@@ -227,6 +229,7 @@ using Set = std::unordered_set<T, Hash, Predicate>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_DICTIONARY
+  #include <unordered_map>
 /**
  * @brief Unordered key-value collection
  */
@@ -242,16 +245,25 @@ using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
  * @brief 0 Sized Type
  */
 struct unit {
-  static const unit val;
+  /**
+   * Instance of unit, equivalent to constructing a new one, more of a stylistic
+   * choice whether you want to type unit{} or unit::val, I personally use
+   * unit::val to imply that there is a single value of unit
+   */
+  static constinit unit val;
 
   constexpr unit() = default;
 
+  /**
+   * Unit has not state, all instances of until are equal
+   * (this will always return true)
+   */
   [[nodiscard]] constexpr auto operator==(const unit&) const -> bool {
     return true;
   }
 };
 
-constexpr unit unit::val{};
+inline constinit unit unit::val{};
 
 constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
   return os << "unit";
@@ -260,87 +272,109 @@ constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
 /**
  * @brief Literal for converting a degree literal -> radians
  */
-constexpr f32 operator""_deg(const f64 literal) {
+[[nodiscard]] consteval f32 operator""_deg(const f64 literal) {
   return static_cast<f32>(literal * std::numbers::pi / 180.f);
 }
 
-constexpr f32 operator""_f32(const f64 literal) {
+[[nodiscard]] consteval f32 operator""_f32(const f64 literal) {
   return static_cast<f32>(literal);
 }
 
-constexpr f64 operator""_f64(const f64 literal) { return literal; }
-
-#define CRAB_USER_LITERAL(type)                                                \
-  constexpr type operator""_##type(const unsigned long long literal) {         \
-    return static_cast<type>(literal);                                         \
-  } // NOLINT
+[[nodiscard]] consteval f64 operator""_f64(const f64 literal) {
+  return literal;
+}
 
 /**
  * @brief Converts literal to an i8
  */
-CRAB_USER_LITERAL(i8);
+[[nodiscard]] consteval i8 operator""_i8(const unsigned long long literal) {
+  return static_cast<i8>(literal);
+}
 
 /**
  * @brief Converts literal to an i16
  */
-CRAB_USER_LITERAL(i16);
+[[nodiscard]] consteval i16 operator""_i16(const unsigned long long literal) {
+  return static_cast<i16>(literal);
+}
 
 /**
  * @brief Converts literal to an i32
  */
-CRAB_USER_LITERAL(i32);
+[[nodiscard]] consteval i32 operator""_i32(const unsigned long long literal) {
+  return static_cast<i32>(literal);
+}
 
 /**
  * @brief Converts literal to an i64
  */
-CRAB_USER_LITERAL(i64);
+[[nodiscard]] consteval i64 operator""_i64(const unsigned long long literal) {
+  return static_cast<i64>(literal);
+}
 
 /**
  * @brief Converts literal to an imax
  */
-CRAB_USER_LITERAL(imax);
+[[nodiscard]] consteval imax operator""_imax(const unsigned long long literal) {
+  return static_cast<imax>(literal);
+}
 
 /**
  * @brief Converts literal to an iptr
  */
-CRAB_USER_LITERAL(iptr);
+[[nodiscard]] consteval iptr operator""_iptr(const unsigned long long literal) {
+  return static_cast<iptr>(literal);
+}
 
 /**
  * @brief Converts literal to an u8
  */
-CRAB_USER_LITERAL(u8);
+[[nodiscard]] consteval u8 operator""_u8(const unsigned long long literal) {
+  return static_cast<u8>(literal);
+}
 
 /**
  * @brief Converts literal to an u16
  */
-CRAB_USER_LITERAL(u16);
+[[nodiscard]] consteval u16 operator""_u16(const unsigned long long literal) {
+  return static_cast<u16>(literal);
+}
 
 /**
  * @brief Converts literal to an u32
  */
-CRAB_USER_LITERAL(u32);
+[[nodiscard]] consteval u32 operator""_u32(const unsigned long long literal) {
+  return static_cast<u32>(literal);
+}
 
 /**
  * @brief Converts literal to an u64
  */
-CRAB_USER_LITERAL(u64);
+[[nodiscard]] consteval u64 operator""_u64(const unsigned long long literal) {
+  return static_cast<u64>(literal);
+}
 
 /**
  * @brief Converts literal to an usize
  */
-CRAB_USER_LITERAL(usize);
+[[nodiscard]] consteval usize operator""_usize(const unsigned long long literal
+) {
+  return static_cast<usize>(literal);
+}
 
 /**
  * @brief Converts literal to an umax
  */
-CRAB_USER_LITERAL(umax);
+[[nodiscard]] consteval umax operator""_umax(const unsigned long long literal) {
+  return static_cast<umax>(literal);
+}
 
 /**
  * @brief Converts literal to an uptr
  */
-CRAB_USER_LITERAL(uptr);
-
-#undef CRAB_USER_LITERAL
+[[nodiscard]] consteval uptr operator""_uptr(const unsigned long long literal) {
+  return static_cast<uptr>(literal);
+}
 
 // Pattern Matching
 namespace crab {
@@ -348,7 +382,7 @@ namespace crab {
    * @brief Shows its use with std::visit
    */
   template<typename... Cases>
-  struct cases : Cases... {
+  struct cases final : Cases... {
     using Cases::operator()...;
   };
 } // namespace crab

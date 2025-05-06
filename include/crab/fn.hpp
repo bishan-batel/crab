@@ -26,7 +26,7 @@ namespace crab::fn {
    */
   constexpr auto constant = []<std::copy_constructible T>(T x) {
     return
-      [x = std::move<T>(x)]<typename... Args>(Args&&...) -> T { return x; };
+      [=]<typename... Args>(Args&&...) { return x; };
   };
 
   /**

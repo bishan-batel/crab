@@ -252,7 +252,7 @@ struct unit {
    * choice whether you want to type unit{} or unit::val, I personally use
    * unit::val to imply that there is a single value of unit
    */
-  static constexpr unit val;
+  static const unit val;
 
   constexpr unit() = default;
 

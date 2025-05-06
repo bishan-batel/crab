@@ -252,7 +252,7 @@ struct unit {
    * choice whether you want to type unit{} or unit::val, I personally use
    * unit::val to imply that there is a single value of unit
    */
-  static constinit unit val;
+  static constexpr unit val;
 
   constexpr unit() = default;
 
@@ -265,7 +265,7 @@ struct unit {
   }
 };
 
-inline constinit unit unit::val{};
+constexpr unit unit::val{};
 
 constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
   return os << "unit";

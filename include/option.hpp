@@ -22,14 +22,6 @@
 #include "crab/debug.hpp"
 #include "hash.hpp"
 
-/**
- * @brief CRAB_OPTION_STD_VARIANT: whether crab should use std::variant as
- * storage for the implementation of option
- */
-#ifndef CRAB_OPTION_STD_VARIANT
-  #define CRAB_OPTION_STD_VARIANT false
-#endif
-
 namespace crab {
   /**
    * @brief 0-sized* struct to give into Option<T> to create an empty Option
@@ -47,12 +39,12 @@ namespace crab {
   /**
    * @brief 'None' value type for use with Option<T>
    */
-  inline constinit None none{};
+  inline constexpr None none{};
 
 } // namespace crab
 
 #if CRAB_OPTION_STD_VARIANT
-  #include <variant>
+#include <variant>
 #endif
 
 /**
@@ -220,6 +212,7 @@ namespace crab::option::helper {
 
       if (in_use_flag) {
         std::destroy_at(address());
+        in_use_flag = false;
       }
     }
 
@@ -276,6 +269,7 @@ namespace crab::option::helper {
     [[nodiscard]] inline constexpr auto value() && -> T {
       T value = std::move(*address());
       std::destroy_at(address());
+      in_use_flag = false;
       return value;
     }
 
@@ -287,13 +281,13 @@ namespace crab::option::helper {
 
     [[nodiscard]] inline auto address() -> T* {
       return reinterpret_cast<T*>(&bytes[0]);
-    };
+    }
 
     [[nodiscard]] inline auto address() const -> const T* {
       return reinterpret_cast<const T*>(&bytes[0]);
-    };
+    }
 
-    alignas(T) std::array<std::byte, sizeof(T)> bytes;
+    std::array<std::byte, sizeof(T)> bytes alignas(T);
     bool in_use_flag;
   };
 
@@ -834,26 +828,20 @@ public:
    * @brief If this option is of some type Option<Option<T>>, this will flatten
    * it to a single Option<T>
    */
-  template<std::same_as<unit> = unit>
-  requires std::constructible_from<T, crab::None>
-  [[nodiscard]] inline constexpr auto flatten() && -> T {
-    if (is_some()) {
-      return std::move(*this).unwrap();
-    }
-    return crab::None{};
+  [[nodiscard]] inline constexpr auto flatten() && -> T
+    requires crab::option_type<T>
+  {
+    return std::move(*this).flat_map([](T value) { return value; });
   }
 
   /**
    * @brief If this option is of some type Option<Option<T>>, this will flatten
    * it to a single Option<T>
    */
-  template<std::same_as<unit> = unit>
-  requires std::copy_constructible<T> and std::constructible_from<T, crab::None>
-  [[nodiscard]] inline constexpr auto flatten() const& -> T {
-    if (is_some()) {
-      return T{get_unchecked()};
-    }
-    return crab::None{};
+  [[nodiscard]] inline constexpr auto flatten() const& -> T
+    requires crab::option_type<T> and std::copy_constructible<T>
+  {
+    return copied().flatten();
   }
 
   /**
@@ -864,7 +852,7 @@ public:
     requires std::copy_constructible<T>
   {
     if (is_some()) {
-      return T{get_unchecked()};
+      return Option<T>{get_unchecked()};
     }
 
     return crab::None{};
@@ -970,6 +958,86 @@ public:
       std::move(*this).unwrap(),
       std::move(other).unwrap()...
     };
+  }
+
+  ///
+  /// Boolean Operations
+  ///
+
+  /**
+   * Boolean 'and' operation on two options, this will return none if either of
+   * the two options are none, and if both are some this will return the
+   * contained value of the second
+   */
+  template<typename S>
+  [[nodiscard]]
+  inline constexpr auto operator and(Option<S> other) && -> Option<S> {
+    if (is_none()) {
+      return crab::none;
+    }
+
+    return other;
+  }
+
+  /**
+   * Boolean 'and' operation on two options, this will return none if either of
+   * the two options are none, and if both are some this will return the
+   * contained value of the second
+   */
+  template<typename S>
+  [[nodiscard]]
+  inline constexpr auto operator and(Option<S> other) const& -> Option<S>
+    requires std::copy_constructible<T>
+  {
+    return copied() and std::move(other);
+  }
+
+  /**
+   * Boolean or operation, if this option is some it will return that, if the
+   * other option is some it will return that, else this returns none
+   */
+  [[nodiscard]] inline constexpr auto operator or(Option other) && -> Option {
+    if (is_none()) {
+      return other;
+    }
+
+    return std::move(*this);
+  }
+
+  /**
+   * Boolean or operation, if this option is some it will return that, if the
+   * other option is some it will return that, else this returns none
+   */
+  [[nodiscard]]
+  inline constexpr auto operator or(Option other) const& -> Option
+    requires std::copy_constructible<T>
+  {
+    return copied() or std::move(other);
+  }
+
+  /**
+   * The same as or but if both options are some then this will be none
+   */
+  [[nodiscard]] inline constexpr auto operator xor(Option other) && -> Option {
+    if (is_none()) {
+      return other;
+    }
+
+    if (other.is_some()) {
+      return crab::none;
+    }
+
+    return std::move(*this);
+  }
+
+  /**
+   * The same as or but if both options are some then this will be none
+   */
+  [[nodiscard]]
+  inline constexpr auto operator xor(Option other) const& -> Option
+    requires std::copy_constructible<T>
+  {
+    return copied() xor std::move(other);
   }
 
   ///
@@ -1248,7 +1316,7 @@ namespace crab {
    * @param from Option to consume
    */
   template<typename T>
-  inline constexpr auto unwrap(Option<T>&& from) -> T {
+  [[nodiscard]] inline constexpr auto unwrap(Option<T>&& from) -> T {
     return std::forward<T>(from).unwrap();
   }
 
@@ -1276,7 +1344,7 @@ namespace crab {
 
       template<typename PrevResults, std::invocable F, typename... Rest>
       requires(not option_type<std::invoke_result_t<F>>)
-      inline constexpr auto operator()(
+      [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         F&& function,
         Rest&&... other_functions
@@ -1292,7 +1360,7 @@ namespace crab {
 
       template<typename PrevResults, typename V, typename... Rest>
       requires(not std::invocable<V> and not option_type<V>)
-      inline constexpr auto operator()(
+      [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         V&& value,
         Rest&&... other_functions
@@ -1305,7 +1373,7 @@ namespace crab {
 
       template<typename PrevResults, typename V, typename... Rest>
       requires(not std::invocable<V>)
-      inline constexpr auto operator()(
+      [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple, /* Tuple<T...>*/
         Option<V> value,
         Rest&&... other_functions

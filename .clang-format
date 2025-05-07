@@ -69,7 +69,7 @@ IncludeCategories:
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
 IndentCaseBlocks: true
-IndentPPDirectives: BeforeHash
+# IndentPPDirectives: false
 InsertBraces: true
 InsertNewlineAtEOF: true
 MacroBlockBegin: ''

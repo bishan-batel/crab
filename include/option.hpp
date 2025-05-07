@@ -806,7 +806,7 @@ public:
    */
   template<std::invocable F>
   [[nodiscard]] inline constexpr auto or_else(F mapper) && {
-    using Returned = std::invoke_result_t<F, T>;
+    using Returned = std::invoke_result_t<F>;
 
     if (is_some()) {
       return Returned{std::move(*this).unwrap()};

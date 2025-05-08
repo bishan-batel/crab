@@ -584,14 +584,8 @@ public:
    * this opton was none then this returns a default constructed T
    */
   [[nodiscard]] constexpr inline auto get_or_default() const -> T
-    requires std::is_default_constructible_v<T>
-         and std::is_copy_constructible_v<T>
+    requires std::copy_constructible<T>
   {
-    static_assert(
-      std::is_default_constructible_v<T>,
-      "Cannot use get_or_default on a type that can't be copied, try "
-      "take_or/take_or_default"
-    );
     return copied().take_or_default();
   }
 
@@ -602,10 +596,6 @@ public:
   [[nodiscard]] inline constexpr auto get_or(T default_value) const -> T
     requires std::copy_constructible<T>
   {
-    static_assert(
-      std::is_default_constructible_v<T>,
-      "Cannot use get_or on a type that can't be copied, try take_or"
-    );
     return copied().take_or(std::forward<T>(default_value));
   }
 

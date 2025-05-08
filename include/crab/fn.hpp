@@ -24,7 +24,7 @@ namespace crab::fn {
    *
    * @param x Any integer value to check
    */
-  constexpr auto constant = []<std::copy_constructible T>(T&& x) {
+  constexpr auto constant = []<std::copy_constructible T>(T x) {
     return [x]<typename... Args>(Args&&...) -> T { return x; };
   };
 

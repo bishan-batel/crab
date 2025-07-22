@@ -925,6 +925,18 @@ public:
   }
 
   /**
+   * @brief Checks if this result contains a value, and if so does it also
+   * match with the given predicate
+   *
+   * Option<i32>{10}.is_ok_and(crab::fn::even) -> true
+   * Option<i32>{10}.is_ok_and(crab::fn::odd) -> false
+   */
+  template<std::predicate<const T&> F>
+  [[nodiscard]] inline constexpr auto is_some_and(F&& functor) const -> bool {
+    return is_some() and std::invoke(functor, get_unchecked());
+  }
+
+  /**
    * Combines many Option values into one if they are all Some,
    * if any of the options are empty, this returns an empty option.
    *
@@ -1271,8 +1283,8 @@ namespace crab {
    * @brief Creates an Option<T> from some value T
    */
   template<typename T>
-  [[nodiscard]] inline constexpr auto some(std::type_identity_t<T> from) {
-    return Option<std::remove_cvref_t<T>>{std::move(from)};
+  [[nodiscard]] inline constexpr auto some(std::type_identity_t<T>&& from) {
+    return Option<T>{std::forward<T>(from)};
   }
 
   /**

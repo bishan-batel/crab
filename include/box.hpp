@@ -169,7 +169,8 @@ public:
    * @brief Attempts to downcast the pointer
    */
   template<std::derived_from<T> Derived>
-  [[nodiscard]] inline constexpr auto downcast() const -> Option<Ref<Derived>> {
+  [[nodiscard]]
+  inline constexpr auto downcast() const -> Option<const Derived&> {
     return crab::ref::from_ptr(dynamic_cast<const Derived*>(raw_ptr()));
   }
 
@@ -177,7 +178,7 @@ public:
    * @brief Attempts to downcast the pointer
    */
   template<std::derived_from<T> Derived>
-  [[nodiscard]] inline constexpr auto downcast() -> Option<RefMut<Derived>> {
+  [[nodiscard]] inline constexpr auto downcast() -> Option<Derived&> {
     return crab::ref::from_ptr(dynamic_cast<Derived*>(raw_ptr()));
   }
 
@@ -236,7 +237,7 @@ namespace crab {
   /**
    * @brief Makes a new instance of type T on the heap with given args
    */
-  template<typename T, typename... Args>
+  template<crab::complete_type T, typename... Args>
   requires std::constructible_from<T, Args...>
   [[nodiscard]]
   static inline constexpr auto make_box(Args&&... args) -> Box<T> {

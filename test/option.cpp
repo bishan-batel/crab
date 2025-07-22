@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <concepts>
+#include <ranges>
 #include <result.hpp>
 #include <option.hpp>
 #include <catch2/catch_test_macros.hpp>
@@ -10,6 +12,7 @@
 #include <ref.hpp>
 #include <crab/fn.hpp>
 #include <range.hpp>
+#include <utility>
 
 TEST_CASE("Option", "Tests for all option methods") {
   const auto life = crab::fn::constant(42);
@@ -168,49 +171,47 @@ TEST_CASE("Option", "Tests for all option methods") {
     CHECK(Option{10}.map(crab::fn::constant(42)) == Option{42});
     CHECK(Option<i32>{}.map(crab::fn::constant(42)) == crab::none);
 
-    CHECK(Option<RefMut<Derived>>{}.map<Base>() == crab::none);
-    CHECK(Option<RefMut<Derived>>{}.map<Derived>() == crab::none);
-    CHECK(Option<RefMut<Derived>>{}.map<Derived>() == crab::none);
-    CHECK(
-      Option<RefMut<Base>>().flat_map(crab::fn::cast<Derived>) == crab::none
-    );
+    CHECK(Option<Derived&>{}.map<Base>() == crab::none);
+    CHECK(Option<Derived&>{}.map<Derived>() == crab::none);
+    CHECK(Option<Derived&>{}.map<Derived>() == crab::none);
+    CHECK(Option<Derived&>{}.flat_map(crab::fn::cast<Derived>) == crab::none);
   }
 
   SECTION("as_ref/as_mut") {
     SECTION("copyable") {
       Option<String> name{"Hello"};
-      Option<RefMut<String>> ref = name.as_mut();
-      Option<Ref<String>> ref_mut = name.as_ref();
+      Option<String&> ref = name.as_mut();
+      Option<const String&> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
       REQUIRE(ref.is_some());
       REQUIRE(ref_mut.is_some());
 
-      REQUIRE(*ref.get_unchecked() == "Hello");
-      REQUIRE(*ref_mut.get_unchecked() == "Hello");
+      REQUIRE(ref.get_unchecked() == "Hello");
+      REQUIRE(ref_mut.get_unchecked() == "Hello");
 
       name.get_unchecked() += " World";
 
-      REQUIRE(*ref.get_unchecked() == "Hello World");
-      REQUIRE(*ref_mut.get_unchecked() == "Hello World");
+      REQUIRE(ref.get_unchecked() == "Hello World");
+      REQUIRE(ref_mut.get_unchecked() == "Hello World");
     }
 
     SECTION("move only") {
       Option<MoveOnly> name{MoveOnly{"Hello"}};
-      Option<RefMut<MoveOnly>> ref = name.as_mut();
-      Option<Ref<MoveOnly>> ref_mut = name.as_ref();
+      Option<MoveOnly&> ref = name.as_mut();
+      Option<const MoveOnly&> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
       REQUIRE(ref.is_some());
       REQUIRE(ref_mut.is_some());
 
-      REQUIRE(ref.get_unchecked()->get_name() == "Hello");
-      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello");
+      REQUIRE(ref.get_unchecked().get_name() == "Hello");
+      REQUIRE(ref_mut.get_unchecked().get_name() == "Hello");
 
       name.get_unchecked().set_name("Hello World");
 
-      REQUIRE(ref.get_unchecked()->get_name() == "Hello World");
-      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello World");
+      REQUIRE(ref.get_unchecked().get_name() == "Hello World");
+      REQUIRE(ref_mut.get_unchecked().get_name() == "Hello World");
     }
 
     SECTION("reference types") {
@@ -263,5 +264,36 @@ TEST_CASE("Option", "Tests for all option methods") {
 
       REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 11);
     }
+  }
+
+  SECTION("flatten") {
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      STATIC_REQUIRE(not requires(Option<T> opt) { opt.flatten(); });
+      STATIC_REQUIRE(requires(Option<Option<T>> opt) {
+        Option<T>{std::move(opt).flatten()};
+      });
+    });
+  }
+
+  SECTION("crab::some implicit vs explicit template") {
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      assert::for_types(
+        assert::types<T, T&, const T&>,
+        []<typename K>(assert::type<K>) {
+          if constexpr (std::copy_constructible<T>) {
+            STATIC_REQUIRE( //
+              std::same_as<
+                Option<T>,
+                decltype(crab::some(std::declval<K>()))> //
+            );
+          }
+
+          STATIC_REQUIRE(
+            std::
+              same_as<Option<K>, decltype(crab::some<K>(std::declval<K>()))> //
+          );
+        }
+      );
+    });
   }
 }

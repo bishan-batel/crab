@@ -204,10 +204,12 @@ private:
 
 public:
 
-  inline constexpr Result(const T& from) requires(not is_same and std::copyable<T>)
+  inline constexpr Result(const T& from)
+    requires(not is_same and std::copyable<T>)
       : Result{T{from}} {}
 
-  inline constexpr Result(const E& from) requires(not is_same and std::copyable<E>)
+  inline constexpr Result(const E& from)
+    requires(not is_same and std::copyable<E>)
       : Result{E{from}} {}
 
   inline constexpr Result(T&& from) requires(not is_same)
@@ -439,6 +441,40 @@ public:
   // ===========================================================================
 
   // ============================ map functions ================================
+  //
+  template<typename Into>
+  [[nodiscard]] inline constexpr auto map() && -> Result<Into, E> {
+    static_assert(
+      std::convertible_to<T, Into>,
+      "'Result<T, E>::map<Into>()' can only be done if T is convertible to Into"
+    );
+    return std::move(*this).map([](T&& value) -> Into {
+      return static_cast<Into>(std::forward<T>(value));
+    });
+  }
+
+  template<typename Into>
+  requires is_copyable
+  [[nodiscard]] inline constexpr auto map() const& -> Result<Into, E> {
+    return copied().template map<Into>();
+  }
+
+  template<typename Into>
+  [[nodiscard]] inline constexpr auto map_err() && -> Result<T, Into> {
+    static_assert(
+      std::convertible_to<E, Into>,
+      "'Result<T, E>::map<Into>()' can only be done if E is convertible to Into"
+    );
+    return std::move(*this).map_err([](E&& value) -> Into {
+      return static_cast<Into>(std::forward<E>(value));
+    });
+  }
+
+  template<typename Into>
+  requires is_copyable
+  [[nodiscard]] inline constexpr auto map_err() const& -> Result<T, E> {
+    return copied().template map_err<Into>();
+  }
 
   /**
    * Consumes self and if not Error, maps the Ok value to a new value

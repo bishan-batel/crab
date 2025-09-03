@@ -17,7 +17,7 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
-#include <fmt/base.h>
+#include <fmt/format.h>
 #include <fmt/ranges.h>
 
 #define nameof(x) #x

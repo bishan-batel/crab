@@ -13,9 +13,9 @@ namespace crab::debug {
 
   public:
     explicit AssertionFailedError(std::source_location source_location, StringView assertion_text, StringView msg) :
-        /* fmt{std::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}", source, line, function, assertion_text,
+        /* fmt{fmt::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}", source, line, function, assertion_text,
            msg)} { */
-        fmt{std::format(
+        fmt{fmt::format(
             "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}\n{}",
             source_location.file_name(),
             source_location.line(),

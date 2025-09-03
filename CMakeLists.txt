@@ -14,8 +14,12 @@ project(${PROJECT_NAME} VERSION 1.0.1 DESCRIPTION "${PROJECT_NAME} description")
 # CPM
 include(cmake/CPM.cmake)
 
+CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+
 # Setting up library & install
 include(GNUInstallDirs)
+
+
 
 add_library(${PROJECT_NAME} SHARED
         include/box.hpp
@@ -30,6 +34,8 @@ add_library(${PROJECT_NAME} SHARED
         include/crab/type_traits.hpp
         include/error.hpp
 )
+
+target_link_libraries(${PROJECT_NAME} fmt)
 
 # Public API
 set_target_properties(${PROJECT_NAME} PROPERTIES

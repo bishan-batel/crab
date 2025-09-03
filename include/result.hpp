@@ -314,7 +314,7 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
+      fmt::format(
         "Called take_unchecked on result with Error:\n{}",
         crab::result::error_to_string(get_err_unchecked())
       ),
@@ -352,7 +352,7 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
+      fmt::format(
         "Called unwrap on result with Error:\n{}",
         crab::result::error_to_string(get_err_unchecked())
       ),
@@ -372,7 +372,7 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_err(),
-      std::format("Called unwrap on Ok value"),
+      fmt::format("Called unwrap on Ok value"),
       loc
     );
     return std::get<Err>(inner).value;
@@ -389,7 +389,7 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
+      fmt::format(
         "Called unwrap on result with Error:\n{}",
         crab::result::error_to_string(get_err_unchecked())
       ),
@@ -409,7 +409,7 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_err(),
-      std::format("Called unwrap on Ok value"),
+      fmt::format("Called unwrap on Ok value"),
       loc
     );
     return std::get<Err>(inner).value;
@@ -422,7 +422,7 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
+      fmt::format(
         "Called unwrap on result with Error:\n{}",
         crab::result::error_to_string(get_err_unchecked())
       ),

@@ -10,7 +10,7 @@ namespace crab {
     public:
 
       explicit todo_exception(const String& msg):
-          msg{std::format("TODO Exception: {}", msg)} {}
+          msg{fmt::format("TODO Exception: {}", msg)} {}
 
       [[nodiscard]] auto what() const noexcept -> const char* final {
         return msg.c_str();

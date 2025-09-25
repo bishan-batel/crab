@@ -3,9 +3,9 @@
 //
 
 #pragma once
-#include <format>
 #include <source_location>
 #include "../preamble.hpp"
+#include <fmt/format.h>
 
 namespace crab::debug {
   class AssertionFailedError final : public std::exception {
@@ -18,9 +18,9 @@ namespace crab::debug {
       StringView assertion_text,
       StringView msg
     ):
-        /* fmt{std::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}",
+        /* fmt{fmt::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}",
            source, line, function, assertion_text, msg)} { */
-        fmt{std::format(
+        fmt{fmt::format(
           "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}\n{}",
           source_location.file_name(),
           source_location.line(),
@@ -55,7 +55,7 @@ namespace crab::debug {
   #define debug_assert(condition, ...)                                         \
     debug_assert_transparent(                                                  \
       condition,                                                               \
-      std::format(__VA_ARGS__),                                                \
+      fmt::format(__VA_ARGS__),                                                \
       std::source_location::current()                                          \
     )
 #else

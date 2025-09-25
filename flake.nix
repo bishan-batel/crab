@@ -3,36 +3,43 @@
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs }:
-  let
-    supportedSystems = [ "x86_64-linux" "aarch64-linux" ];
-    forEachSupportedSystem = f: nixpkgs.lib.genAttrs supportedSystems (system: f {
-      pkgs = import nixpkgs { 
-          inherit system; 
-      };
-    });
-  in {
-    devShells = forEachSupportedSystem ({ pkgs }: {
-      default = pkgs.mkShell.override {}
-        {
-          shellHook = /* bash */ '' '';
+  outputs = { 
+    self, nixpkgs, flake-utils, ...
+    }: flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = nixpkgs.legacyPackages.${system};
+      llvm = pkgs.llvmPackages_19;
+      libPath = [pkgs.fmt]; 
+    in {
 
-          packages = with pkgs; [
+      devShells = { 
+        default = pkgs.mkShell.override {
+          stdenv = llvm.stdenv;
+        } {
+            name = "crab";
+            packages = with pkgs; [
               ninja
               cmake
-              python3
-              valgrind
-          ];
+              unzip
+            ];
 
-          nativeBuildInputs = with pkgs; [
-            clang
-            clang-tools
-            llvm
-          ];
+            buildInputs = with pkgs; [
+              llvm.clang-tools
+              llvm.clang
+              llvm.clang.cc
 
-        };
+              pkg-config
+            ] ++ libPath;
+
+            nativeBuildInputs = with pkgs; [ 
+              llvm.clang
+            ] ++ libPath;
+
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libPath;
+            DYLD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libPath;
+          };
+      };
     });
-  };
 }

@@ -7,6 +7,8 @@
 struct SelfReferential {
 private:
 
+  static_assert(not std::is_const_v<SelfReferential>);
+
   Option<Box<SelfReferential>> test;
 };
 

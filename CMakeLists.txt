@@ -13,6 +13,8 @@ project(${PROJECT_NAME} VERSION 1.0.1 DESCRIPTION "${PROJECT_NAME} description")
 # CPM
 include(cmake/CPM.cmake)
 
+CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+
 # Setting up library & install
 include(GNUInstallDirs)
 
@@ -54,9 +56,20 @@ target_compile_definitions(${PROJECT_NAME}
         "DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
         "RELEASE=$<IF:$<CONFIG:Debug>,0,1>"
 )
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 
 option(CRAB_TESTS OFF)
 
 if(CRAB_TESTS)
         add_subdirectory(test)
+endif()
+
+if (APPLE)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "_OSX=1")
+elseif (LINUX)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "_LINUX=1")
+elseif(BSD)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "_BSD=1")
+elseif(WIN32)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "_WIN32=1")
 endif()

@@ -25,7 +25,7 @@
 template<typename T>
 requires(not std::is_const_v<T>)
 class Box {
-  T* obj;
+  void* obj;
 
   // SizeType size;
 
@@ -34,9 +34,9 @@ class Box {
   // ReSharper disable once CppMemberFunctionMayBeConst
   inline constexpr auto drop() -> void {
     if constexpr (std::is_array_v<T>) {
-      delete[] obj;
+      delete[] raw_ptr();
     } else {
-      delete obj;
+      delete raw_ptr();
     }
   }
 
@@ -82,14 +82,12 @@ public:
 
   inline constexpr operator const T&() const { return *raw_ptr(); }
 
-  template<typename Base>
-  requires std::derived_from<T, Base>
+  template<std::derived_from<T> Base>
   inline constexpr operator Base&() {
     return *raw_ptr();
   }
 
-  template<typename Base>
-  requires std::derived_from<T, Base>
+  template<std::derived_from<T> Base>
   inline constexpr operator const Base&() const {
     return *raw_ptr();
   }
@@ -98,14 +96,12 @@ public:
 
   inline constexpr operator RefMut<T>() { return *raw_ptr(); }
 
-  template<typename Base>
-  requires std::derived_from<T, Base>
+  template<std::derived_from<T> Base>
   inline constexpr operator Ref<Base>() const {
     return *raw_ptr();
   }
 
-  template<typename Base>
-  requires std::derived_from<T, Base>
+  template<std::derived_from<T> Base>
   inline constexpr operator RefMut<Base>() {
     return *raw_ptr();
   }
@@ -224,12 +220,12 @@ private:
 
   [[nodiscard]] inline constexpr auto raw_ptr() -> T*& {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
-    return obj;
+    return reinterpret_cast<T*&>(obj);
   }
 
-  [[nodiscard]] inline constexpr auto raw_ptr() const -> const T* {
+  [[nodiscard]] inline constexpr auto raw_ptr() const -> const T* const& {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
-    return obj;
+    return reinterpret_cast<const T* const&>(obj);
   }
 };
 

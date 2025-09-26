@@ -68,8 +68,7 @@ public:
   constexpr Box(Box&& from) noexcept: obj{std::exchange(from.obj, nullptr)} {}
 
   template<std::derived_from<T> Derived>
-  constexpr Box(Box<Derived>&& from):
-      Box{Box<Derived>::unwrap(std::move<Box<Derived>>(from))} {
+  constexpr Box(Box<Derived> from): Box{Box<Derived>::unwrap(std::move(from))} {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
@@ -247,7 +246,7 @@ namespace crab {
    */
   template<typename T, typename V>
   requires std::convertible_to<T, V>
-         and (std::integral<T> or std::floating_point<T>)
+       and (std::integral<T> or std::floating_point<T>)
   [[nodiscard]] static inline constexpr auto make_box(V&& from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }

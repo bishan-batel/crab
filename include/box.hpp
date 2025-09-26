@@ -25,7 +25,7 @@
 template<typename T>
 requires(not std::is_const_v<T>)
 class Box {
-  void* obj;
+  T* obj;
 
   // SizeType size;
 
@@ -34,9 +34,9 @@ class Box {
   // ReSharper disable once CppMemberFunctionMayBeConst
   inline constexpr auto drop() -> void {
     if constexpr (std::is_array_v<T>) {
-      delete[] raw_ptr();
+      delete[] obj;
     } else {
-      delete raw_ptr();
+      delete obj;
     }
   }
 
@@ -65,22 +65,24 @@ public:
 
   constexpr Box(const Box&) = delete;
 
-  inline constexpr Box(Box&& from) noexcept:
-      obj(std::exchange(from.obj, nullptr)) {}
+  constexpr Box(Box&& from) noexcept: obj{std::exchange(from.obj, nullptr)} {}
 
   template<std::derived_from<T> Derived>
-  inline constexpr Box(Box<Derived>&& from):
-      Box{Box<Derived>::unwrap(std::forward<Box<Derived>>(from))} {
+  constexpr Box(Box<Derived>&& from):
+      Box{Box<Derived>::unwrap(std::move<Box<Derived>>(from))} {
     debug_assert(obj != nullptr, "Invalid Box, moved from invalid box.");
   }
 
-  inline constexpr explicit Box(T&& val): Box(new T(std::move(val))) {}
+  constexpr explicit Box(T&& val):
+      Box(new T{
+        std::forward<T>(val),
+      }) {}
 
-  inline constexpr ~Box() { drop(); }
+  constexpr ~Box() { drop(); }
 
-  inline constexpr operator T&() { return *raw_ptr(); }
+  constexpr operator T&() { return *raw_ptr(); }
 
-  inline constexpr operator const T&() const { return *raw_ptr(); }
+  constexpr operator const T&() const { return *raw_ptr(); }
 
   template<std::derived_from<T> Base>
   inline constexpr operator Base&() {
@@ -223,9 +225,9 @@ private:
     return reinterpret_cast<T*&>(obj);
   }
 
-  [[nodiscard]] inline constexpr auto raw_ptr() const -> const T* const& {
+  [[nodiscard]] inline constexpr auto raw_ptr() const -> const T* {
     debug_assert(obj != nullptr, "Invalid Use of Moved Box<T>.");
-    return reinterpret_cast<const T* const&>(obj);
+    return reinterpret_cast<const T*>(obj);
   }
 };
 

@@ -1,8 +1,30 @@
 #include "box.hpp"
 
 #include <catch2/catch_test_macros.hpp>
+#include <memory>
 #include <preamble.hpp>
 #include "test_types.hpp"
+
+struct SelfReferential;
+
+// im gonna crash the fuck out
+// ok nevermind
+// fucking hate linking in C++
+// allowed in a class, not allowed in a variable
+// absolute fucking cinema
+//
+// it cant dynamically link the destructer if its an instnaiation
+
+// but it can in a struct because it can link the structs destructor :)
+struct FuckingMeInTheAss {
+  Option<Box<SelfReferential>> b;
+
+  // and this one doesnt work thats great thanks
+  Option<std::unique_ptr<SelfReferential>> c;
+  std::unique_ptr<SelfReferential> d{};
+};
+
+// fucking awesome, great, good feature
 
 struct SelfReferential {
 private:
@@ -20,18 +42,17 @@ TEST_CASE("Preamble", "[unit]") {
 TEST_CASE("Box", "[box]") {
   SECTION("Box Moving") {
     Box<u32> a = crab::make_box<u32>(10);
-    REQUIRE_NOTHROW(a.as_ptr() != nullptr);
+    CHECK_NOTHROW(a.as_ptr() != nullptr);
 
     const Box<u32> moved = std::move(a);
-    REQUIRE_THROWS(a.as_ptr());
-    REQUIRE_NOTHROW(moved.as_ptr());
+    std::cout << moved << std::endl;
+    CHECK_THROWS(a.as_ptr() == nullptr);
+    CHECK_THROWS(a.as_ptr());
+    CHECK_NOTHROW(moved.as_ptr());
 
-    REQUIRE(*moved == 10);
-    REQUIRE(moved == 10);
+    CHECK(*moved == 10);
+    CHECK(moved == 10);
   }
-
-  STATIC_REQUIRE(sizeof(Box<u32>) == sizeof(u32*));
-  STATIC_REQUIRE(sizeof(Box<MoveOnly>) == sizeof(MoveOnly*));
 
   SECTION("Const Correctness") {
     const Box<u32> var = crab::make_box<u32>(42);

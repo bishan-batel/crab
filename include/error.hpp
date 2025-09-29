@@ -23,7 +23,7 @@ namespace crab {
    */
   template<typename... T>
   [[noreturn]] unit todo(const String& msg, T&&...) {
-#if DEBUG
+#if _DEBUG
     throw error::todo_exception{msg};
 #else
     static_assert(false, "Cannot compile on release with lingering TODOs");

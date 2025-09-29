@@ -46,24 +46,24 @@ namespace crab::debug {
   }
 } // namespace crab::debug
   //
-#if DEBUG
-  #define debug_assert_transparent(condition, message, source_location)        \
-    if (!static_cast<bool>(condition)) do {                                    \
-        crab::debug::dbg_assert(source_location, #condition, (message));       \
-    } while (false)
+#if _DEBUG
+#define debug_assert_transparent(condition, message, source_location)          \
+  if (!static_cast<bool>(condition)) do {                                      \
+      crab::debug::dbg_assert(source_location, #condition, (message));         \
+  } while (false)
 
-  #define debug_assert(condition, ...)                                         \
-    debug_assert_transparent(                                                  \
-      condition,                                                               \
-      fmt::format(__VA_ARGS__),                                                \
-      std::source_location::current()                                          \
-    )
+#define debug_assert(condition, ...)                                           \
+  debug_assert_transparent(                                                    \
+    condition,                                                                 \
+    fmt::format(__VA_ARGS__),                                                  \
+    std::source_location::current()                                            \
+  )
 #else
 
-  #define debug_assert_transparent(condition, message, source_location)        \
-    while (false) do {                                                         \
-        std::ignore = source_location;                                         \
-      } while (false);
-  #define debug_assert(...)
+#define debug_assert_transparent(condition, message, source_location)          \
+  while (false) do {                                                           \
+      std::ignore = source_location;                                           \
+    } while (false);
+#define debug_assert(...)
 
 #endif

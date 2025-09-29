@@ -1,12 +1,9 @@
-cmake_minimum_required(VERSION 3.2)
-project(crab VERSION 0.2)
+cmake_minimum_required(VERSION 3.31)
+project(crab VERSION 2.1)
 
 set(CMAKE_CXX_STANDARD 23)
-
-if(CMAKE_EXPORT_COMPILE_COMMANDS)
-  set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES 
-      ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
-endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 
 project(${PROJECT_NAME} VERSION 1.0.1 DESCRIPTION "${PROJECT_NAME} description")
 
@@ -52,13 +49,15 @@ install(FILES ${CMAKE_BINARY_DIR}/${PROJECT_NAME}.pc
 
 
 target_compile_definitions(${PROJECT_NAME}
-        PRIVATE
-        "DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
-        "RELEASE=$<IF:$<CONFIG:Debug>,0,1>"
+        PUBLIC
+        "_DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
+        "_RELEASE=$<IF:$<CONFIG:Debug>,0,1>"
+        "_NDEBUG=$<IF:$<CONFIG:Debug>,0,1>"
 )
+
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 
-option(CRAB_TESTS OFF)
+option(CRAB_TESTS OFF "Whether to compile / include crab tests")
 
 if(CRAB_TESTS)
         add_subdirectory(test)
@@ -72,4 +71,6 @@ elseif(BSD)
         target_compile_definitions(${PROJECT_NAME} PUBLIC "_BSD=1")
 elseif(WIN32)
         target_compile_definitions(${PROJECT_NAME} PUBLIC "_WIN32=1")
+elseif(UNIX)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC "_UNIX=1")
 endif()

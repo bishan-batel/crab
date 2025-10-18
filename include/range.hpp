@@ -173,7 +173,7 @@ namespace crab {
    * for (usize i = 0; i <= 100; i++)
    */
   template<std::integral T = usize>
-  [[nodiscard]] inline constexpr auto range_inclusive( //
+  [[nodiscard]] inline constexpr auto range_inclusive(
     std::type_identity_t<T> max
   ) -> Range<T> {
     return range(max + 1);

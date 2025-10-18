@@ -4,11 +4,11 @@
 
 #include <type_traits>
 #include <utility>
-#include "preamble.hpp"
-#include "crab/type_traits.hpp"
 
-#include "crab/debug.hpp"
-#include "ref.hpp"
+#include <crab/preamble.hpp>
+#include <crab/type_traits.hpp>
+#include <crab/debug.hpp>
+#include <crab/ref.hpp>
 
 // NOLINTBEGIN(*explicit*)
 
@@ -246,7 +246,7 @@ namespace crab {
    */
   template<typename T, typename V>
   requires std::convertible_to<T, V>
-       and (std::integral<T> or std::floating_point<T>)
+         and (std::integral<T> or std::floating_point<T>)
   [[nodiscard]] static inline constexpr auto make_box(V&& from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }

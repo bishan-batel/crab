@@ -1,6 +1,8 @@
 #pragma once
+
 #include <format>
-#include "preamble.hpp"
+
+#include <crab/preamble.hpp>
 
 namespace crab {
   namespace error {
@@ -21,8 +23,8 @@ namespace crab {
   /**
    * Does not return, use when you are waiting to implement a function.
    */
-  template<typename... T>
-  [[noreturn]] unit todo(const String& msg, T&&...) {
+  template<typename... ArgsToIgnore>
+  [[noreturn]] unit todo(const String& msg, ArgsToIgnore&&...) {
 #if _DEBUG
     throw error::todo_exception{msg};
 #else

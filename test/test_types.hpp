@@ -1,9 +1,9 @@
 #pragma once
 
 #include <utility>
-#include "preamble.hpp"
-#include "rc.hpp"
-#include "ref.hpp"
+#include <crab/preamble.hpp>
+#include <crab/rc.hpp>
+#include <crab/ref.hpp>
 #include "test_static_asserts.hpp"
 
 struct MoveCount {

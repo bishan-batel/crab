@@ -12,15 +12,16 @@
 #pragma once
 
 #include <concepts>
-#include <crab/type_traits.hpp>
 #include <cstddef>
 #include <functional>
 #include <iostream>
 #include <type_traits>
 #include <utility>
 
-#include "crab/debug.hpp"
-#include "hash.hpp"
+#include <crab/preamble.hpp>
+#include <crab/type_traits.hpp>
+#include <crab/debug.hpp>
+#include <crab/hash.hpp>
 
 namespace crab {
   /**
@@ -446,8 +447,7 @@ public:
    * If this option previously contained Some(K), the previous value is
    * discarded and is replaced by Some(T)
    */
-  inline constexpr auto operator=(T&& from) -> Option& requires(not is_ref)
-  {
+  inline constexpr auto operator=(T&& from) -> Option& requires(not is_ref) {
     value = std::forward<T>(from);
     return *this;
   }

@@ -6,12 +6,12 @@
 // ReSharper disable CppNonExplicitConvertingConstructor
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
-#include <preamble.hpp>
 #include <concepts>
 #include <format>
 #include <type_traits>
 #include <variant>
 
+#include "crab/preamble.hpp"
 #include "crab/debug.hpp"
 #include "crab/type_traits.hpp"
 #include "option.hpp"
@@ -261,13 +261,11 @@ public:
     return *this;
   }
 
-  inline constexpr auto operator=(T&& from) -> Result& requires(not is_same)
-  {
+  inline constexpr auto operator=(T&& from) -> Result& requires(not is_same) {
     return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  inline constexpr auto operator=(E&& from) -> Result& requires(not is_same)
-  {
+  inline constexpr auto operator=(E&& from) -> Result& requires(not is_same) {
     return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
   }
 

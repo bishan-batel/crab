@@ -1,17 +1,16 @@
 #include <algorithm>
 #include <concepts>
 #include <ranges>
-#include <result.hpp>
-#include <option.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
-#include "box.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
-#include <preamble.hpp>
-#include <ref.hpp>
+#include <crab/box.hpp>
+#include <crab/ref.hpp>
 #include <crab/fn.hpp>
-#include <range.hpp>
+#include <crab/range.hpp>
+#include <crab/result.hpp>
+#include <crab/option.hpp>
 #include <utility>
 
 TEST_CASE("Option", "Tests for all option methods") {

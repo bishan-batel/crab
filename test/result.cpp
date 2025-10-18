@@ -4,7 +4,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <result.hpp>
+#include <crab/result.hpp>
 
 class Error final : public crab::Error {
 public:

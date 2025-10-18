@@ -3,8 +3,10 @@
 //
 
 #pragma once
+
+#include <crab/preamble.hpp>
+
 #include <source_location>
-#include "../preamble.hpp"
 #include <fmt/format.h>
 
 namespace crab::debug {

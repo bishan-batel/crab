@@ -1,8 +1,9 @@
 #pragma once
 #include <functional>
 #include <type_traits>
-#include "crab/debug.hpp"
-#include "crab/type_traits.hpp"
+
+#include <crab/debug.hpp>
+#include <crab/type_traits.hpp>
 
 // NOLINGBEGIN(*explicit*)
 

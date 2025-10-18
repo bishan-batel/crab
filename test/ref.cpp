@@ -1,6 +1,6 @@
-#include "ref.hpp"
+#include <crab/ref.hpp>
+#include <crab/type_traits.hpp>
 #include <catch2/catch_test_macros.hpp>
-#include "crab/type_traits.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
 

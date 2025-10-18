@@ -7,30 +7,7 @@
 
 struct SelfReferential;
 
-// im gonna crash the fuck out
-// ok nevermind
-// fucking hate linking in C++
-// allowed in a class, not allowed in a variable
-// absolute fucking cinema
-//
-// it cant dynamically link the destructer if its an instnaiation
-
-// but it can in a struct because it can link the structs destructor :)
-struct FuckingMeInTheAss {
-  Option<Box<SelfReferential>> b;
-
-  // and this one doesnt work thats great thanks
-  Option<std::unique_ptr<SelfReferential>> c;
-  std::unique_ptr<SelfReferential> d{};
-};
-
-// fucking awesome, great, good feature
-
 struct SelfReferential {
-private:
-
-  static_assert(not std::is_const_v<SelfReferential>);
-
   Option<Box<SelfReferential>> test;
 };
 

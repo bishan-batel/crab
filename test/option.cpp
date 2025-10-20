@@ -18,8 +18,11 @@ TEST_CASE("Option", "Tests for all option methods") {
 
   STATIC_CHECK(sizeof(crab::None) == 1);
 
-  SECTION("Constructors & Move Semantics") {
+  SECTION("Option<T>::GenericStorage Reference Optimisation") {
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {});
+  }
 
+  SECTION("Constructors & Move Semantics") {
     // general construction
     assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
       constexpr bool copyable = std::copyable<T>;
@@ -173,7 +176,9 @@ TEST_CASE("Option", "Tests for all option methods") {
     CHECK(Option<Derived&>{}.map<Base>() == crab::none);
     CHECK(Option<Derived&>{}.map<Derived>() == crab::none);
     CHECK(Option<Derived&>{}.map<Derived>() == crab::none);
-    CHECK(Option<Derived&>{}.flat_map(crab::fn::cast<Derived>) == crab::none);
+
+    auto c = crab::fn::cast<Derived>;
+    CHECK(Option<Derived&>{}.flat_map(c) == crab::none);
   }
 
   SECTION("as_ref/as_mut") {
@@ -287,9 +292,9 @@ TEST_CASE("Option", "Tests for all option methods") {
             );
           }
 
-          STATIC_REQUIRE(
-            std::
-              same_as<Option<K>, decltype(crab::some<K>(std::declval<K>()))> //
+          STATIC_REQUIRE(std::same_as<
+                         Option<K>,
+                         decltype(crab::some<K>(std::declval<K>()))> //
           );
         }
       );

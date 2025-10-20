@@ -213,7 +213,7 @@ public:
 
 private:
 
-  struct invalidated {};
+  struct invalidated final {};
 
   std::variant<Ok, Err, invalidated> inner;
 
@@ -309,7 +309,7 @@ public:
    * Result<i32,String>{10}.is_ok_and(crab::fn::even) -> true
    * Result<i32,String>{10}.is_ok_and(crab::fn::odd) -> false
    */
-  template<std::predicate<const T&> F>
+  template<crab::ty::predicate<const T&> F>
   [[nodiscard]] inline constexpr auto is_ok_and(F&& functor) const -> bool {
     return is_ok() and std::invoke(functor, get_unchecked());
   }
@@ -318,7 +318,7 @@ public:
    * @brief Checks if this result contains an Err value, and if so does it also
    * match with the given predicate
    */
-  template<std::predicate<const E&> F>
+  template<crab::ty::predicate<const E&> F>
   [[nodiscard]] inline constexpr auto is_err_and(F&& functor) const -> bool {
     return is_err() and std::invoke(functor, get_err_unchecked());
   }
@@ -328,7 +328,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_unchecked(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) -> T& {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -345,7 +345,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_err_unchecked(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) -> E& {
     ensure_valid(loc);
     debug_assert_transparent(is_err(), loc, "Called unwrap with Ok value");
@@ -357,7 +357,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_unchecked(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> const T& {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -374,7 +374,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_err_unchecked(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> const E& {
     ensure_valid(loc);
     debug_assert_transparent(is_err(), loc, "Called unwrap on Ok value");
@@ -382,7 +382,7 @@ public:
   }
 
   [[nodiscard]] inline constexpr auto unwrap(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && -> T {
     ensure_valid(loc);
     debug_assert_transparent(
@@ -395,7 +395,7 @@ public:
   }
 
   [[nodiscard]] inline constexpr auto unwrap_err(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) && -> E {
     ensure_valid(loc);
 
@@ -412,7 +412,7 @@ public:
    * @brief Internal method for preventing use-after-movas
    */
   inline constexpr auto ensure_valid(
-    std::source_location loc = std::source_location::current()
+    const std::source_location loc = std::source_location::current()
   ) const -> void {
 
     debug_assert_transparent(
@@ -427,7 +427,8 @@ public:
     const Result& result
   ) -> std::ostream& {
     if (result.is_err()) {
-      return os << "Err(" << result.get_err_unchecked() << ")";
+      return os << "Err(" << crab::error_to_string(result.get_err_unchecked())
+                << ")";
     }
     return os << "Ok(" << result.get_unchecked() << ")";
   }
@@ -491,12 +492,12 @@ public:
    * @tparam F
    * @return
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto map(
     F&& functor,
     std::source_location loc = std::source_location::current()
   ) && {
-    using R = std::invoke_result_t<F, T>;
+    using R = crab::ty::mapper_codomain<F, T>;
 
     ensure_valid(loc);
 
@@ -514,12 +515,12 @@ public:
    * @tparam F
    * @return
    */
-  template<std::invocable<E> F>
+  template<crab::ty::mapper<E> F>
   [[nodiscard]] inline constexpr auto map_err(
     F&& functor,
     std::source_location loc = std::source_location::current()
   ) && {
-    using R = std::invoke_result_t<F, E>;
+    using R = crab::ty::mapper_codomain<F, E>;
 
     ensure_valid(loc);
 
@@ -537,7 +538,7 @@ public:
    * @tparam F
    * @return
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto map(
     F&& functor,
     std::source_location loc = std::source_location::current()
@@ -555,7 +556,7 @@ public:
    * @tparam F
    * @return
    */
-  template<std::invocable<E> F>
+  template<crab::ty::mapper<E> F>
   [[nodiscard]] inline constexpr auto map_err(
     F&& functor,
     std::source_location loc = std::source_location::current()
@@ -575,12 +576,12 @@ public:
    * If result is Ok, run function on the ok value,
    * If the mapped function is Ok(type M), it returns Result<M, Error>
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto and_then(
     F&& functor,
     std::source_location loc = std::source_location::current()
   ) && {
-    using R = std::invoke_result_t<F, T>;
+    using R = crab::ty::mapper_codomain<F, T>;
 
     static_assert(
       crab::result_type<R>,
@@ -607,7 +608,7 @@ public:
    * function on the ok value, If the mapped function is Ok(type M), it returns
    * Result<M, Error>
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto and_then(
     F&& functor,
     std::source_location loc = std::source_location::current()

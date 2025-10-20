@@ -30,17 +30,23 @@ namespace crab::rc {
       ):
           weak_ref_count{weak_ref_count}, ref_count{ref_count}, data{data} {}
 
-      auto increment_ref_count() -> void {
-        debug_assert(
+      auto increment_ref_count(
+        const std::source_location loc = std::source_location::current()
+      ) -> void {
+        debug_assert_transparent(
           not should_free_data(),
+          loc,
           "Corrupted Rc<T>: ref_count being increased after reaching zero"
         );
         ref_count++;
       }
 
-      auto decrement_ref_count() -> void {
-        debug_assert(
+      auto decrement_ref_count(
+        const std::source_location loc = std::source_location::current()
+      ) -> void {
+        debug_assert_transparent(
           not should_free_data(),
+          loc,
           "Corrupted Rc<T>: ref_count being decreased after reaching zero"
         );
         ref_count--;
@@ -62,9 +68,12 @@ namespace crab::rc {
         return ref_count == 0 and weak_ref_count == 0;
       }
 
-      auto free_data() -> void {
-        debug_assert(
+      auto free_data(
+        const std::source_location loc = std::source_location::current()
+      ) -> void {
+        debug_assert_transparent(
           should_free_data(),
+          loc,
           "Invalid use of Rc<T>: Data cannot be freed when there are existing "
           "references."
         );
@@ -72,9 +81,12 @@ namespace crab::rc {
       }
 
       template<std::derived_from<T> Derived = T>
-      [[nodiscard]] auto raw_ptr() const -> Derived* {
-        debug_assert(
+      [[nodiscard]] auto raw_ptr(
+        const std::source_location loc = std::source_location::current()
+      ) const -> Derived* {
+        debug_assert_transparent(
           is_data_valid(),
+          loc,
           "Invalid access of Rc<T> or RcMut<T>, data is nullptr"
         );
         return static_cast<Derived*>(data);
@@ -95,8 +107,10 @@ namespace crab::rc {
         return crab::none;
       }
 
-      [[nodiscard]] auto release() -> Box<T> {
-        decrement_ref_count();
+      [[nodiscard]] auto release(
+        const std::source_location loc = std::source_location::current()
+      ) -> Box<T> {
+        decrement_ref_count(loc);
         return Box<T>::wrap_unchecked(std::exchange(data, nullptr));
       }
     };
@@ -118,9 +132,14 @@ class Rc final {
    *
    * Public version is from_interior_unchecked
    */
-  explicit Rc(Interior* interior): interior{interior} {
-    debug_assert(
+  explicit Rc(
+    Interior* interior,
+    const std::source_location loc = std::source_location::current()
+  ):
+      interior{interior} {
+    debug_assert_transparent(
       interior != nullptr,
+      loc,
       "Corrupted Rc<T>: Cannot construct a NULL Rc"
     );
   }
@@ -128,15 +147,17 @@ class Rc final {
   /**
    * Destructor operations for this class
    */
-  auto destruct() -> void {
+  auto destruct(
+    const std::source_location loc = std::source_location::current()
+  ) -> void {
     if (interior == nullptr) {
       return;
     }
 
-    interior->decrement_ref_count();
+    interior->decrement_ref_count(loc);
 
     if (interior->should_free_data()) {
-      interior->free_data();
+      interior->free_data(loc);
     }
 
     if (interior->should_free_self()) {
@@ -173,22 +194,33 @@ public:
   /**
    * Copy constructor
    */
-  Rc(const Rc& from): interior{from.interior} {
-    debug_assert(
+  Rc(
+    const Rc& from,
+    const std::source_location loc = std::source_location::current()
+  ):
+      interior{from.interior} {
+
+    debug_assert_transparent(
       is_valid() and interior->is_data_valid(),
+      loc,
       "Invalid use of Rc<T>, copied from an invalidated Rc, most likely a "
       "use-after-move"
     );
 
-    interior->increment_ref_count();
+    interior->increment_ref_count(loc);
   }
 
   /**
    * Move constructor
    */
-  Rc(Rc&& from) noexcept: interior{std::exchange(from.interior, nullptr)} {
-    debug_assert(
+  Rc(
+    Rc&& from,
+    const std::source_location loc = std::source_location::current()
+  ) noexcept:
+      interior{std::exchange(from.interior, nullptr)} {
+    debug_assert_transparent(
       is_valid(),
+      loc,
       "Invalid use of Rc<T>, moved from an invalidated Rc, most likely a "
       "use-after-move"
     );
@@ -198,18 +230,24 @@ public:
    * @brief Copy constructor from a RcMut<Derived> -> RcMut<Base>
    */
   template<std::derived_from<T> Derived>
-  Rc(const Rc<Derived>& from): // NOLINT(*-explicit-constructor)
+  Rc( // NOLINT(*-explicit-constructor)
+    const Rc<Derived>& from,
+    const std::source_location loc = std::source_location::current()
+  ):
       interior{from.interior->template upcast<T>()} {
-    get_interior()->increment_ref_count();
+    get_interior(loc)->increment_ref_count(loc);
   }
 
   /**
    * @brief Move constructor from a RcMut<Derived> -> RcMut<Base>
    */
   template<std::derived_from<T> Derived>
-  Rc(Rc<Derived>&& from): // NOLINT(*-explicit-constructor)
+  Rc(
+    Rc<Derived>&& from,
+    const std::source_location loc = std::source_location::current()
+  ): // NOLINT(*-explicit-constructor)
       interior{
-        std::exchange(from.get_interior(), nullptr)->template upcast<T>(),
+        std::exchange(from.get_interior(loc), nullptr)->template upcast<T>(),
       } {}
 
   /**
@@ -236,23 +274,26 @@ public:
    * @brief Converts Rc<Derived> -> Rc<Base>
    */
   template<typename Base>
-  auto upcast() const -> Rc<Base> {
+  auto upcast(const std::source_location loc = std::source_location::current())
+    const -> Rc<Base> {
     static_assert(
       std::derived_from<T, Base>,
       "Cannot upcast to a Base that Contained does not derive from"
     );
 
     crab::rc::helper::RcInterior<Base>* i =
-      get_interior()->template upcast<Base>();
+      get_interior(loc)->template upcast<Base>();
+
     Rc<Base> casted = Rc<Base>::from_rc_interior_unchecked(i);
 
-    debug_assert(
+    debug_assert_transparent(
       interior->is_data_valid(),
+      loc,
       "Invalid use of Rc<T>, copied from an invalidated Rc, most likely a "
       "use-after-move"
     );
 
-    casted.get_interior()->increment_ref_count();
+    casted.get_interior(loc)->increment_ref_count();
 
     return casted;
   }
@@ -261,10 +302,12 @@ public:
    * @brief Attempts to convert Rc<Base> -> Rc<Derived>
    */
   template<std::derived_from<T> Derived>
-  auto downcast() const -> Option<Rc<Derived>> {
-    return get_interior()->template downcast<Derived>().map(
-      [](crab::rc::helper::RcInterior<Derived>* interior) {
-        interior->increment_ref_count();
+  auto downcast(
+    const std::source_location loc = std::source_location::current()
+  ) const -> Option<Rc<Derived>> {
+    return get_interior(loc)->template downcast<Derived>().map(
+      [loc](crab::rc::helper::RcInterior<Derived>* interior) {
+        interior->increment_ref_count(loc);
         return Rc<Derived>::from_rc_interior_unchecked(interior);
       }
     );
@@ -354,22 +397,31 @@ public:
   /**
    * @brief Returns a reference to the underlying data
    */
-  [[nodiscard]] auto get() const -> const T& { return *raw_ptr(); }
+  [[nodiscard]] auto get(
+    const std::source_location loc = std::source_location::current()
+  ) const -> const T& {
+    return *raw_ptr(loc);
+  }
 
   /**
    * @brief Returns a raw pointer to the underlying data
    */
-  [[nodiscard]] auto raw_ptr() const -> const T* {
-    return get_interior()->raw_ptr();
+  [[nodiscard]] auto raw_ptr(
+    const std::source_location loc = std::source_location::current()
+  ) const -> const T* {
+    return get_interior(loc)->raw_ptr();
   }
 
   /**
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a very good reason for messing with the invariants of Rc
    */
-  [[nodiscard]] auto get_interior() const -> Interior* {
-    debug_assert(
+  [[nodiscard]] auto get_interior(
+    const std::source_location loc = std::source_location::current()
+  ) const -> Interior* {
+    debug_assert_transparent(
       is_valid(),
+      loc,
       "Invalid use of Rc<T>, Interior is nullptr - this is most likely the "
       "result of a use-after-move."
     );
@@ -380,9 +432,12 @@ public:
    * @brief UNSAFE: Gets raw pointer to the RcInterior, do not use this unless
    * you have a reason to mess with Rc directly
    */
-  [[nodiscard]] auto get_interior() -> Interior*& {
-    debug_assert(
+  [[nodiscard]] auto get_interior(
+    const std::source_location loc = std::source_location::current()
+  ) -> Interior*& {
+    debug_assert_transparent(
       is_valid(),
+      loc,
       "Invalid use of Rc<T>, Interior is nullptr - this is most likely the "
       "result of a use-after-move."
     );
@@ -393,8 +448,10 @@ public:
    * @brief  Attempts to take ownership of the shared value, this will only
    * suceed if this is the only reference to the instance.
    */
-  [[nodiscard]] auto try_release() && -> Option<Box<T>> {
-    return std::exchange(interior, nullptr)->release();
+  [[nodiscard]] auto try_release(
+    const std::source_location loc = std::source_location::current()
+  ) && -> Option<Box<T>> {
+    return std::exchange(interior, nullptr)->release(loc);
   }
 };
 
@@ -409,9 +466,14 @@ class RcMut final {
    *
    * Public version is from_interior_unchecked
    */
-  explicit RcMut(Interior* interior): interior{interior} {
-    debug_assert(
+  explicit RcMut(
+    Interior* interior,
+    const std::source_location loc = std::source_location::current()
+  ):
+      interior{interior} {
+    debug_assert_transparent(
       interior != nullptr,
+      loc,
       "Corrupted RcMut<T>: Cannot construct a NULL Rc"
     );
   }
@@ -419,12 +481,14 @@ class RcMut final {
   /**
    * Destructor operations for this class
    */
-  auto destruct() -> void {
+  auto destruct(
+    const std::source_location loc = std::source_location::current()
+  ) -> void {
     if (interior) {
-      interior->decrement_ref_count();
+      interior->decrement_ref_count(loc);
 
       if (interior->should_free_data()) {
-        interior->free_data();
+        interior->free_data(loc);
       }
 
       if (interior->should_free_self()) {
@@ -462,23 +526,32 @@ public:
   /**
    * Copy constructor
    */
-  RcMut(const RcMut& from): interior{from.interior} {
-    debug_assert(
+  RcMut(
+    const RcMut& from,
+    const std::source_location loc = std::source_location::current()
+  ):
+      interior{from.interior} {
+    debug_assert_transparent(
       interior != nullptr and interior->is_data_valid(),
+      loc,
       "Invalid use of RcMut<T>, copied from an invalidated RcMut, most likely "
       "a use-after-move"
     );
 
-    interior->increment_ref_count();
+    interior->increment_ref_count(loc);
   }
 
   /**
    * Move constructor
    */
-  RcMut(RcMut&& from) noexcept:
+  RcMut(
+    RcMut&& from,
+    const std::source_location loc = std::source_location::current()
+  ) noexcept:
       interior{std::exchange(from.interior, nullptr)} {
-    debug_assert(
+    debug_assert_transparent(
       interior != nullptr,
+      loc,
       "Invalid use of RcMut<T>, moved from an invalidated RcMut, most likely a "
       "use-after-move"
     );
@@ -488,33 +561,46 @@ public:
    * @brief Copy constructor from a RcMut<Derived> -> RcMut<Base>
    */
   template<std::derived_from<T> Derived>
-  RcMut(const RcMut<Derived>& from): // NOLINT(*-explicit-constructor)
-      interior{from.get_interior()->template upcast<T>()} {
-    get_interior()->increment_ref_count();
+  RcMut( // NOLINT(*-explicit-constructor)
+    const RcMut<Derived>& from,
+    const std::source_location loc = std::source_location::current()
+  ):
+      interior{from.get_interior(loc)->template upcast<T>()} {
+    get_interior(loc)->increment_ref_count(loc);
   }
 
   /**
    * @brief Move constructor from a RcMut<Derived> -> RcMut<Base>
    */
   template<std::derived_from<T> Derived>
-  RcMut(RcMut<Derived>&& from): // NOLINT(*-explicit-constructor)
-      interior{std::exchange(from.get_interior(), nullptr)->template upcast<T>()
+  RcMut(
+    RcMut<Derived>&& from,
+    const std::source_location loc = std::source_location::current()
+  ): // NOLINT(*-explicit-constructor)
+      interior{
+        std::exchange(from.get_interior(loc), nullptr)->template upcast<T>()
       } {}
 
   /**
    * @brief Converts an singlely-owned box into a shared pointer
    */
-  RcMut(Box<T> from): // NOLINT(*-explicit-constructor)
+  RcMut(
+    Box<T> from,
+    const std::source_location loc = std::source_location::current()
+  ): // NOLINT(*-explicit-constructor)
       interior{
-        new Interior{1, 0, Box<T>::unwrap(std::move(from))}
+        new Interior{1, 0, Box<T>::unwrap(std::move(from), loc)}
   } {}
 
   /**
    * @brief Converts an singlely-owned box into a shared pointer upcast
    */
   template<std::derived_from<T> Derived>
-  RcMut(Box<Derived> from): // NOLINT(*-explicit-constructor)
-      RcMut<T>{Box<T>{std::move(from)}} {}
+  RcMut(
+    Box<Derived> from,
+    const std::source_location loc = std::source_location::current()
+  ): // NOLINT(*-explicit-constructor)
+      RcMut<T>{Box<T>{std::move(from)}, loc} {}
 
   /**
    * @brief Destructor
@@ -526,9 +612,12 @@ public:
    */
   template<class Base>
   requires std::derived_from<T, Base>
-  auto upcast() const -> RcMut<Base> {
-    crab::rc::helper::RcInterior<Base>* i =
-      get_interior()->template upcast<Base>();
+  auto upcast(const std::source_location loc = std::source_location::current())
+    const -> RcMut<Base> {
+    crab::rc::helper::RcInterior<Base>* i{
+      get_interior(loc)->template upcast<Base>(),
+    };
+
     RcMut<Base> casted = RcMut<Base>::from_rc_interior_unchecked(i);
 
     debug_assert(
@@ -537,7 +626,7 @@ public:
       "a use-after-move"
     );
 
-    casted.get_interior()->increment_ref_count();
+    casted.get_interior(loc)->increment_ref_count(loc);
 
     return casted;
   }
@@ -546,10 +635,12 @@ public:
    * @brief Attempts to convert RcMut<Base> -> RcMut<Derived>
    */
   template<std::derived_from<T> Derived>
-  auto downcast() const -> Option<RcMut<Derived>> {
-    return get_interior()->template downcast<Derived>().map(
-      [](crab::rc::helper::RcInterior<Derived>* interior) {
-        interior->increment_ref_count();
+  auto downcast(
+    const std::source_location loc = std::source_location::current()
+  ) const -> Option<RcMut<Derived>> {
+    return get_interior(loc)->template downcast<Derived>().map(
+      [loc](crab::rc::helper::RcInterior<Derived>* interior) {
+        interior->increment_ref_count(loc);
         return RcMut<Derived>::from_rc_interior_unchecked(interior);
       }
     );
@@ -640,7 +731,11 @@ public:
   /**
    * @brief Gets a const reference to the value inside.
    */
-  [[nodiscard]] auto as_ref() const -> T& { return *raw_ptr(); }
+  [[nodiscard]] auto as_ref(
+    const std::source_location loc = std::source_location::current()
+  ) const -> T& {
+    return *raw_ptr(loc);
+  }
 
   /**
    * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
@@ -665,20 +760,31 @@ public:
   /**
    * @brief Returns a reference to the underlying data
    */
-  [[nodiscard]] auto get() const -> T& { return *raw_ptr(); }
+  [[nodiscard]] auto get(
+    const std::source_location loc = std::source_location::current()
+  ) const -> T& {
+    return *raw_ptr(loc);
+  }
 
   /**
    * @brief Returns a raw pointer to the underlying data
    */
-  [[nodiscard]] auto raw_ptr() const -> T* { return get_interior()->raw_ptr(); }
+  [[nodiscard]] auto raw_ptr(
+    const std::source_location loc = std::source_location::current()
+  ) const -> T* {
+    return get_interior(loc)->raw_ptr();
+  }
 
   /**
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a reason to mess with Rc directly
    */
-  [[nodiscard]] auto get_interior() const -> Interior* {
-    debug_assert(
+  [[nodiscard]] auto get_interior(
+    const std::source_location loc = std::source_location::current()
+  ) const -> Interior* {
+    debug_assert_transparent(
       is_valid(),
+      loc,
       "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the "
       "result of a use-after-move."
     );
@@ -689,9 +795,12 @@ public:
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a very good reason for messing with the invariants of Rc
    */
-  [[nodiscard]] auto get_interior() -> Interior*& {
-    debug_assert(
+  [[nodiscard]] auto get_interior(
+    const std::source_location loc = std::source_location::current()
+  ) -> Interior*& {
+    debug_assert_transparent(
       is_valid(),
+      loc,
       "Invalid use of RcMut<T>, Interior is nullptr - this is most likely the "
       "result of a use-after-move."
     );
@@ -702,8 +811,10 @@ public:
    * @brief  Attempts to take ownership of the shared value, this will only
    * suceed if this is the only reference to the instance.
    */
-  [[nodiscard]] auto try_release() && -> Option<Box<T>> {
-    return std::exchange(interior, nullptr)->release();
+  [[nodiscard]] auto try_release(
+    const std::source_location loc = std::source_location::current()
+  ) && -> Option<Box<T>> {
+    return std::exchange(interior, nullptr)->release(loc);
   }
 };
 

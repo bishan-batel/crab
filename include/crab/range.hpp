@@ -63,8 +63,17 @@ public:
   /**
    * Constructs a range from min to max, this will panic if max > min
    */
-  constexpr Range(T min, T max): min(min), max(max) {
-    debug_assert(min <= max, "Invalid Range, max cannot be greater than min");
+  constexpr Range(
+    T min,
+    T max,
+    const std::source_location loc = std::source_location::current()
+  ):
+      min(min), max(max) {
+    debug_assert_transparent(
+      min <= max,
+      loc,
+      "Invalid Range, max cannot be greater than min"
+    );
   }
 
   /**
@@ -119,9 +128,10 @@ namespace crab {
   template<std::integral T = usize>
   [[nodiscard]] constexpr auto range(
     std::type_identity_t<T> min,
-    std::type_identity_t<T> max
+    std::type_identity_t<T> max,
+    const std::source_location loc = std::source_location::current()
   ) -> Range<T> {
-    return Range<T>(min, max);
+    return Range<T>{min, max, loc};
   }
 
   /**
@@ -137,8 +147,11 @@ namespace crab {
    */
   template<std::integral T = usize>
   [[nodiscard]]
-  constexpr auto range(std::type_identity_t<T> max) -> Range<T> {
-    return range<T>(0, max);
+  constexpr auto range(
+    std::type_identity_t<T> max,
+    const std::source_location loc = std::source_location::current()
+  ) -> Range<T> {
+    return range<T>(0, max, loc);
   }
 
   /**
@@ -155,9 +168,10 @@ namespace crab {
   template<std::integral T = usize>
   [[nodiscard]] constexpr auto range_inclusive(
     std::type_identity_t<T> min,
-    std::type_identity_t<T> max
+    std::type_identity_t<T> max,
+    const std::source_location loc = std::source_location::current()
   ) -> Range<T> {
-    return range(min, max + 1);
+    return range(min, max + 1, loc);
   }
 
   /**
@@ -172,8 +186,10 @@ namespace crab {
    * for (usize i = 0; i <= 100; i++)
    */
   template<std::integral T = usize>
-  [[nodiscard]] constexpr auto range_inclusive(std::type_identity_t<T> max
+  [[nodiscard]] constexpr auto range_inclusive(
+    std::type_identity_t<T> max,
+    const std::source_location loc = std::source_location::current()
   ) -> Range<T> {
-    return range(max + 1);
+    return range(max + 1, loc);
   }
 } // namespace crab

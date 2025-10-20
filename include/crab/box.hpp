@@ -266,4 +266,4 @@ namespace crab {
   }
 } // namespace crab
 
-// NOLINTEND(*explicit)
+// NOLINTEND(*explicit*)

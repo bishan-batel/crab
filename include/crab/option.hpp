@@ -356,7 +356,7 @@ class Option final {
 public:
 
   static_assert(
-    not std::same_as<T, crab::None>,
+    not crab::ty::same_as<T, crab::None>,
     "Cannot make an option of crab::None, you will need to use some other unit "
     "type (eg. std::monostate, unit, or others)"
   );
@@ -569,12 +569,8 @@ public:
    * exists, else uses 'F' to compute & create a default value
    * @param default_generator Function to create the default value
    */
-  template<std::invocable F>
+  template<crab::ty::provider<T> F>
   [[nodiscard]] inline constexpr auto take_or(F&& default_generator) && -> T {
-    static_assert(
-      std::is_invocable_r_v<T, F>,
-      "A function with Option<T>::take_or must return T"
-    );
     return is_some() ? T{std::move(*this).unwrap()}
                      : std::invoke(default_generator);
   }
@@ -604,10 +600,9 @@ public:
    * with 'F' and returns
    * @param default_generator Function to create the default value
    */
-  template<std::invocable F>
+  template<crab::ty::provider<T> F>
   [[nodiscard]] inline constexpr auto get_or(F&& default_generator) const -> T
     requires std::copy_constructible<T>
-         and std::convertible_to<std::invoke_result_t<F>, T>
   {
     static_assert(
       std::is_invocable_r_v<T, F>,
@@ -679,11 +674,10 @@ public:
    * @tparam E Error Type
    * @param error_generator Function to generate an error to replace "None".
    */
-  template<typename E, std::invocable F>
+  template<typename E, crab::ty::provider<E> F>
   [[nodiscard]]
   inline constexpr auto ok_or(F&& error_generator) const -> Result<T, E>
     requires std::copy_constructible<T>
-         and std::convertible_to<std::invoke_result_t<F>, E>
   {
     return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
                      : Result<T, E>{crab::Err<E>{std::invoke(error_generator)}};
@@ -708,7 +702,7 @@ public:
    * @tparam E Error Type
    * @param error_generator Function to generate an error to replace "None".
    */
-  template<typename E, std::invocable F>
+  template<typename E, crab::ty::provider<E> F>
   [[nodiscard]]
   inline constexpr auto take_ok_or(F&& error_generator) && -> Result<T, E> {
     return is_some() ? Result<T, E>{crab::Ok<T>{std::move(*this).unwrap()}}
@@ -734,9 +728,9 @@ public:
    *  .take_unchecked() == "420"
    * );
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto map(F&& mapper) && {
-    using Returned = Option<std::invoke_result_t<F, T>>;
+    using Returned = Option<crab::ty::mapper_codomain<F, T>>;
 
     return is_some() ? Returned{std::invoke(mapper, std::move(*this).unwrap())}
                      : Returned{};
@@ -761,7 +755,7 @@ public:
    *  .unwrap() == "420"
    * );
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   requires std::copy_constructible<T>
   [[nodiscard]] inline constexpr auto map(F&& mapper) const& {
     return copied().map(std::forward<F>(mapper));
@@ -1246,6 +1240,8 @@ private:
 
   crab::option::helper::Storage<T> value;
 };
+
+#undef CRAB_OPTION_ASSERT_COPYABLE
 
 template<typename T>
 inline constexpr auto operator<<(std::ostream& os, const Option<T>& opt)

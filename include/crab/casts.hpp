@@ -85,7 +85,7 @@ namespace crab {
     template<class Derived, std::derived_from<Derived> Base>
     [[nodiscard]]
     constexpr auto cast(Option<Ref<Base>> from) -> Option<Ref<Derived>> {
-      return from.flat_map([](Ref<Base> base) -> Option<Ref<Derived>> {
+      return from.flat_map([](const auto& base) {
         return cast<Derived, Base>(base);
       });
     }
@@ -95,8 +95,9 @@ namespace crab {
      */
     template<class Derived, std::derived_from<Derived> Base>
     [[nodiscard]]
-    constexpr auto cast(Option<RefMut<Base>> from) -> Option<Ref<Derived>> {
-      return from.flat_map([](RefMut<Base> base) -> Option<RefMut<Derived>> {
+    constexpr auto cast(Option<RefMut<Base>> from
+    ) noexcept -> Option<Ref<Derived>> {
+      return from.flat_map([](const auto& base) {
         return cast<Derived, Base>(base);
       });
     }
@@ -108,7 +109,7 @@ namespace crab {
      * @param obj Object to check
      */
     template<class Derived, std::derived_from<Derived> Base>
-    [[nodiscard]] constexpr auto is(const Base& obj) -> bool {
+    [[nodiscard]] constexpr auto is(const Base& obj) noexcept -> bool {
       return dynamic_cast<const Derived*>(&obj) != nullptr;
     }
 
@@ -144,7 +145,7 @@ namespace crab {
      * @return
      */
     template<typename T>
-    [[nodiscard]] constexpr auto is_exact(const auto& obj) -> bool {
+    [[nodiscard]] constexpr auto is_exact(const auto& obj) noexcept -> bool {
       return typeid(obj) == typeid(T);
     }
   }

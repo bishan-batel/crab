@@ -21,48 +21,123 @@ namespace crab::ty {
   using identity = std::type_identity_t<T>;
 
   /**
-   * @brief Type extractor for the result type of a given functor 'F' called
-   * with arguments 'Args'
+   * @brief Requirement for the two given types to be exactly the same.
    */
-  template<typename F, typename... Args>
-  using functor_result = std::invoke_result_t<F>;
-
   template<typename A, typename B>
   concept same_as = std::same_as<A, B>;
 
+  /**
+   * @brief Requirement for the two given types to not be the same.
+   */
   template<typename A, typename B>
   concept different_than = not same_as<A, B>;
 
+  /**
+   * @brief Requirement for the given to be any one of the other types listed
+   */
   template<typename T, typename... Cases>
   concept either = (std::same_as<T, Cases> || ...);
 
+  /**
+   * @brief Requirement for a type to not be 'void'
+   */
   template<typename T>
   concept not_void = different_than<T, void>;
 
   /**
    * @brief This is true for a given type T if that type is not qualified
-   * with 'const', 'volatile', or
+   * with 'const' or 'volatile',
    */
   template<typename T>
   concept unqualified = different_than<T, std::remove_cv_t<T>>;
 
+  /**
+   * @brief Requirement for the type to be 'const' (const T, const T&)
+   */
   template<typename T>
   concept is_const = std::is_const_v<T>;
 
+  /**
+   * @brief Requirement for the type to not be 'const' (T, T&)
+   */
   template<typename T>
   concept non_const = not is_const<T>;
 
+  /**
+   * @brief Requirement for the type to be volatile (volatile T, volatile T&,
+   * ...)
+   */
   template<typename T>
   concept is_volatile = std::is_volatile_v<T>;
 
+  /**
+   * @brief Requirement for the type to be volatile (T,  T&, ...)
+   */
   template<typename T>
   concept non_volatile = not is_volatile<T>;
 
+  /**
+   * @brief Requirement for the type to be some reference type (T&, const T&).
+   * Note that this is C++ references, this will not ring true for crab
+   * reference types Ref<T> & RefMut<T>
+   */
   template<typename T>
   concept is_reference = std::is_reference_v<T>;
 
+  /**
+   * @brief Requirement for the given type to not be a reference type
+   */
   template<typename T>
   concept non_reference = not is_reference<T>;
+
+  /**
+   * @brief Requirement for the type T to be copy constructible and assignable
+   */
+  template<typename T>
+  concept copyable = std::copyable<T>;
+
+  /**
+   * @brief Requirement for the type T to be copy constructible
+   */
+  template<typename T>
+  concept copy_constructible = std::copy_constructible<T>;
+
+  /**
+   * @brief Requirement for the type T to be copy assignable
+   */
+  template<typename T>
+  concept copy_assignable = std::is_copy_assignable_v<T>;
+
+  /**
+   * @brief Requirement for T to be a movable type (constructible and
+   * assignable)
+   */
+  template<typename T>
+  concept movable = std::movable<T>;
+
+  /**
+   * @brief Requirement for T to be default constructible
+   */
+  template<typename T>
+  concept default_constructible = std::is_default_constructible_v<T>;
+
+  /**
+   * @brief Metafunction for turning const T& or T& -> T, or leave T alone if T
+   * is not a reference
+   */
+  template<typename T>
+  using remove_reference = std::remove_reference_t<T>;
+
+  /**
+   * @brief Conditional metafunction, if the condition is true it will select
+   * IfTrue, else it will select IfFalse. You can think of this as a ternary
+   * operator for Types instead of values.
+   *
+   * @tparam IfTrue
+   * @tparam IfFalse
+   */
+  template<bool Condition, typename IfTrue, typename IfFalse>
+  using conditional = std::conditional_t<Condition, IfTrue, IfFalse>;
 
   /**
    * @brief Trait for any type that is callable with the argument types 'Args'
@@ -97,6 +172,27 @@ namespace crab::ty {
     );
   };
 
+  /**
+   * @brief Gets the result of a functor from the given atguments. Ex. for a
+   * given mapping function F(Args...) -> Y, this metafunction will take in 'F'
+   * and 'Args...' and evaluate to the type 'Y'.
+   *
+   * @tparam F Functor to check against
+   * @tparam Args
+   */
+  template<typename F, typename... Args>
+  requires consumer<F, Args...>
+  using functor_result = std::invoke_result_t<F, Args...>;
+
+  /**
+   * @brief Gets the result of a 'mapper' functor. Ex. for a given mapping
+   * function F(X) -> Y, this metafunction will take in 'F' and evaluate to the
+   * type 'Y'. This is the same as functor_result, but this should be used for
+   * legibility / intention.
+   *
+   * @tparam F
+   * @tparam Args
+   */
   template<typename F, typename... Args>
   using mapper_codomain = functor_result<F, Args...>;
 
@@ -104,23 +200,35 @@ namespace crab::ty {
    * @brief The same as crab:ty::consumer, with the added constraint that
    * the functor must result in a value that is not void.
    */
-  template<typename F, typename... Args>
+  template<typename F, typename Arg, typename... Other>
   concept mapper =
-    consumer<F, Args...> and not_void<mapper_codomain<F, Args...>>;
+    consumer<F, Arg, Other...> and not_void<mapper_codomain<F, Arg, Other...>>;
+
+  namespace helper {
+    /**
+     * @class generator_default
+     * @brief Internal crab struct for detecting when a default argument was
+     * passed, this should not typically be used externally.
+     */
+    struct generator_default final {};
+  }
 
   /**
    * @brif Trait for a functor that simply generates a values of F
    */
-  template<typename F, typename Return>
-  concept generator = functor<F, Return>;
+  template<typename F, typename Return = helper::generator_default>
+  concept generator =
+    (same_as<Return, helper::generator_default> ? consumer<F>
+                                                : functor<F, Return>)
+    and not_void<functor_result<F>>;
 
   /**
    * @brif Trait for a functor that simply generates a *single* value of F
    *
-   * This is almost the same as generator, however this is supposed to be used
-   * for semantic readability
+   * If given a return type, this will also enforce that this should be a
+   * provider for that type
    */
-  template<typename F, typename Return>
+  template<typename F, typename Return = helper::generator_default>
   concept provider = not std::is_const_v<F> and generator<F, Return>;
 
   /**

@@ -76,7 +76,7 @@ namespace crab::option::helper {
      * Copy initialise to Some(value)
      */
     constexpr explicit GenericStorage(const T& value)
-      requires std::copy_constructible<T>
+      requires crab::ty::copy_constructible<T>
         : inner{value} {}
 
     constexpr explicit GenericStorage(const crab::None&): GenericStorage{} {}
@@ -146,7 +146,7 @@ namespace crab::option::helper {
      * Copy initialise to Some(value)
      */
     inline constexpr explicit GenericStorage(const T& value)
-      requires std::copy_constructible<T>
+      requires crab::ty::copy_constructible<T>
         : in_use_flag(true) {
       std::construct_at<T, const T&>(address(), value);
     }
@@ -237,7 +237,7 @@ namespace crab::option::helper {
      */
     inline constexpr auto operator=( //
       const T& value
-    ) -> GenericStorage& requires std::is_copy_assignable_v<T>
+    ) -> GenericStorage& requires crab::ty::copy_assignable<T>
     {
       if (in_use_flag) {
         *address() = value;
@@ -341,9 +341,9 @@ namespace crab::option::helper {
   };
 
   template<typename T>
-  using Storage = std::conditional_t<
-    std::is_reference_v<T>,
-    RefStorage<std::remove_reference_t<T>>,
+  using Storage = ty::conditional<
+    ty::is_reference<T>,
+    RefStorage<ty::remove_reference<T>>,
     GenericStorage<T>>;
 }
 
@@ -369,17 +369,17 @@ public:
   /**
    * Is the contained type T a reference type (immutable or mutable)
    */
-  static constexpr bool is_ref = std::is_reference_v<T>;
+  static constexpr bool is_ref = crab::ty::is_reference<T>;
 
   /**
    * Is the contained type T a immutable reference type
    */
-  static constexpr bool is_const_ref = is_ref and std::is_const_v<T>;
+  static constexpr bool is_const_ref = is_ref and crab::ty::is_const<T>;
 
   /**
    * Is the contained type T a mutable reference type
    */
-  static constexpr bool is_mut_ref = is_ref and not std::is_const_v<T>;
+  static constexpr bool is_mut_ref = is_ref and crab::ty::non_const<T>;
 
   /**
    * @brief Create an option that wraps Some(T)
@@ -545,12 +545,13 @@ public:
    * will instead return a new default constructed T
    */
   [[nodiscard]] inline constexpr auto take_or_default() && -> T
-    requires std::is_default_constructible_v<T>
+    requires crab::ty::default_constructible<T>
   {
     static_assert(
-      std::is_default_constructible_v<T>,
+      crab::ty::default_constructible<T>,
       "take_or_default requires that T is default constructible"
     );
+
     return std::move(*this).take_or([] { return T{}; });
   }
 
@@ -580,7 +581,7 @@ public:
    * this opton was none then this returns a default constructed T
    */
   [[nodiscard]] constexpr inline auto get_or_default() const -> T
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return copied().take_or_default();
   }
@@ -590,7 +591,7 @@ public:
    * @param default_value
    */
   [[nodiscard]] inline constexpr auto get_or(T default_value) const -> T
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return copied().take_or(std::forward<T>(default_value));
   }
@@ -602,7 +603,7 @@ public:
    */
   template<crab::ty::provider<T> F>
   [[nodiscard]] inline constexpr auto get_or(F&& default_generator) const -> T
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     static_assert(
       std::is_invocable_r_v<T, F>,
@@ -662,7 +663,7 @@ public:
    */
   template<typename E>
   [[nodiscard]] inline constexpr auto ok_or(E&& error) const -> Result<T, E>
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
                      : Result<T, E>{crab::Err<E>{std::forward<E>(error)}};
@@ -677,7 +678,7 @@ public:
   template<typename E, crab::ty::provider<E> F>
   [[nodiscard]]
   inline constexpr auto ok_or(F&& error_generator) const -> Result<T, E>
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
                      : Result<T, E>{crab::Err<E>{std::invoke(error_generator)}};
@@ -756,7 +757,7 @@ public:
    * );
    */
   template<crab::ty::mapper<T> F>
-  requires std::copy_constructible<T>
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto map(F&& mapper) const& {
     return copied().map(std::forward<F>(mapper));
   }
@@ -773,7 +774,7 @@ public:
   }
 
   template<typename Into>
-  requires std::copy_constructible<T>
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto map() const& -> Option<Into> {
     return copied().template map<Into>();
   }
@@ -781,9 +782,9 @@ public:
   /**
    * @brief Shorthand for calling .map(...).flatten()
    */
-  template<std::invocable<T> F>
+  template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto flat_map(F&& mapper) && {
-    using Returned = std::invoke_result_t<F, T>;
+    using Returned = crab::ty::mapper_codomain<F, T>;
     static_assert(
       crab::option_type<Returned>,
       "The function passed to flat_map must return an Option"
@@ -799,8 +800,8 @@ public:
   /**
    * @brief Shorthand for calling .map(...).flatten()
    */
-  template<std::invocable<T> F>
-  requires std::copy_constructible<T>
+  template<crab::ty::mapper<T> F>
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto flat_map(F&& mapper) const& {
     return copied().flat_map(std::forward<F>(mapper));
   }
@@ -808,9 +809,9 @@ public:
   /**
    * @brief Equivalent of flat_map but for the 'None' type
    */
-  template<std::invocable F>
+  template<crab::ty::provider F>
   [[nodiscard]] inline constexpr auto or_else(F&& mapper) && {
-    using Returned = std::invoke_result_t<F>;
+    using Returned = crab::ty::functor_result<F>;
 
     static_assert(
       crab::option_type<Returned>,
@@ -828,7 +829,7 @@ public:
    * @brief Equivalent of flat_map but for the 'None' type
    */
   template<std::invocable F>
-  requires std::copy_constructible<T>
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto or_else(F&& mapper) const& {
     return copied().or_else(std::forward<F>(mapper));
   }
@@ -852,7 +853,7 @@ public:
    * it to a single Option<T>
    */
   [[nodiscard]] inline constexpr auto flatten() const& -> T
-    requires crab::option_type<T> and std::copy_constructible<T>
+    requires crab::option_type<T> and crab::ty::copy_constructible<T>
   {
     return copied().flatten();
   }
@@ -863,7 +864,7 @@ public:
    */
   [[nodiscard]] inline constexpr auto copied() const -> Option {
     static_assert(
-      std::copy_constructible<T>,
+      crab::ty::copy_constructible<T>,
       "Cannot call copied() on an option with a non copy-cosntructible type"
     );
 
@@ -902,7 +903,7 @@ public:
    * will return Some, else None
    */
   template<std::predicate<const T&> F>
-  requires std::copy_constructible<T>
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]]
   inline constexpr auto filter(F&& predicate) const& -> Option<T> {
     return copied().filter(std::forward<F>(predicate));
@@ -913,7 +914,7 @@ public:
    * will return Some, else None
    */
   template<std::predicate<const T&> F>
-  requires std::copy_constructible<T>
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto filter(F&& predicate) & -> Option<T> {
     return copied().filter(std::forward<F>(predicate));
   }
@@ -988,7 +989,7 @@ public:
   template<typename S>
   [[nodiscard]]
   inline constexpr auto operator and(Option<S> other) const& -> Option<S>
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return copied() and std::move(other);
   }
@@ -1011,7 +1012,7 @@ public:
    */
   [[nodiscard]]
   inline constexpr auto operator or(Option other) const& -> Option
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return copied() or std::move(other);
   }
@@ -1036,7 +1037,7 @@ public:
    */
   [[nodiscard]]
   inline constexpr auto operator xor(Option other) const& -> Option
-    requires std::copy_constructible<T>
+    requires crab::ty::copy_constructible<T>
   {
     return copied() xor std::move(other);
   }
@@ -1066,6 +1067,7 @@ public:
       std::equality_comparable_with<T, S>,
       "Cannot equate to options if the inner types are not inverse equatable"
     );
+
     if (is_none() or other.is_none()) {
       return is_none() != other.is_none();
     }

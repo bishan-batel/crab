@@ -11,7 +11,6 @@
     }: flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
       llvm = pkgs.llvmPackages_19;
-      libPath = [pkgs.fmt]; 
     in {
 
       devShells = { 
@@ -28,17 +27,16 @@
             buildInputs = with pkgs; [
               llvm.clang-tools
               llvm.clang
-              llvm.clang.cc
 
+            ];
+
+            nativeBuildInputs = with pkgs; [
+              fmt
+              catch2_3
               pkg-config
-            ] ++ libPath;
+            ];
 
-            nativeBuildInputs = with pkgs; [ 
-              llvm.clang
-            ] ++ libPath;
-
-            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libPath;
-            DYLD_LIBRARY_PATH = pkgs.lib.makeLibraryPath libPath;
+            LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [ fmt catch2_3 ]);
           };
       };
     });

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.5)
 
 project(crab VERSION 1.0.1 DESCRIPTION "crab description")
 
@@ -6,10 +6,12 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
 
+# CPM should find local packages before trying to download
 
 # CPM
 include(cmake/CPM.cmake)
 
+set(CPM_USE_LOCAL_PACKAGES ON)
 CPMAddPackage("gh:fmtlib/fmt#7.1.3")
 
 # Setting up library & install
@@ -71,4 +73,3 @@ option(CRAB_TESTS OFF "Whether to compile / include crab tests")
 if(CRAB_TESTS)
         add_subdirectory(test)
 endif()
-

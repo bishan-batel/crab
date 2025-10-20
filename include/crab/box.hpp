@@ -23,15 +23,19 @@
  * messed up with move semantics.
  */
 template<typename T>
-requires(not std::is_const_v<T>)
 class Box {
   T* obj;
+
+  static_assert(
+    not std::is_const_v<T>,
+    "Box<T> does not support const undirected types, switch Box<const T> into "
+    "Box<T>"
+  );
 
   // SizeType size;
 
   inline constexpr explicit Box(T* const from): obj(from) {}
 
-  // ReSharper disable once CppMemberFunctionMayBeConst
   inline constexpr auto drop() -> void {
     if constexpr (std::is_array_v<T>) {
       delete[] obj;
@@ -54,7 +58,7 @@ public:
   };
 
   /**
-   * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
+   * @brief Gives up ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
   [[nodiscard]] static inline constexpr auto unwrap(Box box) -> T* {

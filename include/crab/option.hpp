@@ -32,7 +32,7 @@ namespace crab {
      * Equality comparison for none, None is a unit type therefore this will
      * always return true.
      */
-    [[nodiscard]] consteval auto operator==(const None&) const -> bool {
+    [[nodiscard]] constexpr auto operator==(const None&) const -> bool {
       return true;
     }
   };
@@ -1302,6 +1302,7 @@ namespace crab {
     if (not cond) {
       return Option<std::invoke_result_t<F>>{};
     }
+
     return Option<std::invoke_result_t<F>>{std::invoke(func)};
   }
 

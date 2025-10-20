@@ -32,18 +32,18 @@ namespace crab::rc {
 
       auto increment_ref_count() -> void {
         debug_assert(
-          ref_count != 0,
+          not should_free_data(),
           "Corrupted Rc<T>: ref_count being increased after reaching zero"
         );
-        ++ref_count;
+        ref_count++;
       }
 
       auto decrement_ref_count() -> void {
         debug_assert(
-          ref_count != 0,
+          not should_free_data(),
           "Corrupted Rc<T>: ref_count being decreased after reaching zero"
         );
-        --ref_count;
+        ref_count--;
       }
 
       [[nodiscard]] auto is_unique() const -> bool { return ref_count == 1; }
@@ -175,7 +175,7 @@ public:
    */
   Rc(const Rc& from): interior{from.interior} {
     debug_assert(
-      interior != nullptr and interior->is_data_valid(),
+      is_valid() and interior->is_data_valid(),
       "Invalid use of Rc<T>, copied from an invalidated Rc, most likely a "
       "use-after-move"
     );
@@ -188,7 +188,7 @@ public:
    */
   Rc(Rc&& from) noexcept: interior{std::exchange(from.interior, nullptr)} {
     debug_assert(
-      interior != nullptr,
+      is_valid(),
       "Invalid use of Rc<T>, moved from an invalidated Rc, most likely a "
       "use-after-move"
     );
@@ -199,7 +199,7 @@ public:
    */
   template<std::derived_from<T> Derived>
   Rc(const Rc<Derived>& from): // NOLINT(*-explicit-constructor)
-      interior{from.get_interior()->template upcast<T>()} {
+      interior{from.interior->template upcast<T>()} {
     get_interior()->increment_ref_count();
   }
 
@@ -208,7 +208,8 @@ public:
    */
   template<std::derived_from<T> Derived>
   Rc(Rc<Derived>&& from): // NOLINT(*-explicit-constructor)
-      interior{std::exchange(from.get_interior(), nullptr)->template upcast<T>()
+      interior{
+        std::exchange(from.get_interior(), nullptr)->template upcast<T>(),
       } {}
 
   /**
@@ -277,10 +278,6 @@ public:
       return *this;
     }
 
-    if (from.interior == interior) {
-      return *this;
-    }
-
     destruct();
 
     interior = from.interior;
@@ -307,21 +304,21 @@ public:
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator const T&() const { // NOLINT(*-explicit-constructor)
+  [[nodiscard]] operator const T&() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to a pointer to the contained value
    */
-  operator const T*() const { // NOLINT(*-explicit-constructor)
+  [[nodiscard]] operator const T*() const { // NOLINT(*-explicit-constructor)
     return raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator Ref<T>() const { // NOLINT(*-explicit-constructor)
+  [[nodiscard]] operator Ref<T>() const { // NOLINT(*-explicit-constructor)
     return as_ref();
   }
 
@@ -562,7 +559,7 @@ public:
    * Copy assignment
    */
   auto operator=(const RcMut& from) -> RcMut& {
-    if (&from == this) {
+    if (&from == this or from.interior == interior) {
       return *this;
     }
 
@@ -582,7 +579,7 @@ public:
    * Move assignment
    */
   auto operator=(RcMut&& from) noexcept -> RcMut& {
-    if (&from == this) {
+    if (&from == this or from.interior == interior) {
       return *this;
     }
 
@@ -734,4 +731,5 @@ namespace crab {
   [[nodiscard]] auto make_rc_mut(Args&&... args) -> RcMut<T> {
     return RcMut<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
+
 } // namespace crab

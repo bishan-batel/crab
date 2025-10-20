@@ -26,19 +26,25 @@ namespace crab::fn {
    *
    * @param x Any integer value to check
    */
-  constexpr auto constant = []<std::copy_constructible T>(T x) {
-    return [x]<typename... Args>(Args&&...) -> T { return x; };
+  constexpr auto constant{
+    []<std::copy_constructible T>(T x) {
+      return [x]<typename... Args>(Args&&...) -> T { return x; };
+    },
   };
 
   /**
    * Predicate for whether the input is even
    */
-  constexpr auto is_even = [](auto&& x) -> bool { return x % 2 == 0; };
+  constexpr auto is_even{
+    [](auto&& x) -> bool { return x % 2 == 0; },
+  };
 
   /**
    * Predicate for whether the input is odd
    */
-  constexpr auto is_odd = [](auto&& x) -> bool { return not is_even(x); };
+  constexpr auto is_odd{
+    [](auto&& x) -> bool { return not is_even(x); },
+  };
 
   template<typename Derived>
   struct cast_s final {

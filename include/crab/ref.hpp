@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <functional>
 #include <type_traits>
 
@@ -119,20 +120,14 @@ private:
 };
 
 template<typename T>
-struct std::hash<RefMut<T>> { // NOLINT
-
-  auto operator()(const RefMut<T>& mut) const -> usize {
-    return std::bit_cast<usize>(mut.as_ptr());
+struct std::hash<Ref<T>> {
+  [[nodiscard]] auto operator()(const Ref<T>& mut) const -> usize {
+    return static_cast<usize>(static_cast<uptr>(mut.as_ptr()));
   };
 };
 
 template<typename T>
-struct std::hash<Ref<T>> { // NOLINT
-
-  auto operator()(const Ref<T>& mut) const -> usize {
-    return std::bit_cast<usize>(mut.as_ptr());
-  };
-};
+struct std::hash<RefMut<T>> : std::hash<Ref<T>> {};
 
 template<typename T>
 class Option;
@@ -145,11 +140,7 @@ namespace crab::ref {
    */
   template<typename T>
   [[nodiscard]] constexpr auto from_ptr(T* const from) -> Option<T&> {
-    if (from) {
-      return *from;
-    }
-
-    return crab::none;
+    return crab::then(from != nullptr, [from]() -> T& { return *from; });
   }
 
   /**
@@ -159,17 +150,13 @@ namespace crab::ref {
   template<typename T>
   [[nodiscard]]
   constexpr auto from_ptr(const T* const from) -> Option<const T&> {
-    if (from) {
-      return *from;
-    }
-    return none;
+    return crab::then(from != nullptr, [from]() -> const T& { return *from; });
   }
 
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]]
   constexpr auto cast(const Base& from) -> Option<const Derived&> {
     return from_ptr(dynamic_cast<const Derived*>(&from));
@@ -178,8 +165,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]]
   constexpr auto cast(Base& from) -> Option<Derived&> {
     return from_ptr(dynamic_cast<Derived*>(&from));
@@ -188,8 +174,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]]
   constexpr auto cast(const Base* from) -> Option<const Derived&> {
     return from_ptr(dynamic_cast<const Derived*>(from));
@@ -198,8 +183,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]] constexpr auto cast(Base* from) -> Option<Derived&> {
     return from_ptr(dynamic_cast<Derived*>(from));
   }
@@ -207,8 +191,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]] constexpr auto cast(Ref<Base> from) -> Option<Ref<Derived>> {
     return cast<Derived, Base>(*from).template map<Ref<Derived>>();
   }
@@ -216,8 +199,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]] constexpr Option<RefMut<Derived>> cast(RefMut<Base> from) {
     return cast<Derived, Base>(*from).template map<RefMut<Derived>>();
   }
@@ -225,8 +207,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]]
   constexpr auto cast(Option<Ref<Base>> from) -> Option<Ref<Derived>> {
     return from.flat_map([](Ref<Base> base) -> Option<Ref<Derived>> {
@@ -237,8 +218,7 @@ namespace crab::ref {
   /**
    * @brief Attempts to cast input of type Base into a Derived instances
    */
-  template<class Derived, class Base>
-  requires std::derived_from<Derived, Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]]
   constexpr auto cast(Option<RefMut<Base>> from) -> Option<Ref<Derived>> {
     return from.flat_map([](RefMut<Base> base) -> Option<RefMut<Derived>> {
@@ -252,7 +232,7 @@ namespace crab::ref {
    * @tparam Derived What type to check
    * @param obj Object to check
    */
-  template<class Derived, class Base>
+  template<class Derived, std::derived_from<Derived> Base>
   [[nodiscard]] constexpr auto is(const Base& obj) -> bool {
     return dynamic_cast<const Derived*>(&obj) != nullptr;
   }

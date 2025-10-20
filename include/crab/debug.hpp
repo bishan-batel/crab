@@ -9,6 +9,8 @@
 #include <source_location>
 #include <fmt/format.h>
 
+#if _DEBUG
+
 namespace crab::debug {
   class AssertionFailedError final : public std::exception {
     std::string fmt;
@@ -20,8 +22,6 @@ namespace crab::debug {
       StringView assertion_text,
       StringView msg
     ):
-        /* fmt{fmt::format("Failed Assertion in:\n {}:{} in {} \n'{}'\n{}",
-           source, line, function, assertion_text, msg)} { */
         fmt{fmt::format(
           "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}\n{}",
           source_location.file_name(),
@@ -32,9 +32,7 @@ namespace crab::debug {
           msg
         )} {}
 
-    ~AssertionFailedError() override = default;
-
-    [[nodiscard]] auto what() const noexcept -> const char* final {
+    [[nodiscard]] auto what() const noexcept -> const char* override {
       return fmt.c_str();
     }
   };
@@ -46,9 +44,9 @@ namespace crab::debug {
   ) {
     throw AssertionFailedError{source_location, assertion_text, msg};
   }
+
 } // namespace crab::debug
-  //
-#if _DEBUG
+
 #define debug_assert_transparent(condition, message, source_location)          \
   if (!static_cast<bool>(condition)) do {                                      \
       crab::debug::dbg_assert(source_location, #condition, (message));         \
@@ -60,12 +58,14 @@ namespace crab::debug {
     fmt::format(__VA_ARGS__),                                                  \
     std::source_location::current()                                            \
   )
+
 #else
 
 #define debug_assert_transparent(condition, message, source_location)          \
-  while (false) do {                                                           \
-      std::ignore = source_location;                                           \
-    } while (false);
+  while (false) {                                                              \
+    std::ignore = source_location;                                             \
+  }
+
 #define debug_assert(...)
 
 #endif

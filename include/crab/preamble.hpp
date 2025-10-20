@@ -186,7 +186,7 @@ namespace ranges = std::ranges;
 namespace views = std::ranges::views;
 
 #if !CRAB_NO_TYPEDEF_ARRAY
-  #include <array>
+#include <array>
 /**
  * @brief Alias for std::array
  *
@@ -199,7 +199,7 @@ using SizedArray = std::array<T, length>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_SPAN
-  #include <span>
+#include <span>
 
 /**
  * @brief Abstraction over any contiguous sequence of elements
@@ -209,7 +209,7 @@ using Span = std::span<T, length>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_VEC
-  #include <vector>
+#include <vector>
 
 /**
  * @brief Heap allocated, dynamically sized list
@@ -219,7 +219,7 @@ using Vec = std::vector<T>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_SET
-  #include <unordered_set>
+#include <unordered_set>
 /**
  * @brief Unordered set of elements
  */
@@ -231,7 +231,7 @@ using Set = std::unordered_set<T, Hash, Predicate>;
 #endif
 
 #if !CRAB_NO_TYPEDEF_DICTIONARY
-  #include <unordered_map>
+#include <unordered_map>
 /**
  * @brief Unordered key-value collection
  */
@@ -244,7 +244,9 @@ using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 #endif
 
 /**
- * @brief 0 Sized Type
+ * @brief Monostate type, all instances of 'unit' are indistinguishable,
+ * note that this type will never be '0' sized, unless being used as a field
+ * with [[no_unique_address]]
  */
 struct unit {
   /**
@@ -381,10 +383,11 @@ constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
 // Pattern Matching
 namespace crab {
   /**
-   * @brief Shows its use with std::visit
+   * @brief Utility class for easily creating a Visitor instance when using
+   * std::visit and alike
    */
-  template<typename... Cases>
-  struct cases final : Cases... {
-    using Cases::operator()...;
+  template<typename... Functions>
+  struct cases final : Functions... {
+    using Functions::operator()...;
   };
 } // namespace crab

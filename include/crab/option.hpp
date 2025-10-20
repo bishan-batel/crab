@@ -1282,25 +1282,29 @@ namespace crab {
   /**
    * @brief Maps a boolean to an option if it is true
    */
-  template<std::invocable F>
+  template<crab::ty::provider F>
   [[nodiscard]] inline constexpr auto then(const bool cond, F&& func) {
+    using Return = Option<crab::ty::functor_result<F>>;
+
     if (not cond) {
-      return Option<std::invoke_result_t<F>>{};
+      return Return{};
     }
 
-    return Option<std::invoke_result_t<F>>{std::invoke(func)};
+    return Return{std::invoke(func)};
   }
 
   /**
    * @brief Maps a boolean to an option if it is false
    */
-  template<std::invocable F>
-  [[nodiscard]] inline constexpr auto unless(const bool cond, F&& func)
-    -> Option<std::invoke_result_t<F>> {
+  template<crab::ty::provider F>
+  [[nodiscard]] inline constexpr auto unless(const bool cond, F&& func) {
+    using Return = Option<crab::ty::functor_result<F>>;
+
     if (cond) {
-      return Option<std::invoke_result_t<F>>{};
+      return Return{};
     }
-    return Option<std::invoke_result_t<F>>{std::invoke(func)};
+
+    return Return{std::invoke(func)};
   }
 
   /**
@@ -1320,8 +1324,8 @@ namespace crab {
         return Option<Tuple<T...>>{std::forward<Tuple<T...>>(tuple)};
       }
 
-      template<typename PrevResults, std::invocable F, typename... Rest>
-      requires option_type<std::invoke_result_t<F>>
+      template<typename PrevResults, crab::ty::provider F, typename... Rest>
+      requires option_type<crab::ty::functor_result<F>>
       [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         F&& function,
@@ -1335,8 +1339,8 @@ namespace crab {
         });
       }
 
-      template<typename PrevResults, std::invocable F, typename... Rest>
-      requires(not option_type<std::invoke_result_t<F>>)
+      template<typename PrevResults, crab::ty::provider F, typename... Rest>
+      requires(not option_type<crab::ty::functor_result<F>>)
       [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         F&& function,
@@ -1345,14 +1349,14 @@ namespace crab {
         return operator()(
           std::tuple_cat(
             std::move(tuple),
-            Tuple<std::invoke_result_t<F>>(std::invoke(function))
+            Tuple<crab::ty::functor_result<F>>(std::invoke(function))
           ),
           std::forward<Rest>(other_functions)...
         );
       }
 
       template<typename PrevResults, typename V, typename... Rest>
-      requires(not std::invocable<V> and not option_type<V>)
+      requires(not crab::ty::provider<V> and not option_type<V>)
       [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         V&& value,
@@ -1365,7 +1369,7 @@ namespace crab {
       }
 
       template<typename PrevResults, typename V, typename... Rest>
-      requires(not std::invocable<V>)
+      requires(not crab::ty::provider<V>)
       [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple, /* Tuple<T...>*/
         Option<V> value,

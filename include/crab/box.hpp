@@ -9,6 +9,7 @@
 #include <crab/type_traits.hpp>
 #include <crab/debug.hpp>
 #include <crab/ref.hpp>
+#include <crab/casts.hpp>
 
 // NOLINTBEGIN(*explicit*)
 

@@ -46,7 +46,8 @@ namespace crab {
   /**
    * @brief A valid error type for use in Err<T> / Result<_, E>
    */
-  template<typename E> concept error_type = std::move_constructible<E>;
+  template<typename E>
+  concept error_type = std::move_constructible<E>;
 
   /**
    * @brief Converts a given error to its stringified representation.
@@ -83,7 +84,8 @@ namespace crab {
   /**
    * @brief Type constraint for a type that can be used with Result<T>
    */
-  template<typename T> concept ok_type = std::move_constructible<T>;
+  template<typename T>
+  concept ok_type = std::move_constructible<T>;
 
   /**
    * @brief Thin wrapper over a value to be given to Result<T,E>(Ok)'s
@@ -155,12 +157,14 @@ namespace crab {
   /**
    * Type predicate for if the given type is of the form crab::Ok<T>
    */
-  template<typename T> concept crab_ok = helper::is_crab_ok<T>::value;
+  template<typename T>
+  concept crab_ok = helper::is_crab_ok<T>::value;
 
   /**
    * Type predicate for if the given type is of the form crab::Err<T>
    */
-  template<typename T> concept crab_err = helper::is_crab_err<T>::value;
+  template<typename T>
+  concept crab_err = helper::is_crab_err<T>::value;
 }
 
 // NOLINTBEGIN(*explicit*)

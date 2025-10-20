@@ -14,13 +14,14 @@ namespace crab {
   /**
    * @brief Any type that can be converted to a hash_code (usize)
    */
-  template<typename T> concept into_hash_code =
-    std::convertible_to<T, hash_code>;
+  template<typename T>
+  concept into_hash_code = std::convertible_to<T, hash_code>;
 
   /**
    * @brief Is the given type hashable
    */
-  template<typename T> concept hashable = requires(const T& v) {
+  template<typename T>
+  concept hashable = requires(const T& v) {
     { std::hash<T>{}(v) } -> std::convertible_to<hash_code>;
   };
 

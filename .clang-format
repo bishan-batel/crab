@@ -22,7 +22,7 @@ AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: All
 AllowShortLambdasOnASingleLine: All
 AlwaysBreakTemplateDeclarations: Yes
-# BreakTemplateDeclarations: Yes
+BreakTemplateDeclarations: Yes
 AlwaysBreakBeforeMultilineStrings: false
 BinPackArguments: false
 BinPackParameters: false
@@ -46,7 +46,7 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
 BreakBeforeBraces: Custom
-BreakBeforeConceptDeclarations: Never
+BreakBeforeConceptDeclarations: Always
 BreakBeforeTernaryOperators: true
 BreakBeforeBinaryOperators: NonAssignment
 BreakConstructorInitializers: AfterColon

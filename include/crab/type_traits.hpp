@@ -26,7 +26,8 @@ namespace crab {
     /**
      * True if the given type is valid for use in Ref/RefMut<T>
      */
-    template<typename T> concept is_valid_type =
+    template<typename T>
+    concept is_valid_type =
       not std::is_const_v<T> and not std::is_reference_v<T>;
   }
 
@@ -34,7 +35,8 @@ namespace crab {
    * True if the given type is a complete type
    * eg. not a forward declaration and can be used fully
    */
-  template<typename T> concept complete_type = requires { sizeof(T); };
+  template<typename T>
+  concept complete_type = requires { sizeof(T); };
 
   namespace helper {
     /**
@@ -62,12 +64,14 @@ namespace crab {
   /**
    * Type predicate for if the given type T is some form of crab Option
    */
-  template<typename T> concept option_type = helper::is_option_type<T>::value;
+  template<typename T>
+  concept option_type = helper::is_option_type<T>::value;
 
   /**
    * Type predicate for if the given type T is some form of crab Result
    */
-  template<typename T> concept result_type = helper::is_result_type<T>::value;
+  template<typename T>
+  concept result_type = helper::is_result_type<T>::value;
 
 } // namespace crab
 
@@ -142,18 +146,29 @@ namespace crab {
    * Type predicate for whether or not the given type T is a crab
    * immutable reference, eg. of the form Ref<T>
    */
-  template<typename T> concept crab_ref = helper::is_crab_ref<T>::value;
+  template<typename T>
+  concept crab_ref = helper::is_crab_ref<T>::value;
 
   /**
    * Type predicate for whether or not the given type T is a crab
    * mutable reference, eg. of the form RefMut<T>
    */
-  template<typename T> concept crab_ref_mut = helper::is_crab_ref_mut<T>::value;
+  template<typename T>
+  concept crab_ref_mut = helper::is_crab_ref_mut<T>::value;
 
   /**
    * Type predicate for whether or not the given type T is any form of
    * crab reference wrapper
    */
-  template<typename T> concept any_crab_ref = crab_ref<T> or crab_ref_mut<T>;
+  template<typename T>
+  concept any_crab_ref = crab_ref<T> or crab_ref_mut<T>;
 
+}
+
+namespace crab::ty {
+  template<typename F, typename... Args>
+  concept consumer = std::invocable<F, Args...>;
+
+  template<typename F, typename ReturnType, typename... Args>
+  concept functor = std::invocable<F, Args...>;
 }

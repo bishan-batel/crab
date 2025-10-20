@@ -4,6 +4,7 @@
 
 #include <crab/debug.hpp>
 #include <crab/type_traits.hpp>
+#include <source_location>
 
 // NOLINTBEGIN(*explicit*)
 
@@ -13,8 +14,16 @@
  */
 template<crab::ref::is_valid_type T>
 class Ref final {
-  constexpr explicit Ref(const T* const pointer): pointer(pointer) {
-    debug_assert(pointer, "Invalid State: Cannot create a NULL Ref object");
+  constexpr explicit Ref(
+    const T* const pointer,
+    std::source_location loc = std::source_location::current()
+  ):
+      pointer(pointer) {
+    debug_assert_transparent(
+      pointer,
+      loc,
+      "Invalid State: Cannot create a NULL Ref object"
+    );
   }
 
 public:
@@ -59,8 +68,16 @@ private:
 
 template<crab::ref::is_valid_type T>
 class RefMut final {
-  constexpr explicit RefMut(T* const pointer): pointer(pointer) {
-    debug_assert(pointer, "Invalid State: Cannot create a NULL RefMut object");
+  constexpr explicit RefMut(
+    T* const pointer,
+    std::source_location loc = std::source_location::current()
+  ):
+      pointer(pointer) {
+    debug_assert_transparent(
+      pointer,
+      loc,
+      "Invalid State: Cannot create a NULL RefMut object"
+    );
   }
 
 public:

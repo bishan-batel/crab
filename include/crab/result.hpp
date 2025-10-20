@@ -36,6 +36,17 @@ namespace crab {
     constexpr virtual ~Error() = default;
 
     /**
+     * @brief Converts this crab Error into a runtime exception that can be
+     * thrown, if needed when dealing with certain API's
+     *
+     * @return
+     */
+    [[nodiscard]]
+    inline constexpr auto as_exception() const -> std::runtime_error {
+      return std::runtime_error{what()};
+    }
+
+    /**
      * @brief Stringified error message for logging purposes
      */
     [[nodiscard]] constexpr virtual auto what() const -> String = 0;
@@ -47,7 +58,7 @@ namespace crab {
    * @brief A valid error type for use in Err<T> / Result<_, E>
    */
   template<typename E>
-  concept error_type = std::move_constructible<E>;
+  concept error_type = crab::ty::movable<E>;
 
   /**
    * @brief Converts a given error to its stringified representation.
@@ -322,11 +333,9 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
-        "Called unwrap on result with Error:\n{}",
-        crab::error_to_string(get_err_unchecked())
-      ),
-      loc
+      loc,
+      "Called unwrap on result with Error:\n{}",
+      crab::error_to_string(get_err_unchecked())
     );
     return std::get<Ok>(inner).value;
   }
@@ -339,7 +348,7 @@ public:
     std::source_location loc = std::source_location::current()
   ) -> E& {
     ensure_valid(loc);
-    debug_assert_transparent(is_err(), "Called unwrap with Ok value", loc);
+    debug_assert_transparent(is_err(), loc, "Called unwrap with Ok value");
     return std::get<Err>(inner).value;
   }
 
@@ -353,11 +362,9 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
-        "Called unwrap on result with Error:\n{}",
-        crab::error_to_string(get_err_unchecked())
-      ),
-      loc
+      loc,
+      "Called unwrap on result with Error:\n{}",
+      crab::error_to_string(get_err_unchecked())
     );
     return std::get<Ok>(inner).value;
   }
@@ -370,7 +377,7 @@ public:
     std::source_location loc = std::source_location::current()
   ) const -> const E& {
     ensure_valid(loc);
-    debug_assert_transparent(is_err(), "Called unwrap on Ok value", loc);
+    debug_assert_transparent(is_err(), loc, "Called unwrap on Ok value");
     return std::get<Err>(inner).value;
   }
 
@@ -380,11 +387,9 @@ public:
     ensure_valid(loc);
     debug_assert_transparent(
       is_ok(),
-      std::format(
-        "Called unwrap on result with Error:\n{}",
-        crab::error_to_string(get_err_unchecked())
-      ),
-      loc
+      loc,
+      "Called unwrap on result with Error:\n{}",
+      crab::error_to_string(get_err_unchecked())
     );
     return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
@@ -393,11 +398,13 @@ public:
     std::source_location loc = std::source_location::current()
   ) && -> E {
     ensure_valid(loc);
+
     debug_assert_transparent(
       is_err(),
-      "Called unwrap_err on result with Ok value",
-      loc
+      loc,
+      "Called unwrap_err on result with Ok value"
     );
+
     return std::get<Err>(std::exchange(inner, invalidated{})).value;
   }
 
@@ -407,10 +414,11 @@ public:
   inline constexpr auto ensure_valid(
     std::source_location loc = std::source_location::current()
   ) const -> void {
+
     debug_assert_transparent(
       not std::holds_alternative<invalidated>(inner),
-      "Invalid use of moved result",
-      loc
+      loc,
+      "Invalid use of moved result"
     );
   }
 

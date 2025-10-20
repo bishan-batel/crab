@@ -382,11 +382,6 @@ public:
   static constexpr bool is_mut_ref = is_ref and crab::ty::non_const<T>;
 
   /**
-   * Is the contained type T fully copyable
-   */
-  static constexpr bool is_copyable = crab::ty::copyable<T>;
-
-  /**
    * @brief Create an option that wraps Some(T)
    */
   constexpr Option(const T& from) //
@@ -586,7 +581,7 @@ public:
    * this opton was none then this returns a default constructed T
    */
   [[nodiscard]] constexpr inline auto get_or_default() const -> T
-    requires is_copyable
+    requires crab::ty::copy_constructible<T>
   {
     return copied().take_or_default();
   }
@@ -596,7 +591,7 @@ public:
    * @param default_value
    */
   [[nodiscard]] inline constexpr auto get_or(T default_value) const -> T
-    requires is_copyable
+    requires crab::ty::copy_constructible<T>
   {
     return copied().take_or(std::forward<T>(default_value));
   }
@@ -608,7 +603,7 @@ public:
    */
   template<crab::ty::provider<T> F>
   [[nodiscard]] inline constexpr auto get_or(F&& default_generator) const -> T
-    requires is_copyable
+    requires crab::ty::copy_constructible<T>
   {
     static_assert(
       std::is_invocable_r_v<T, F>,
@@ -625,7 +620,7 @@ public:
   [[nodiscard]] inline constexpr auto unwrap(
     std::source_location loc = std::source_location::current()
   ) && -> T {
-    debug_assert_transparent(is_some(), "Cannot unwrap a none option", loc);
+    debug_assert_transparent(is_some(), loc, "Cannot unwrap a none option");
     return std::exchange(value, crab::None{}).value();
   }
 
@@ -638,8 +633,8 @@ public:
   ) -> T& {
     debug_assert_transparent(
       is_some(),
-      "cannot get_unchecked a none option",
-      loc
+      loc,
+      "Cannot get_unchecked a none option"
     );
 
     return value.value();
@@ -654,8 +649,8 @@ public:
   ) const -> const T& {
     debug_assert_transparent(
       is_some(),
-      "cannot get_unchecked a none option",
-      loc
+      loc,
+      "Cannot get_unchecked a none option"
     );
     return value.value();
   }
@@ -668,7 +663,7 @@ public:
    */
   template<typename E>
   [[nodiscard]] inline constexpr auto ok_or(E&& error) const -> Result<T, E>
-    requires is_copyable
+    requires crab::ty::copy_constructible<T>
   {
     return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
                      : Result<T, E>{crab::Err<E>{std::forward<E>(error)}};
@@ -683,7 +678,7 @@ public:
   template<typename E, crab::ty::provider<E> F>
   [[nodiscard]]
   inline constexpr auto ok_or(F&& error_generator) const -> Result<T, E>
-    requires is_copyable
+    requires crab::ty::copy_constructible<T>
   {
     return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
                      : Result<T, E>{crab::Err<E>{std::invoke(error_generator)}};
@@ -762,7 +757,7 @@ public:
    * );
    */
   template<crab::ty::mapper<T> F>
-  requires is_copyable
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto map(F&& mapper) const& {
     return copied().map(std::forward<F>(mapper));
   }
@@ -773,13 +768,14 @@ public:
       std::convertible_to<T, Into>,
       "'Option<T>::map<Into>()' can only be done if T is convertible to Into"
     );
-    return std::move(*this).map([](T&& value) -> Into {
-      return static_cast<Into>(std::forward<Contained>(value));
+
+    return std::move(*this).map([](T&& value) {
+      return static_cast<Into>(std::forward<T>(value));
     });
   }
 
   template<typename Into>
-  requires is_copyable
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto map() const& -> Option<Into> {
     return copied().template map<Into>();
   }
@@ -806,7 +802,7 @@ public:
    * @brief Shorthand for calling .map(...).flatten()
    */
   template<crab::ty::mapper<T> F>
-  requires is_copyable
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto flat_map(F&& mapper) const& {
     return copied().flat_map(std::forward<F>(mapper));
   }
@@ -834,7 +830,7 @@ public:
    * @brief Equivalent of flat_map but for the 'None' type
    */
   template<crab::ty::provider F>
-  requires is_copyable
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto or_else(F&& mapper) const& {
     return copied().or_else(std::forward<F>(mapper));
   }
@@ -858,7 +854,7 @@ public:
    * it to a single Option<T>
    */
   [[nodiscard]] inline constexpr auto flatten() const& -> T
-    requires crab::option_type<T> and is_copyable
+    requires crab::option_type<T> and crab::ty::copy_constructible<T>
 
   {
     return copied().flatten();
@@ -869,7 +865,7 @@ public:
    * want to consume the option.
    */
   [[nodiscard]] inline constexpr auto copied() const -> Option
-    requires is_copyable
+    requires crab::ty::copy_constructible<T>
   {
     static_assert(
       crab::ty::copy_constructible<T>,
@@ -911,7 +907,7 @@ public:
    * will return Some, else None
    */
   template<crab::ty::predicate<const T&> F>
-  requires is_copyable
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]]
   inline constexpr auto filter(F&& predicate) const& -> Option<T> {
     return copied().filter(std::forward<F>(predicate));
@@ -922,7 +918,7 @@ public:
    * will return Some, else None
    */
   template<crab::ty::predicate<const T&> F>
-  requires is_copyable
+  requires crab::ty::copy_constructible<T>
   [[nodiscard]] inline constexpr auto filter(F&& predicate) & -> Option<T> {
     return copied().filter(std::forward<F>(predicate));
   }

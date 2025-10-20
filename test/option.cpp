@@ -19,7 +19,10 @@ TEST_CASE("Option", "Tests for all option methods") {
   STATIC_CHECK(sizeof(crab::None) == 1);
 
   SECTION("Option<T>::GenericStorage Reference Optimisation") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {});
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      STATIC_CHECK(sizeof(T*) == sizeof(Option<T&>));
+      STATIC_CHECK(sizeof(T*) == sizeof(Option<const T&>));
+    });
   }
 
   SECTION("Constructors & Move Semantics") {

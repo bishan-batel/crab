@@ -331,12 +331,14 @@ public:
     const std::source_location loc = std::source_location::current()
   ) -> T& {
     ensure_valid(loc);
+
     debug_assert_transparent(
       is_ok(),
       loc,
       "Called unwrap on result with Error:\n{}",
       crab::error_to_string(get_err_unchecked())
     );
+
     return std::get<Ok>(inner).value;
   }
 
@@ -348,7 +350,9 @@ public:
     const std::source_location loc = std::source_location::current()
   ) -> E& {
     ensure_valid(loc);
+
     debug_assert_transparent(is_err(), loc, "Called unwrap with Ok value");
+
     return std::get<Err>(inner).value;
   }
 
@@ -360,12 +364,14 @@ public:
     const std::source_location loc = std::source_location::current()
   ) const -> const T& {
     ensure_valid(loc);
+
     debug_assert_transparent(
       is_ok(),
       loc,
       "Called unwrap on result with Error:\n{}",
       crab::error_to_string(get_err_unchecked())
     );
+
     return std::get<Ok>(inner).value;
   }
 
@@ -377,7 +383,9 @@ public:
     const std::source_location loc = std::source_location::current()
   ) const -> const E& {
     ensure_valid(loc);
+
     debug_assert_transparent(is_err(), loc, "Called unwrap on Ok value");
+
     return std::get<Err>(inner).value;
   }
 
@@ -385,12 +393,14 @@ public:
     const std::source_location loc = std::source_location::current()
   ) && -> T {
     ensure_valid(loc);
+
     debug_assert_transparent(
       is_ok(),
       loc,
       "Called unwrap on result with Error:\n{}",
       crab::error_to_string(get_err_unchecked())
     );
+
     return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
 
@@ -430,6 +440,7 @@ public:
       return os << "Err(" << crab::error_to_string(result.get_err_unchecked())
                 << ")";
     }
+
     return os << "Ok(" << result.get_unchecked() << ")";
   }
 
@@ -459,6 +470,7 @@ public:
       std::convertible_to<T, Into>,
       "'Result<T, E>::map<Into>()' can only be done if T is convertible to Into"
     );
+
     return std::move(*this).map([](T&& value) -> Into {
       return static_cast<Into>(std::forward<T>(value));
     });
@@ -476,6 +488,7 @@ public:
       std::convertible_to<E, Into>,
       "'Result<T, E>::map<Into>()' can only be done if E is convertible to Into"
     );
+
     return std::move(*this).map_err([](E&& value) -> Into {
       return static_cast<Into>(std::forward<E>(value));
     });
@@ -548,6 +561,7 @@ public:
       "Only results with trivial Ok & Err types may be implicitly copied when "
       "using monadic operations, you must call Result::copied() yourself."
     );
+
     return copied(loc).map(std::forward<F>(functor), loc);
   }
 
@@ -566,6 +580,7 @@ public:
       "Only results with trivial Ok & Err types may be implicitly copied when "
       "using monadic operations, you must call Result::copied() yourself."
     );
+
     return copied(loc).map_err(std::forward<F>(functor), loc);
   }
 
@@ -613,11 +628,13 @@ public:
     F&& functor,
     const std::source_location loc = std::source_location::current()
   ) const& {
+
     static_assert(
       is_trivially_copyable,
       "Only results with trivial Ok & Err types may be implicitly copied when "
       "using monadic operations, you must call Result::copied() yourself."
     );
+
     return copied(loc).and_then(std::forward<F>(functor));
   }
 
@@ -704,8 +721,11 @@ namespace crab {
         return Result<Tuple<T...>, Error>{std::forward<Tuple<T...>>(tuple)};
       }
 
-      template<typename PrevResults, std::invocable F, std::invocable... Rest>
-      requires result_type<std::invoke_result_t<F>>
+      template<
+        typename PrevResults,
+        crab::ty::provider F,
+        crab::ty::provider... Rest>
+      requires result_type<crab::ty::functor_result<F>>
       [[nodiscard]] inline constexpr auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         F&& function,

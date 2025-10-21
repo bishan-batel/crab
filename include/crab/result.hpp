@@ -82,7 +82,7 @@ namespace crab {
     }
 
     else if constexpr (std::is_enum_v<E>) {
-      return std::format(
+      return fmt::format(
         "{}[{}]",
         typeid(E).name(),
         static_cast<std::underlying_type_t<E>>(err)

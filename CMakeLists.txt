@@ -38,7 +38,9 @@ elseif(BSD)
         target_compile_definitions(crab PUBLIC "_BSD=1")
 elseif(WIN32)
         target_compile_definitions(crab PUBLIC "_WIN32=1")
-elseif(UNIX)
+endif()
+
+if(UNIX)
         target_compile_definitions(crab PUBLIC "_UNIX=1")
 endif()
 

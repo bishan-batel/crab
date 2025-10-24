@@ -41,8 +41,7 @@ namespace crab {
      *
      * @return
      */
-    [[nodiscard]]
-    inline constexpr auto as_exception() const -> std::runtime_error {
+    [[nodiscard]] auto as_exception() const -> std::runtime_error {
       return std::runtime_error{what()};
     }
 

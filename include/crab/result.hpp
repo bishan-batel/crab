@@ -327,7 +327,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_unchecked(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> T& {
     ensure_valid(loc);
 
@@ -346,7 +346,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_err_unchecked(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> E& {
     ensure_valid(loc);
 
@@ -360,7 +360,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_unchecked(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const -> const T& {
     ensure_valid(loc);
 
@@ -379,7 +379,7 @@ public:
    * value this will panic and crash.
    */
   [[nodiscard]] inline constexpr auto get_err_unchecked(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const -> const E& {
     ensure_valid(loc);
 
@@ -389,7 +389,7 @@ public:
   }
 
   [[nodiscard]] inline constexpr auto unwrap(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && -> T {
     ensure_valid(loc);
 
@@ -404,7 +404,7 @@ public:
   }
 
   [[nodiscard]] inline constexpr auto unwrap_err(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && -> E {
     ensure_valid(loc);
 
@@ -421,7 +421,7 @@ public:
    * @brief Internal method for preventing use-after-movas
    */
   inline constexpr auto ensure_valid(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const -> void {
 
     debug_assert_transparent(
@@ -444,7 +444,7 @@ public:
   }
 
   [[nodiscard]] inline constexpr auto copied(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const -> Result {
     static_assert(
       is_copyable,
@@ -507,7 +507,7 @@ public:
   template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto map(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && {
     using R = crab::ty::mapper_codomain<F, T>;
 
@@ -530,7 +530,7 @@ public:
   template<crab::ty::mapper<E> F>
   [[nodiscard]] inline constexpr auto map_err(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && {
     using R = crab::ty::mapper_codomain<F, E>;
 
@@ -553,7 +553,7 @@ public:
   template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto map(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -572,7 +572,7 @@ public:
   template<crab::ty::mapper<E> F>
   [[nodiscard]] inline constexpr auto map_err(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const& {
     static_assert(
       is_trivially_copyable,
@@ -593,7 +593,7 @@ public:
   template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto and_then(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && {
     using R = crab::ty::mapper_codomain<F, T>;
 
@@ -625,7 +625,7 @@ public:
   template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto and_then(
     F&& functor,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const& {
 
     static_assert(
@@ -645,7 +645,7 @@ public:
    * type to simply 'none'.
    */
   [[nodiscard]] inline constexpr auto ok(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && -> Option<T> {
     ensure_valid(loc);
 
@@ -660,7 +660,7 @@ public:
    * to simply 'none'.
    */
   [[nodiscard]] inline constexpr auto err(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) && -> Option<E> {
     ensure_valid(loc);
 
@@ -675,7 +675,7 @@ public:
    * type to simply 'none'.
    */
   [[nodiscard]] inline constexpr auto ok(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const& -> Option<T> {
     static_assert(
       std::is_trivially_copyable_v<T>,
@@ -695,7 +695,7 @@ public:
    * to simply 'none'.
    */
   [[nodiscard]] inline constexpr auto err(
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) const& -> Option<E> {
     static_assert(
       std::is_trivially_copyable_v<E>,
@@ -831,7 +831,7 @@ namespace crab {
   template<typename T, typename E>
   [[nodiscard]] inline constexpr auto unwrap(
     Result<T, E>&& result,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> T {
     return std::forward<Result<T, E>>(result).unwrap(loc);
   }
@@ -839,7 +839,7 @@ namespace crab {
   template<typename T, typename E>
   [[nodiscard]] inline constexpr auto unwrap_err(
     Result<T, E>&& result,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> E {
     return std::forward<Result<T, E>>(result).unwrap_err(loc);
   }

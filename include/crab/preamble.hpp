@@ -9,6 +9,7 @@
 #include <numbers>
 #include <ostream>
 #include <ranges>
+#include <source_location>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -156,6 +157,8 @@ using InStringStream = std::istringstream;
  * @brief std::wstringstream
  */
 using WideStringStream = std::wstringstream;
+
+using SourceLocation = std::source_location;
 
 /**
  * @brief Function pointer that supports lambdas with captures

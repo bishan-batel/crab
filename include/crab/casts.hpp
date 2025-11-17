@@ -23,9 +23,7 @@ namespace crab {
     template<typename T>
     [[nodiscard]]
     constexpr auto from_ptr(const T* const from) -> Option<const T&> {
-      return crab::then(from != nullptr, [from]() -> const T& {
-        return *from;
-      });
+      return crab::then(from != nullptr, [from]() -> const T& { return *from; });
     }
 
     /**
@@ -85,9 +83,7 @@ namespace crab {
     template<class Derived, std::derived_from<Derived> Base>
     [[nodiscard]]
     constexpr auto cast(Option<Ref<Base>> from) -> Option<Ref<Derived>> {
-      return from.flat_map([](const auto& base) {
-        return cast<Derived, Base>(base);
-      });
+      return from.flat_map([](const auto& base) { return cast<Derived, Base>(base); });
     }
 
     /**
@@ -95,11 +91,8 @@ namespace crab {
      */
     template<class Derived, std::derived_from<Derived> Base>
     [[nodiscard]]
-    constexpr auto cast(Option<RefMut<Base>> from
-    ) noexcept -> Option<Ref<Derived>> {
-      return from.flat_map([](const auto& base) {
-        return cast<Derived, Base>(base);
-      });
+    constexpr auto cast(Option<RefMut<Base>> from) noexcept -> Option<Ref<Derived>> {
+      return from.flat_map([](const auto& base) { return cast<Derived, Base>(base); });
     }
 
     /**
@@ -155,9 +148,7 @@ namespace crab {
    * using static_cast
    */
   template<typename T>
-  [[nodiscard]] auto implicit_cast( //
-    std::type_identity_t<T> type
-  ) noexcept(std::is_nothrow_move_constructible_v<T>) -> T {
+  [[nodiscard]] auto implicit_cast(ty::identity<T> type) noexcept(std::is_nothrow_move_constructible_v<T>) -> T {
     return type;
   }
 

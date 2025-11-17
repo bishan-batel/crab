@@ -5,11 +5,11 @@
 #include <type_traits>
 #include <utility>
 
-#include <crab/preamble.hpp>
-#include <crab/type_traits.hpp>
-#include <crab/debug.hpp>
-#include <crab/ref.hpp>
 #include <crab/casts.hpp>
+#include <crab/debug.hpp>
+#include <crab/preamble.hpp>
+#include <crab/ref.hpp>
+#include <crab/type_traits.hpp>
 
 // NOLINTBEGIN(*explicit*)
 
@@ -28,8 +28,9 @@ class Box {
   T* obj;
 
   static_assert(
-    not std::is_const_v<T>,
-    "Box<T> does not support const undirected types, switch Box<const T> into "
+    not crab::ty::is_const<T>,
+    "Box<T> does not support const undirected types, switch "
+    "Box<const T> into "
     "Box<T>"
   );
 
@@ -62,10 +63,8 @@ public:
    * @brief Gives up ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  [[nodiscard]] static inline constexpr auto unwrap(
-    Box box,
-    const std::source_location loc = std::source_location::current()
-  ) -> T* {
+  [[nodiscard]] static inline constexpr auto unwrap(Box box, const SourceLocation loc = SourceLocation::current())
+    -> T* {
     return std::exchange(box.raw_ptr(loc), nullptr);
   }
 
@@ -76,16 +75,9 @@ public:
   constexpr Box(Box&& from) noexcept: obj{std::exchange(from.obj, nullptr)} {}
 
   template<std::derived_from<T> Derived>
-  constexpr Box(
-    Box<Derived> from,
-    const std::source_location loc = std::source_location::current()
-  ):
+  constexpr Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
       Box{Box<Derived>::unwrap(std::move(from))} {
-    debug_assert_transparent(
-      obj != nullptr,
-      loc,
-      "Invalid Box, moved from invalid box."
-    );
+    debug_assert_transparent(obj != nullptr, loc, "Invalid Box, moved from invalid box.");
   }
 
   constexpr explicit Box(T&& val):
@@ -93,11 +85,17 @@ public:
         std::forward<T>(val),
       }) {}
 
-  constexpr ~Box() { drop(); }
+  constexpr ~Box() {
+    drop();
+  }
 
-  constexpr operator T&() { return *raw_ptr(); }
+  constexpr operator T&() {
+    return *raw_ptr();
+  }
 
-  constexpr operator const T&() const { return *raw_ptr(); }
+  constexpr operator const T&() const {
+    return *raw_ptr();
+  }
 
   template<std::derived_from<T> Base>
   inline constexpr operator Base&() {
@@ -109,9 +107,13 @@ public:
     return *raw_ptr();
   }
 
-  inline constexpr operator Ref<T>() const { return *raw_ptr(); }
+  inline constexpr operator Ref<T>() const {
+    return *raw_ptr();
+  }
 
-  inline constexpr operator RefMut<T>() { return *raw_ptr(); }
+  inline constexpr operator RefMut<T>() {
+    return *raw_ptr();
+  }
 
   template<std::derived_from<T> Base>
   inline constexpr operator Ref<Base>() const {
@@ -143,44 +145,42 @@ public:
     }
 
     drop();
-    obj =
-      static_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
+    obj = static_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
 
     return *this;
   }
 
-  [[nodiscard]] inline constexpr auto operator->() -> T* { return as_ptr(); }
+  [[nodiscard]] inline constexpr auto operator->() -> T* {
+    return as_ptr();
+  }
 
   [[nodiscard]] inline constexpr auto operator->() const -> const T* {
     return as_ptr();
   }
 
-  [[nodiscard]] inline constexpr auto operator*() -> T& { return *as_ptr(); }
+  [[nodiscard]] inline constexpr auto operator*() -> T& {
+    return *as_ptr();
+  }
 
   [[nodiscard]] inline constexpr auto operator*() const -> const T& {
     return *as_ptr();
   }
 
-  inline friend constexpr auto operator<<(std::ostream& os, const Box& rhs)
-    -> std::ostream& {
+  inline friend constexpr auto operator<<(std::ostream& os, const Box& rhs) -> std::ostream& {
     return os << *rhs;
   }
 
   /**
    * @brief Gets the underlying raw pointer for this box.
    */
-  [[nodiscard]] inline constexpr auto as_ptr(
-    const std::source_location loc = std::source_location::current()
-  ) -> T* {
+  [[nodiscard]] inline constexpr auto as_ptr(const SourceLocation loc = SourceLocation::current()) -> T* {
     return raw_ptr(loc);
   }
 
   /**
    * @brief Gets the underlying raw pointer for this box.
    */
-  [[nodiscard]] inline constexpr auto as_ptr(
-    const std::source_location loc = std::source_location::current()
-  ) const -> const T* {
+  [[nodiscard]] inline constexpr auto as_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
     return raw_ptr(loc);
   }
 
@@ -189,9 +189,7 @@ public:
    */
   template<std::derived_from<T> Derived>
   [[nodiscard]]
-  inline constexpr auto downcast(
-    const std::source_location loc = std::source_location::current()
-  ) const -> Option<const Derived&> {
+  inline constexpr auto downcast(const SourceLocation loc = SourceLocation::current()) const -> Option<const Derived&> {
     return crab::ref::from_ptr(dynamic_cast<const Derived*>(raw_ptr(loc)));
   }
 
@@ -199,9 +197,8 @@ public:
    * @brief Attempts to downcast the pointer
    */
   template<std::derived_from<T> Derived>
-  [[nodiscard]] inline constexpr auto downcast(
-    const std::source_location loc = std::source_location::current()
-  ) -> Option<Derived&> {
+  [[nodiscard]]
+  inline constexpr auto downcast(const SourceLocation loc = SourceLocation::current()) -> Option<Derived&> {
     return crab::ref::from_ptr(dynamic_cast<Derived*>(raw_ptr(loc)));
   }
 
@@ -245,27 +242,15 @@ public:
 
 private:
 
-  [[nodiscard]] inline constexpr auto raw_ptr(
-    const std::source_location loc = std::source_location::current()
-  ) -> T*& {
+  [[nodiscard]] inline constexpr auto raw_ptr(const SourceLocation loc = SourceLocation::current()) -> T*& {
 
-    debug_assert_transparent(
-      obj != nullptr,
-      loc,
-      "Invalid Use of Moved Box<T>."
-    );
+    debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
 
     return reinterpret_cast<T*&>(obj);
   }
 
-  [[nodiscard]] inline constexpr auto raw_ptr(
-    const std::source_location loc = std::source_location::current()
-  ) const -> const T* {
-    debug_assert_transparent(
-      obj != nullptr,
-      loc,
-      "Invalid Use of Moved Box<T>."
-    );
+  [[nodiscard]] inline constexpr auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
+    debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
     return reinterpret_cast<const T*>(obj);
   }
 };
@@ -285,8 +270,7 @@ namespace crab {
    * @brief Makes a new instance of type T on the heap with given args
    */
   template<typename T, typename V>
-  requires std::convertible_to<T, V>
-         and (std::integral<T> or std::floating_point<T>)
+  requires std::convertible_to<T, V> and (std::integral<T> or std::floating_point<T>)
   [[nodiscard]] static inline constexpr auto make_box(V&& from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
   }

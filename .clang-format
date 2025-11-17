@@ -19,7 +19,7 @@ AllowShortLoopsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Empty
 AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: All
 AlwaysBreakTemplateDeclarations: Yes
 BreakTemplateDeclarations: Yes
@@ -54,10 +54,8 @@ BreakConstructorInitializersBeforeComma: false
 BreakInheritanceList: AfterComma
 BracedInitializerIndentWidth: 2
 BreakAfterAttributes: Leave
-# AlwaysBreakAfterDefinitionReturnType: None
-# AlwaysBreakAfterReturnType: None
 PenaltyReturnTypeOnItsOwnLine: 9990
-ColumnLimit: 80
+ColumnLimit: 120
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 IncludeCategories: 
   - Regex: '^<.*'

@@ -17,11 +17,7 @@ namespace crab::debug {
 
   public:
 
-    explicit AssertionFailedError(
-      std::source_location source_location,
-      StringView assertion_text,
-      String msg
-    ):
+    explicit AssertionFailedError(SourceLocation source_location, StringView assertion_text, String msg):
         fmt{fmt::format(
           "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}\n{}",
           source_location.file_name(),
@@ -37,37 +33,24 @@ namespace crab::debug {
     }
   };
 
-  [[noreturn]] inline unit dbg_assert(
-    std::source_location source_location,
-    StringView assertion_text,
-    String msg
-  ) {
+  [[noreturn]] inline unit dbg_assert(SourceLocation source_location, StringView assertion_text, String msg) {
     throw AssertionFailedError{source_location, assertion_text, msg};
   }
 
 } // namespace crab::debug
 
-#define debug_assert_transparent(condition, source_location, ...)              \
-  if (!static_cast<bool>(condition)) do {                                      \
-      crab::debug::dbg_assert(                                                 \
-        source_location,                                                       \
-        #condition,                                                            \
-        fmt::format(__VA_ARGS__)                                               \
-      );                                                                       \
+#define debug_assert_transparent(condition, source_location, ...)                                                      \
+  if (!static_cast<bool>(condition)) do {                                                                              \
+      crab::debug::dbg_assert(source_location, #condition, fmt::format(__VA_ARGS__));                                  \
   } while (false)
 
-#define debug_assert(condition, ...)                                           \
-  debug_assert_transparent(                                                    \
-    condition,                                                                 \
-    std::source_location::current(),                                           \
-    __VA_ARGS__                                                                \
-  )
+#define debug_assert(condition, ...) debug_assert_transparent(condition, SourceLocation::current(), __VA_ARGS__)
 
 #else
 
-#define debug_assert_transparent(condition, source_location, ...)              \
-  while (false) {                                                              \
-    std::ignore = source_location;                                             \
+#define debug_assert_transparent(condition, source_location, ...)                                                      \
+  while (false) {                                                                                                      \
+    std::ignore = source_location;                                                                                     \
   }
 
 #define debug_assert(...)

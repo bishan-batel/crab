@@ -13,10 +13,7 @@ namespace crab::fn {
    * @brief Identity Function, f(x)=x forall x
    */
   constexpr auto identity = []<typename T>(T&& x) {
-    static_assert(
-      std::move_constructible<T>,
-      "Cannot create an identity function for a type that cannot be moved."
-    );
+    static_assert(std::move_constructible<T>, "Cannot create an identity function for a type that cannot be moved.");
     return std::forward<T>(x);
   };
 
@@ -27,9 +24,7 @@ namespace crab::fn {
    * @param x Any integer value to check
    */
   constexpr auto constant{
-    []<std::copy_constructible T>(T x) {
-      return [x]<typename... Args>(Args&&...) -> T { return x; };
-    },
+    []<std::copy_constructible T>(T x) { return [x = std::move(x)]<typename... Args>(Args&&...) -> T { return x; }; },
   };
 
   /**
@@ -49,32 +44,27 @@ namespace crab::fn {
   template<typename Derived>
   struct cast_s final {
 
-    [[nodiscard]] inline constexpr auto operator()(auto& value) const
-      requires(not std::is_const_v<decltype(value)>)
+    [[nodiscard]] inline constexpr auto operator()(auto& value) const requires(not std::is_const_v<decltype(value)>)
     {
-      return crab::ref::cast<Derived>(value);
+      return ref::cast<Derived>(value);
     }
 
     [[nodiscard]] inline constexpr auto operator()(const auto& value) const {
-      return crab::ref::cast<Derived>(value);
+      return ref::cast<Derived>(value);
     }
 
     template<typename T>
     [[nodiscard]] inline constexpr auto operator()(RefMut<T> value) const {
-      return crab::ref::cast<Derived>(value);
+      return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()( //
-      Ref<T> value
-    ) const -> Option<Ref<Derived>> {
-      return crab::ref::cast<Derived>(value);
+    [[nodiscard]] inline constexpr auto operator()(Ref<T> value) const -> Option<Ref<Derived>> {
+      return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()( //
-      RcMut<T> value
-    ) const {
+    [[nodiscard]] inline constexpr auto operator()(RcMut<T> value) const {
       return value.template downcast<T>();
     }
 
@@ -108,6 +98,4 @@ namespace crab::fn {
    */
   template<typename Derived>
   inline static constexpr cast_s<Derived> cast{};
-  /// -------------------------------------------------------------------------
-  /// Range Functions
 }

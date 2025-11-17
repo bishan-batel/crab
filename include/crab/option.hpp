@@ -69,14 +69,12 @@ namespace crab::option::helper {
     /**
      * Initialise to Some(value)
      */
-    constexpr explicit GenericStorage(T&& value):
-        inner{std::forward<T>(value)} {}
+    constexpr explicit GenericStorage(T&& value): inner{std::forward<T>(value)} {}
 
     /**
      * Copy initialise to Some(value)
      */
-    constexpr explicit GenericStorage(const T& value)
-      requires crab::ty::copy_constructible<T>
+    constexpr explicit GenericStorage(const T& value) requires crab::ty::copy_constructible<T>
         : inner{value} {}
 
     constexpr explicit GenericStorage(const crab::None&): GenericStorage{} {}
@@ -112,7 +110,9 @@ namespace crab::option::helper {
       return std::get<T>(inner);
     }
 
-    [[nodiscard]] constexpr auto value() & -> T& { return std::get<T>(inner); }
+    [[nodiscard]] constexpr auto value() & -> T& {
+      return std::get<T>(inner);
+    }
 
     [[nodiscard]] constexpr auto value() && -> T {
       return std::get<T>(std::move(inner));
@@ -145,8 +145,7 @@ namespace crab::option::helper {
     /**
      * Copy initialise to Some(value)
      */
-    inline constexpr explicit GenericStorage(const T& value)
-      requires crab::ty::copy_constructible<T>
+    inline constexpr explicit GenericStorage(const T& value) requires crab::ty::copy_constructible<T>
         : in_use_flag(true) {
       std::construct_at<T, const T&>(address(), value);
     }
@@ -154,18 +153,15 @@ namespace crab::option::helper {
     /**
      * Default initialises to none
      */
-    inline constexpr explicit GenericStorage(const crab::None& = crab::none):
-        in_use_flag{false} {}
+    inline constexpr explicit GenericStorage(const crab::None& = crab::none): in_use_flag{false} {}
 
-    inline constexpr GenericStorage(const GenericStorage& from):
-        in_use_flag{from.in_use_flag} {
+    inline constexpr GenericStorage(const GenericStorage& from): in_use_flag{from.in_use_flag} {
       if (in_use()) {
         std::construct_at<T, const T&>(address(), from.value());
       }
     }
 
-    inline constexpr GenericStorage(GenericStorage&& from) noexcept:
-        in_use_flag{from.in_use_flag} {
+    inline constexpr GenericStorage(GenericStorage&& from) noexcept: in_use_flag{from.in_use_flag} {
       if (in_use()) {
         std::construct_at<T, T&&>(address(), std::move(*from.address()));
         std::destroy_at(from.address());
@@ -265,7 +261,9 @@ namespace crab::option::helper {
       return *address();
     }
 
-    [[nodiscard]] inline constexpr auto value() & -> T& { return *address(); }
+    [[nodiscard]] inline constexpr auto value() & -> T& {
+      return *address();
+    }
 
     [[nodiscard]] inline constexpr auto value() && -> T {
       T value = std::move(*address());
@@ -298,8 +296,7 @@ namespace crab::option::helper {
   struct RefStorage {
     inline constexpr explicit RefStorage(T& value): inner{&value} {}
 
-    inline constexpr explicit RefStorage(const None& = crab::none):
-        inner{nullptr} {}
+    inline constexpr explicit RefStorage(const None& = crab::none): inner{nullptr} {}
 
     inline RefStorage(const RefStorage& from) = default;
 
@@ -323,9 +320,13 @@ namespace crab::option::helper {
       return *this;
     }
 
-    [[nodiscard]] inline constexpr auto value() const& -> T& { return *inner; }
+    [[nodiscard]] inline constexpr auto value() const& -> T& {
+      return *inner;
+    }
 
-    [[nodiscard]] inline constexpr auto value() & -> T& { return *inner; }
+    [[nodiscard]] inline constexpr auto value() & -> T& {
+      return *inner;
+    }
 
     [[nodiscard]] inline constexpr auto value() && -> T& {
       return *std::exchange(inner, nullptr);
@@ -341,10 +342,7 @@ namespace crab::option::helper {
   };
 
   template<typename T>
-  using Storage = ty::conditional<
-    ty::is_reference<T>,
-    RefStorage<ty::remove_reference<T>>,
-    GenericStorage<T>>;
+  using Storage = ty::conditional<ty::is_reference<T>, RefStorage<ty::remove_reference<T>>, GenericStorage<T>>;
 }
 
 /**
@@ -405,8 +403,7 @@ public:
    * convert implicitly to Option<RefMut<T>> (mainly for backwards
    * compatability)
    */
-  [[nodiscard]] inline constexpr operator Option<
-    RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
+  [[nodiscard]] inline constexpr operator Option<RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
   {
     return map<RefMut<std::remove_cvref_t<T>>>();
   }
@@ -416,8 +413,7 @@ public:
    * to be able to convert implicitly to Option<Ref<T>> (mainly for backwards
    * compatability)
    */
-  [[nodiscard]] inline constexpr operator Option<Ref<std::remove_cvref_t<T>>>()
-    requires(is_ref)
+  [[nodiscard]] inline constexpr operator Option<Ref<std::remove_cvref_t<T>>>() requires(is_ref)
   {
     return map<Ref<std::remove_cvref_t<T>>>();
   }
@@ -426,8 +422,7 @@ public:
    * Conversion constructor for options of the form Option<Ref<T>> to be able to
    * convert implicitly to Option<const T&>
    */
-  [[nodiscard]] inline constexpr operator Option<crab::ref_decay<T>>()
-    requires(crab::crab_ref<T>)
+  [[nodiscard]] inline constexpr operator Option<crab::ref_decay<T>>() requires(crab::crab_ref<T>)
   {
     return map<const T&>();
   }
@@ -436,8 +431,7 @@ public:
    * Conversion constructor for options of the form Option<Ref<T>> to be able to
    * convert implicitly to Option<T&>
    */
-  [[nodiscard]] inline constexpr operator Option<crab::ref_decay<T>>()
-    requires(crab::crab_ref_mut<T>)
+  [[nodiscard]] inline constexpr operator Option<crab::ref_decay<T>>() requires(crab::crab_ref_mut<T>)
   {
     return map<T&>();
   }
@@ -466,6 +460,7 @@ public:
    * Move constructor
    */
   inline constexpr Option(Option&& from) = default;
+
   /**
    * Implicit move assignment
    */
@@ -530,8 +525,7 @@ public:
    *
    * This function returns Option<T&>
    */
-  [[nodiscard]] inline constexpr auto as_mut() & -> Option<T&>
-    requires(not is_ref)
+  [[nodiscard]] inline constexpr auto as_mut() & -> Option<T&> requires(not is_ref)
   {
     if (is_none()) {
       return crab::none;
@@ -544,13 +538,9 @@ public:
    * @brief Consumes inner value and returns it, if this option was none this
    * will instead return a new default constructed T
    */
-  [[nodiscard]] inline constexpr auto take_or_default() && -> T
-    requires crab::ty::default_constructible<T>
+  [[nodiscard]] inline constexpr auto take_or_default() && -> T requires crab::ty::default_constructible<T>
   {
-    static_assert(
-      crab::ty::default_constructible<T>,
-      "take_or_default requires that T is default constructible"
-    );
+    static_assert(crab::ty::default_constructible<T>, "take_or_default requires that T is default constructible");
 
     return std::move(*this).take_or([] { return T{}; });
   }
@@ -561,8 +551,7 @@ public:
    * @param default_value
    */
   [[nodiscard]] inline constexpr auto take_or(T default_value) && -> T {
-    return is_some() ? std::move(*this).unwrap()
-                     : std::forward<T>(default_value);
+    return is_some() ? std::move(*this).unwrap() : std::forward<T>(default_value);
   }
 
   /**
@@ -572,16 +561,14 @@ public:
    */
   template<crab::ty::provider<T> F>
   [[nodiscard]] inline constexpr auto take_or(F&& default_generator) && -> T {
-    return is_some() ? T{std::move(*this).unwrap()}
-                     : std::invoke(default_generator);
+    return is_some() ? T{std::move(*this).unwrap()} : std::invoke(default_generator);
   }
 
   /**
    * @brief Is this option has a value, return a copy of that value. if
    * this opton was none then this returns a default constructed T
    */
-  [[nodiscard]] constexpr inline auto get_or_default() const -> T
-    requires crab::ty::copy_constructible<T>
+  [[nodiscard]] constexpr inline auto get_or_default() const -> T requires crab::ty::copy_constructible<T>
   {
     return copied().take_or_default();
   }
@@ -590,8 +577,7 @@ public:
    * @brief Gets the contained value if exists, else returns a default value
    * @param default_value
    */
-  [[nodiscard]] inline constexpr auto get_or(T default_value) const -> T
-    requires crab::ty::copy_constructible<T>
+  [[nodiscard]] inline constexpr auto get_or(T default_value) const -> T requires crab::ty::copy_constructible<T>
   {
     return copied().take_or(std::forward<T>(default_value));
   }
@@ -602,13 +588,9 @@ public:
    * @param default_generator Function to create the default value
    */
   template<crab::ty::provider<T> F>
-  [[nodiscard]] inline constexpr auto get_or(F&& default_generator) const -> T
-    requires crab::ty::copy_constructible<T>
+  [[nodiscard]] inline constexpr auto get_or(F&& default_generator) const -> T requires crab::ty::copy_constructible<T>
   {
-    static_assert(
-      std::is_invocable_r_v<T, F>,
-      "A function with Option<T>::get_or must return T"
-    );
+    static_assert(std::is_invocable_r_v<T, F>, "A function with Option<T>::get_or must return T");
     return copied().take_or(std::forward<F>(default_generator));
   }
 
@@ -617,9 +599,7 @@ public:
    * is none, After this, the value has been 'taken out' of this option, after
    * this method is called this option is 'None'
    */
-  [[nodiscard]] inline constexpr auto unwrap(
-    std::source_location loc = std::source_location::current()
-  ) && -> T {
+  [[nodiscard]] inline constexpr auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
     debug_assert_transparent(is_some(), loc, "Cannot unwrap a none option");
     return std::exchange(value, crab::None{}).value();
   }
@@ -628,14 +608,8 @@ public:
    * @brief Returns a mutable reference to the contained Some value inside, if
    * this option is none this will panic & crash.
    */
-  [[nodiscard]] inline constexpr auto get_unchecked(
-    std::source_location loc = std::source_location::current()
-  ) -> T& {
-    debug_assert_transparent(
-      is_some(),
-      loc,
-      "Cannot get_unchecked a none option"
-    );
+  [[nodiscard]] inline constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) -> T& {
+    debug_assert_transparent(is_some(), loc, "Cannot get_unchecked a none option");
 
     return value.value();
   }
@@ -644,14 +618,8 @@ public:
    * @brief Returns a const reference to the contained Some value inside, if
    * this option is none this will panic & crash.
    */
-  [[nodiscard]] inline constexpr auto get_unchecked(
-    std::source_location loc = std::source_location::current()
-  ) const -> const T& {
-    debug_assert_transparent(
-      is_some(),
-      loc,
-      "Cannot get_unchecked a none option"
-    );
+  [[nodiscard]] inline constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) const -> const T& {
+    debug_assert_transparent(is_some(), loc, "Cannot get_unchecked a none option");
     return value.value();
   }
 
@@ -662,11 +630,13 @@ public:
    * @param error Error to replace an instance of None
    */
   template<typename E>
-  [[nodiscard]] inline constexpr auto ok_or(E&& error) const -> Result<T, E>
-    requires crab::ty::copy_constructible<T>
+  [[nodiscard]] inline constexpr auto ok_or(E&& error) const -> Result<T, E> requires crab::ty::copy_constructible<T>
   {
-    return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
-                     : Result<T, E>{crab::Err<E>{std::forward<E>(error)}};
+    if (is_some()) {
+      return crab::Ok<T>{get_unchecked()};
+    }
+
+    return crab::Err<E>{std::forward<E>(error)};
   }
 
   /**
@@ -677,11 +647,13 @@ public:
    */
   template<typename E, crab::ty::provider<E> F>
   [[nodiscard]]
-  inline constexpr auto ok_or(F&& error_generator) const -> Result<T, E>
-    requires crab::ty::copy_constructible<T>
+  inline constexpr auto ok_or(F&& error_generator) const -> Result<T, E> requires crab::ty::copy_constructible<T>
   {
-    return is_some() ? Result<T, E>{crab::Ok<T>{get_unchecked()}}
-                     : Result<T, E>{crab::Err<E>{std::invoke(error_generator)}};
+    if (is_some()) {
+      return crab::Ok<T>{get_unchecked()};
+    }
+
+    return crab::Err<E>{std::invoke(error_generator)};
   }
 
   /**
@@ -733,8 +705,7 @@ public:
   [[nodiscard]] inline constexpr auto map(F&& mapper) && {
     using Returned = Option<crab::ty::mapper_codomain<F, T>>;
 
-    return is_some() ? Returned{std::invoke(mapper, std::move(*this).unwrap())}
-                     : Returned{};
+    return is_some() ? Returned{std::invoke(mapper, std::move(*this).unwrap())} : Returned{};
   }
 
   /**
@@ -769,9 +740,7 @@ public:
       "'Option<T>::map<Into>()' can only be done if T is convertible to Into"
     );
 
-    return std::move(*this).map([](T&& value) {
-      return static_cast<Into>(std::forward<T>(value));
-    });
+    return std::move(*this).map([](T&& value) { return static_cast<Into>(std::forward<T>(value)); });
   }
 
   template<typename Into>
@@ -786,10 +755,7 @@ public:
   template<crab::ty::mapper<T> F>
   [[nodiscard]] inline constexpr auto flat_map(F&& mapper) && {
     using Returned = crab::ty::mapper_codomain<F, T>;
-    static_assert(
-      crab::option_type<Returned>,
-      "The function passed to flat_map must return an Option"
-    );
+    static_assert(crab::option_type<Returned>, "The function passed to flat_map must return an Option");
 
     if (is_some()) {
       return Returned{std::invoke(mapper, std::move(*this).unwrap())};
@@ -814,10 +780,7 @@ public:
   [[nodiscard]] inline constexpr auto or_else(F&& mapper) && {
     using Returned = crab::ty::functor_result<F>;
 
-    static_assert(
-      crab::option_type<Returned>,
-      "The function passed to or_else must return an Option"
-    );
+    static_assert(crab::option_type<Returned>, "The function passed to or_else must return an Option");
 
     if (is_some()) {
       return Returned{std::move(*this).unwrap()};
@@ -839,8 +802,7 @@ public:
    * @brief If this option is of some type Option<Option<T>>, this will flatten
    * it to a single Option<T>
    */
-  [[nodiscard]] inline constexpr auto flatten() && -> T
-    requires crab::option_type<T>
+  [[nodiscard]] inline constexpr auto flatten() && -> T requires crab::option_type<T>
   {
     if (is_none()) {
       return crab::none;
@@ -864,8 +826,7 @@ public:
    * @brief Copies this option and returns, use this before map if you do not
    * want to consume the option.
    */
-  [[nodiscard]] inline constexpr auto copied() const -> Option
-    requires crab::ty::copy_constructible<T>
+  [[nodiscard]] inline constexpr auto copied() const -> Option requires crab::ty::copy_constructible<T>
   {
     static_assert(
       crab::ty::copy_constructible<T>,
@@ -960,10 +921,7 @@ public:
       return crab::None{};
     }
 
-    return std::tuple<T, Vals...>{
-      std::move(*this).unwrap(),
-      std::move(other).unwrap()...
-    };
+    return std::tuple<T, Vals...>{std::move(*this).unwrap(), std::move(other).unwrap()...};
   }
 
   ///
@@ -992,8 +950,7 @@ public:
    */
   template<typename S>
   [[nodiscard]]
-  inline constexpr auto operator and(Option<S> other) const& -> Option<S>
-    requires crab::ty::copy_constructible<T>
+  inline constexpr auto operator and(Option<S> other) const& -> Option<S> requires crab::ty::copy_constructible<T>
   {
     return copied() and std::move(other);
   }
@@ -1015,8 +972,7 @@ public:
    * other option is some it will return that, else this returns none
    */
   [[nodiscard]]
-  inline constexpr auto operator or(Option other) const& -> Option
-    requires crab::ty::copy_constructible<T>
+  inline constexpr auto operator or(Option other) const& -> Option requires crab::ty::copy_constructible<T>
   {
     return copied() or std::move(other);
   }
@@ -1040,8 +996,7 @@ public:
    * The same as or but if both options are some then this will be none
    */
   [[nodiscard]]
-  inline constexpr auto operator xor(Option other) const& -> Option
-    requires crab::ty::copy_constructible<T>
+  inline constexpr auto operator xor(Option other) const& -> Option requires crab::ty::copy_constructible<T>
   {
     return copied() xor std::move(other);
   }
@@ -1053,10 +1008,7 @@ public:
   template<typename S>
   [[nodiscard]]
   inline constexpr auto operator==(const Option<S>& other) const -> bool {
-    static_assert(
-      std::equality_comparable_with<T, S>,
-      "Cannot equate to options if the inner types are not equatable"
-    );
+    static_assert(std::equality_comparable_with<T, S>, "Cannot equate to options if the inner types are not equatable");
     if (is_none() or other.is_none()) {
       return is_none() == other.is_none();
     }
@@ -1168,56 +1120,48 @@ public:
       return std::partial_ordering::greater;
     }
 
-    return static_cast<std::partial_ordering>(
-      get_unchecked() <=> other.get_unchecked()
-    );
+    return static_cast<std::partial_ordering>(get_unchecked() <=> other.get_unchecked());
   }
 
   /**
    * @brief Option<T> == None only if the former is none
    */
-  [[nodiscard]] inline constexpr auto operator==(const crab::None&) const
-    -> bool {
+  [[nodiscard]] inline constexpr auto operator==(const crab::None&) const -> bool {
     return is_none();
   }
 
   /**
    * @brief Option<T> != None only if the former is some
    */
-  [[nodiscard]] inline constexpr auto operator!=(const crab::None&) const
-    -> bool {
+  [[nodiscard]] inline constexpr auto operator!=(const crab::None&) const -> bool {
     return is_some();
   }
 
   /**
    * @brief Option<T> > None only if the former is some
    */
-  [[nodiscard]] inline constexpr auto operator>(const crab::None&) const
-    -> bool {
+  [[nodiscard]] inline constexpr auto operator>(const crab::None&) const -> bool {
     return is_some();
   }
 
   /**
    * @brief Option<T> >= None is always true
    */
-  [[nodiscard]] inline constexpr auto operator>=(const crab::None&) const
-    -> bool {
+  [[nodiscard]] inline constexpr auto operator>=(const crab::None&) const -> bool {
     return true;
   }
 
   /**
    * @brief Option<T> < None is never true
    */
-  [[nodiscard]] inline constexpr auto operator<(const crab::None&) const
-    -> bool {
+  [[nodiscard]] inline constexpr auto operator<(const crab::None&) const -> bool {
     return false;
   }
 
   /**
    * @brief Option<T> <= None is never true
    */
-  [[nodiscard]] inline constexpr auto operator<=(const crab::None&) const
-    -> bool {
+  [[nodiscard]] inline constexpr auto operator<=(const crab::None&) const -> bool {
     return is_none();
   }
 
@@ -1229,8 +1173,7 @@ private:
 #undef CRAB_OPTION_ASSERT_COPYABLE
 
 template<typename T>
-inline constexpr auto operator<<(std::ostream& os, const Option<T>& opt)
-  -> std::ostream& {
+inline constexpr auto operator<<(std::ostream& os, const Option<T>& opt) -> std::ostream& {
   if (opt.is_none()) {
     return os << "None";
   }
@@ -1343,10 +1286,7 @@ namespace crab {
         Rest&&... other_functions
       ) const {
         return operator()(
-          std::tuple_cat(
-            std::move(tuple),
-            Tuple<crab::ty::functor_result<F>>(std::invoke(function))
-          ),
+          std::tuple_cat(std::move(tuple), Tuple<crab::ty::functor_result<F>>(std::invoke(function))),
           std::forward<Rest>(other_functions)...
         );
       }

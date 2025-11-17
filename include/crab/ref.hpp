@@ -16,7 +16,7 @@ template<crab::ref::is_valid_type T>
 class Ref final {
   constexpr explicit Ref(
     const T* const pointer,
-    std::source_location loc = std::source_location::current()
+    SourceLocation loc = SourceLocation::current()
   ):
       pointer(pointer) {
     debug_assert_transparent(
@@ -70,7 +70,7 @@ template<crab::ref::is_valid_type T>
 class RefMut final {
   constexpr explicit RefMut(
     T* const pointer,
-    std::source_location loc = std::source_location::current()
+    SourceLocation loc = SourceLocation::current()
   ):
       pointer(pointer) {
     debug_assert_transparent(

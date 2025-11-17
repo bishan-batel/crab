@@ -7,6 +7,7 @@
 
 #include <crab/preamble.hpp>
 #include <crab/debug.hpp>
+#include "crab/type_traits.hpp"
 
 template<std::integral T = usize>
 class Range final {
@@ -19,7 +20,7 @@ public:
    */
   struct Iterator {
     using iterator_category = std::output_iterator_tag;
-    using difference_type = std::ptrdiff_t;
+    using difference_type = ptrdiff;
     using value_type = T;
     using pointer = T;
     using reference = T;
@@ -35,7 +36,7 @@ public:
       return *this;
     }
 
-    constexpr auto operator++(int) -> Iterator {
+    [[nodiscard]] constexpr auto operator++(int) -> Iterator {
       Iterator tmp = *this;
       ++*this;
       return tmp;
@@ -66,7 +67,7 @@ public:
   constexpr Range(
     T min,
     T max,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ):
       min(min), max(max) {
     debug_assert_transparent(
@@ -127,9 +128,9 @@ namespace crab {
    */
   template<std::integral T = usize>
   [[nodiscard]] constexpr auto range(
-    std::type_identity_t<T> min,
-    std::type_identity_t<T> max,
-    const std::source_location loc = std::source_location::current()
+    ty::identity<T> min,
+    ty::identity<T> max,
+    const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
     return Range<T>{min, max, loc};
   }
@@ -149,7 +150,7 @@ namespace crab {
   [[nodiscard]]
   constexpr auto range(
     std::type_identity_t<T> max,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
     return range<T>(0, max, loc);
   }
@@ -169,7 +170,7 @@ namespace crab {
   [[nodiscard]] constexpr auto range_inclusive(
     std::type_identity_t<T> min,
     std::type_identity_t<T> max,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
     return range(min, max + 1, loc);
   }
@@ -188,7 +189,7 @@ namespace crab {
   template<std::integral T = usize>
   [[nodiscard]] constexpr auto range_inclusive(
     std::type_identity_t<T> max,
-    const std::source_location loc = std::source_location::current()
+    const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
     return range(max + 1, loc);
   }

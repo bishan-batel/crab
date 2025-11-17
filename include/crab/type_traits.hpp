@@ -51,11 +51,19 @@ namespace crab::ty {
   template<typename T>
   concept unqualified = different_than<T, std::remove_cv_t<T>>;
 
+  namespace helper {
+    template<typename T>
+    struct is_const : std::false_type {};
+
+    template<typename T>
+    struct is_const<const T> : std::true_type {};
+  }
+
   /**
    * @brief Requirement for the type to be 'const' (const T, const T&)
    */
   template<typename T>
-  concept is_const = std::is_const_v<T>;
+  concept is_const = helper::is_const<T>::value;
 
   /**
    * @brief Requirement for the type to not be 'const' (T, T&)
@@ -63,18 +71,34 @@ namespace crab::ty {
   template<typename T>
   concept non_const = not is_const<T>;
 
+  namespace helper {
+    template<typename T>
+    struct is_volatile : std::false_type {};
+
+    template<typename T>
+    struct is_volatile<volatile T> : std::true_type {};
+  }
+
   /**
    * @brief Requirement for the type to be volatile (volatile T, volatile T&,
    * ...)
    */
   template<typename T>
-  concept is_volatile = std::is_volatile_v<T>;
+  concept is_volatile = helper::is_volatile<T>::value;
 
   /**
    * @brief Requirement for the type to be volatile (T,  T&, ...)
    */
   template<typename T>
   concept non_volatile = not is_volatile<T>;
+
+  namespace helper {
+    template<typename T>
+    struct is_reference : std::false_type {};
+
+    template<typename T>
+    struct is_reference<T&> : std::true_type {};
+  }
 
   /**
    * @brief Requirement for the type to be some reference type (T&, const T&).
@@ -89,6 +113,9 @@ namespace crab::ty {
    */
   template<typename T>
   concept non_reference = not is_reference<T>;
+
+  template<typename T>
+  concept array = std::is_array_v<T>;
 
   /**
    * @brief Requirement for the type T to be copy constructible and assignable
@@ -152,10 +179,7 @@ namespace crab::ty {
   template<typename F, typename ReturnType, typename... Args>
   concept functor = requires(F&& function, Args&&... args) {
     {
-      std::invoke<F, Args...>(
-        std::forward<F>(function),
-        std::forward<Args>(args)...
-      )
+      std::invoke<F, Args...>(std::forward<F>(function), std::forward<Args>(args)...)
     } -> std::convertible_to<ReturnType>;
   };
 
@@ -166,10 +190,7 @@ namespace crab::ty {
    */
   template<typename F, typename... Args>
   concept consumer = requires(F&& function, Args&&... args) {
-    std::invoke<F, Args...>(
-      std::forward<F>(function),
-      std::forward<Args>(args)...
-    );
+    std::invoke<F, Args...>(std::forward<F>(function), std::forward<Args>(args)...);
   };
 
   /**
@@ -201,8 +222,7 @@ namespace crab::ty {
    * the functor must result in a value that is not void.
    */
   template<typename F, typename Arg, typename... Other>
-  concept mapper =
-    consumer<F, Arg, Other...> and not_void<mapper_codomain<F, Arg, Other...>>;
+  concept mapper = consumer<F, Arg, Other...> and not_void<mapper_codomain<F, Arg, Other...>>;
 
   namespace helper {
     /**
@@ -218,9 +238,7 @@ namespace crab::ty {
    */
   template<typename F, typename Return = helper::generator_default>
   concept generator =
-    (same_as<Return, helper::generator_default> ? consumer<F>
-                                                : functor<F, Return>)
-    and not_void<functor_result<F>>;
+    (same_as<Return, helper::generator_default> ? consumer<F> : functor<F, Return>) and not_void<functor_result<F>>;
 
   /**
    * @brif Trait for a functor that simply generates a *single* value of F

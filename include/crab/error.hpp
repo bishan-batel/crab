@@ -23,10 +23,13 @@ namespace crab {
    * Does not return, use when you are waiting to implement a function.
    */
   template<typename... ArgsToIgnore>
-  [[noreturn]] unit todo(const String& msg, ArgsToIgnore&&...) {
+  [[noreturn]] unit todo(const String& msg, ArgsToIgnore&&... args) {
+    ((std::ignore = args), ...);
+
 #if _DEBUG
     throw error::todo_exception{msg};
 #else
+    std::ignore = msg;
     static_assert(false, "Cannot compile on release with lingering TODOs");
 #endif
   };

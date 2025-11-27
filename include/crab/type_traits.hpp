@@ -9,6 +9,20 @@
 
 #include <crab/preamble.hpp>
 
+namespace crab {
+  template<typename... Args>
+  auto ignore(Args&&... args) -> void {
+    ((std::ignore = args), ...);
+  }
+}
+
+#define CRAB_TRAIT_FN(...)                                                                                             \
+  {                                                                                                                    \
+    static_assert(false, "Comptime trait function must be implemented.");                                              \
+    crab::ignore(__VA_ARGS__);                                                                                         \
+    std::unreachable();                                                                                                \
+  }
+
 namespace crab::ty {
 
   /**

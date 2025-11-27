@@ -2,6 +2,7 @@
 Language: Cpp
 BasedOnStyle: LLVM
 LineEnding: LF
+StatementMacros: ['CRAB_TRAIT_FN']
 AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Left
 AlignConsecutiveAssignments: false

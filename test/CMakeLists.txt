@@ -22,4 +22,4 @@ add_executable(crab-tests
         fallible.cpp
 )
 target_link_libraries(crab-tests PRIVATE Catch2::Catch2WithMain crab)
-target_compile_options(crab-tests PRIVATE -Wall -Werror -Wpedantic -Wextra -O3)
+target_compile_options(crab-tests PUBLIC -Wall -Werror -Wpedantic -Wextra -O3 -fsanitize-trap=undefined)

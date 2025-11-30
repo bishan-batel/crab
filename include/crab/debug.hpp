@@ -39,11 +39,31 @@ namespace crab::debug {
 
 } // namespace crab::debug
 
+/**
+ * Asserts that the given condition is true when compiled in debug mode, if not then this will halt the program & print
+ * the given error.
+ *
+ * This is a slightly more complicated version of `debug_assert`, the difference being this requires an explicit
+ * SourceLocation to be passed in for the error message, which is useful when using asserts in a a nested library
+ * definition.
+ *
+ * The first argument is the runtime expression that must evaluate to true, then second is the C++20
+ * fmt::format format string for the error message. The following arguments are format args akin to passing in
+ * fmt::format(fmt_string, a1, a2, ...)
+ */
 #define debug_assert_transparent(condition, source_location, ...)                                                      \
   if (!static_cast<bool>(condition)) do {                                                                              \
       crab::debug::dbg_assert(source_location, #condition, fmt::format(__VA_ARGS__));                                  \
   } while (false)
 
+/**
+ * Asserts that the given condition is true when compiled in debug mode, if not then this will halt the program & print
+ * the given error.
+ *
+ * The first argument is the runtime expression that must evaluate to true, then second is the C++20
+ * fmt::format format string for the error message. The following arguments are format args akin to passing in
+ * fmt::format(fmt_string, a1, a2, ...)
+ */
 #define debug_assert(condition, ...) debug_assert_transparent(condition, SourceLocation::current(), __VA_ARGS__)
 
 #else

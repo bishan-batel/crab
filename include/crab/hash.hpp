@@ -1,8 +1,7 @@
 #pragma once
 
-#include <type_traits>
-
 #include <crab/preamble.hpp>
+#include "crab/type_traits.hpp"
 
 namespace crab {
 
@@ -15,7 +14,7 @@ namespace crab {
    * @brief Any type that can be converted to a hash_code (usize)
    */
   template<typename T>
-  concept into_hash_code = std::convertible_to<T, hash_code>;
+  concept into_hash_code = ty::convertible<T, hash_code>;
 
   namespace ty {
     /**
@@ -23,7 +22,7 @@ namespace crab {
      */
     template<typename T>
     concept hashable = requires(const T& v) {
-      { std::hash<T>{}(v) } -> std::convertible_to<hash_code>;
+      { std::hash<T>{}(v) } -> ty::convertible<hash_code>;
     };
   }
 

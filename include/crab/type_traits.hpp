@@ -150,6 +150,18 @@ namespace crab::ty {
   concept copy_assignable = std::is_copy_assignable_v<T>;
 
   /**
+   * @brief Requirement that From can be converted into To with static_cast by some means
+   */
+  template<typename From, typename To>
+  concept convertible = std::convertible_to<From, To>;
+
+  /**
+   * @brief Requirement that From can be noexceptly converted into To with static_cast by some means
+   */
+  template<typename From, typename To>
+  concept convertible_nothrow = std::is_nothrow_convertible_v<From, To>;
+
+  /**
    * @brief Requirement for T to be a movable type (constructible and
    * assignable)
    */
@@ -192,9 +204,7 @@ namespace crab::ty {
    */
   template<typename F, typename ReturnType, typename... Args>
   concept functor = requires(F&& function, Args&&... args) {
-    {
-      std::invoke<F, Args...>(std::forward<F>(function), std::forward<Args>(args)...)
-    } -> std::convertible_to<ReturnType>;
+    { std::invoke<F, Args...>(std::forward<F>(function), std::forward<Args>(args)...) } -> convertible<ReturnType>;
   };
 
   /**

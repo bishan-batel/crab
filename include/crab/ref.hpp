@@ -14,16 +14,8 @@
  */
 template<crab::ref::is_valid_type T>
 class Ref final {
-  constexpr explicit Ref(
-    const T* const pointer,
-    SourceLocation loc = SourceLocation::current()
-  ):
-      pointer(pointer) {
-    debug_assert_transparent(
-      pointer,
-      loc,
-      "Invalid State: Cannot create a NULL Ref object"
-    );
+  constexpr explicit Ref(const T* const pointer, SourceLocation loc = SourceLocation::current()): pointer(pointer) {
+    debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL Ref object");
   }
 
 public:
@@ -34,26 +26,47 @@ public:
 
   constexpr Ref(const T& ref): Ref(&ref) {}
 
-  [[nodiscard]] constexpr operator const T&() const { return get_ref(); };
+  /**
+   * You cannot construct a reference to a prvalue / temporary
+   */
+  constexpr Ref(T&& ref) = delete;
 
-  [[nodiscard]] constexpr operator const T*() const { return as_ptr(); };
+  /**
+   * You cannot construct a reference to an rvalue
+   */
+  constexpr Ref(const T&& ref) = delete;
 
-  [[nodiscard]] constexpr const T& operator*() const { return get_ref(); }
+  [[nodiscard]] constexpr operator const T&() const {
+    return get_ref();
+  };
 
-  [[nodiscard]] constexpr const T* operator->() const { return as_ptr(); }
+  [[nodiscard]] constexpr operator const T*() const {
+    return as_ptr();
+  };
+
+  [[nodiscard]] constexpr const T& operator*() const {
+    return get_ref();
+  }
+
+  [[nodiscard]] constexpr const T* operator->() const {
+    return as_ptr();
+  }
 
   /**
    * Gets underlying pointer, this pointer is always non null
    */
-  [[nodiscard]] constexpr const T* as_ptr() const { return pointer; }
+  [[nodiscard]] constexpr const T* as_ptr() const {
+    return pointer;
+  }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] constexpr const T& get_ref() const { return *pointer; }
+  [[nodiscard]] constexpr const T& get_ref() const {
+    return *pointer;
+  }
 
-  friend constexpr auto operator<<(std::ostream& os, const Ref& val)
-    -> std::ostream& {
+  friend constexpr auto operator<<(std::ostream& os, const Ref& val) -> std::ostream& {
     if constexpr (requires(const T& val) { os << val; }) {
       return os << *val;
     } else {
@@ -68,16 +81,8 @@ private:
 
 template<crab::ref::is_valid_type T>
 class RefMut final {
-  constexpr explicit RefMut(
-    T* const pointer,
-    SourceLocation loc = SourceLocation::current()
-  ):
-      pointer(pointer) {
-    debug_assert_transparent(
-      pointer,
-      loc,
-      "Invalid State: Cannot create a NULL RefMut object"
-    );
+  constexpr explicit RefMut(T* const pointer, SourceLocation loc = SourceLocation::current()): pointer(pointer) {
+    debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL RefMut object");
   }
 
 public:
@@ -88,31 +93,47 @@ public:
     return RefMut(pointer);
   }
 
-  [[nodiscard]] constexpr operator T&() const { return get_mut_ref(); };
+  [[nodiscard]] constexpr operator T&() const {
+    return get_mut_ref();
+  };
 
-  [[nodiscard]] constexpr operator T*() const { return as_ptr(); };
+  [[nodiscard]] constexpr operator T*() const {
+    return as_ptr();
+  };
 
-  [[nodiscard]] constexpr operator Ref<T>() const { return as_ref(); };
+  [[nodiscard]] constexpr operator Ref<T>() const {
+    return as_ref();
+  };
 
-  [[nodiscard]] constexpr T& operator*() const { return get_mut_ref(); }
+  [[nodiscard]] constexpr T& operator*() const {
+    return get_mut_ref();
+  }
 
-  [[nodiscard]] constexpr T* operator->() const { return as_ptr(); }
+  [[nodiscard]] constexpr T* operator->() const {
+    return as_ptr();
+  }
 
   /**
    * Gets underlying pointer, this pointer is always non null
    *
    */
-  [[nodiscard]] constexpr T* as_ptr() const { return pointer; }
+  [[nodiscard]] constexpr T* as_ptr() const {
+    return pointer;
+  }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] constexpr T& get_mut_ref() const { return *pointer; }
+  [[nodiscard]] constexpr T& get_mut_ref() const {
+    return *pointer;
+  }
 
   /**
    * Gets a C++ reference to underlying data
    */
-  [[nodiscard]] constexpr const T& get_ref() const { return *pointer; }
+  [[nodiscard]] constexpr const T& get_ref() const {
+    return *pointer;
+  }
 
   /**
    * Converts RefMut into a immutable reference
@@ -121,8 +142,7 @@ public:
     return Ref<T>(get_mut_ref());
   }
 
-  friend constexpr auto operator<<(std::ostream& os, const RefMut& val)
-    -> std::ostream& {
+  friend constexpr auto operator<<(std::ostream& os, const RefMut& val) -> std::ostream& {
     if constexpr (requires(const T& val) { os << val; }) {
       return os << *val;
     } else {

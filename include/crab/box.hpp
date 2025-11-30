@@ -10,8 +10,48 @@
 #include <crab/preamble.hpp>
 #include <crab/ref.hpp>
 #include <crab/type_traits.hpp>
+#include "crab/option.hpp"
 
 // NOLINTBEGIN(*explicit*)
+
+/**
+ * @brief Owned Pointer (RAII) to an instance of T on the heap, this is an owned smart pointer type with no interior
+ * mutability and and who is always non-null for a given valid value of Box<T>.
+ *
+ * A moved-from box does not leave it in a "valid but unspecified state" like other "well-behaved" types in the STL
+ * (circa 2024), but leaves it in a state where it is partially-formed (only safe to reassign or destroy).
+ *
+ * If you are using this as a field of a class and don't want your class to be in this 'only safe to reassign or
+ * destroy' state once moved, you must take on the weaker invariant and use Option<Box<T>> to explicitly allowed Box<T>
+ * to be none.
+ *
+ * This is a replacement for std::unique_ptr, with two key differences:
+ *
+ * - Prevents Interior Mutability, being passed a const Box<T>& means dealing
+ * with a const T&
+ *
+ * - A Box<T> has the invariant of always being non null, if it is then you
+ * messed up with move semantics.
+ */
+template<typename T>
+class Box;
+
+namespace crab::option {
+
+  template<typename T>
+  struct BoxStorage;
+
+  template<typename T>
+  struct Storage;
+
+  /**
+   * @brief Storage type
+   */
+  template<typename T>
+  struct Storage<Box<T>> final {
+    using type = BoxStorage<T>;
+  };
+}
 
 /**
  * @brief Owned Pointer (RAII) to an instance of T on the heap.
@@ -38,6 +78,9 @@ class Box {
 
   inline constexpr explicit Box(T* const from): obj(from) {}
 
+  /**
+   * Deletes the inner content, leaving this value partially formed
+   */
   inline constexpr auto drop() -> void {
     if constexpr (std::is_array_v<T>) {
       delete[] obj;
@@ -47,6 +90,8 @@ class Box {
   }
 
 public:
+
+  friend struct crab::option::BoxStorage<T>;
 
   /**
    * @brief Wraps pointer with RAII
@@ -60,11 +105,11 @@ public:
   };
 
   /**
-   * @brief Gives up ownership & opts out of RAII, giving you the raw
+   * Gives up ownership & opts out of RAII, giving you the raw
    * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
    */
-  [[nodiscard]] static inline constexpr auto unwrap(Box box, const SourceLocation loc = SourceLocation::current())
-    -> T* {
+  [[nodiscard]]
+  static inline constexpr auto unwrap(Box box, const SourceLocation loc = SourceLocation::current()) -> T* {
     return std::exchange(box.raw_ptr(loc), nullptr);
   }
 
@@ -74,25 +119,32 @@ public:
 
   constexpr Box(Box&& from) noexcept: obj{std::exchange(from.obj, nullptr)} {}
 
+  /**
+   * @brief
+   */
   template<std::derived_from<T> Derived>
   constexpr Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
       Box{Box<Derived>::unwrap(std::move(from))} {
     debug_assert_transparent(obj != nullptr, loc, "Invalid Box, moved from invalid box.");
   }
 
-  constexpr explicit Box(T&& val):
-      Box(new T{
-        std::forward<T>(val),
-      }) {}
-
+  /**
+   * Destructor of Box<T>
+   */
   constexpr ~Box() {
     drop();
   }
 
+  /**
+   * Implicit conversion from `Box<T>` -> `T&`
+   */
   constexpr operator T&() {
     return *raw_ptr();
   }
 
+  /**
+   * Implicit conversion from `const Box<T>` -> `const T&`
+   */
   constexpr operator const T&() const {
     return *raw_ptr();
   }
@@ -255,6 +307,63 @@ private:
   }
 };
 
+namespace crab::option {
+
+  template<typename T>
+  struct BoxStorage final {
+    using Box = ::Box<T>;
+
+    inline constexpr explicit BoxStorage(Box value): inner{std::move(value)} {}
+
+    inline constexpr BoxStorage(BoxStorage&& from) noexcept: inner{std::move(from.inner)} {}
+
+    BoxStorage(const BoxStorage& from) = delete;
+
+    inline constexpr explicit BoxStorage(const None& = crab::none): inner{nullptr} {}
+
+    auto operator=(const BoxStorage&) noexcept -> BoxStorage& = delete;
+
+    inline constexpr auto operator=(BoxStorage&& from) noexcept -> BoxStorage& {
+      inner = std::move(from.inner);
+      return *this;
+    }
+
+    constexpr ~BoxStorage() = default;
+
+    inline constexpr auto operator=(Box&& value) -> BoxStorage& {
+      debug_assert(value.obj != nullptr, "Option<Box<T>>, BoxStorage::operator= called with an invalid box");
+      inner = std::move(value);
+      return *this;
+    }
+
+    inline constexpr auto operator=(const None&) -> BoxStorage& {
+      std::ignore = Box{std::move(inner)};
+      return *this;
+    }
+
+    [[nodiscard]] inline constexpr auto value() const& -> const Box& {
+      return inner;
+    }
+
+    [[nodiscard]] inline constexpr auto value() & -> Box& {
+      return inner;
+    }
+
+    [[nodiscard]] inline constexpr auto value() && -> Box {
+      std::cout << "moving\n";
+      return std::move(inner);
+    }
+
+    [[nodiscard]] inline constexpr auto in_use() const -> bool {
+      return inner.obj != nullptr;
+    }
+
+  private:
+
+    Box inner;
+  };
+}
+
 namespace crab {
   /**
    * @brief Makes a new instance of type T on the heap with given args
@@ -273,15 +382,6 @@ namespace crab {
   requires std::convertible_to<T, V> and (std::integral<T> or std::floating_point<T>)
   [[nodiscard]] static inline constexpr auto make_box(V&& from) -> Box<T> {
     return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
-  }
-
-  /**
-   * @brief Reliquenshes ownership & opts out of RAII, giving you the raw
-   * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
-   */
-  template<typename T>
-  [[nodiscard]] static inline constexpr auto release(Box<T> box) -> T* {
-    return Box<T>::unwrap(std::move(box));
   }
 } // namespace crab
 

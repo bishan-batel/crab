@@ -144,7 +144,9 @@ TEST_CASE("Box Option Niche Optimization") {
   Box<int>& a{opt.get_unchecked()};
   REQUIRE_NOTHROW(std::move(a));
 
-  (void)std::move(opt);
+  Option moved_into{std::move(opt)};
+  CHECK(moved_into.is_some());
+
   CHECK_THROWS(opt.get_unchecked().as_ptr());
   CHECK(opt.is_none());
   CHECK(not opt.is_some());

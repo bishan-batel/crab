@@ -315,20 +315,7 @@ namespace crab::option {
 
     inline constexpr explicit BoxStorage(Box value): inner{std::move(value)} {}
 
-    inline constexpr BoxStorage(BoxStorage&& from) noexcept: inner{std::move(from.inner)} {}
-
-    BoxStorage(const BoxStorage& from) = delete;
-
     inline constexpr explicit BoxStorage(const None& = crab::none): inner{nullptr} {}
-
-    auto operator=(const BoxStorage&) noexcept -> BoxStorage& = delete;
-
-    inline constexpr auto operator=(BoxStorage&& from) noexcept -> BoxStorage& {
-      inner = std::move(from.inner);
-      return *this;
-    }
-
-    constexpr ~BoxStorage() = default;
 
     inline constexpr auto operator=(Box&& value) -> BoxStorage& {
       debug_assert(value.obj != nullptr, "Option<Box<T>>, BoxStorage::operator= called with an invalid box");
@@ -350,7 +337,6 @@ namespace crab::option {
     }
 
     [[nodiscard]] inline constexpr auto value() && -> Box {
-      std::cout << "moving\n";
       return std::move(inner);
     }
 

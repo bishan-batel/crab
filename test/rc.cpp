@@ -55,6 +55,12 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE(original.get_ref_count() == 2);
       REQUIRE_NOTHROW(std::move(returned).unwrap());
       REQUIRE(original.is_unique());
+
+      returned = original.downcast<Derived>();
+
+      Rc<Derived> moved{std::move(returned.get_unchecked())};
+      REQUIRE(returned.is_none());
+      REQUIRE(moved.is_valid());
     }
 
     SECTION("RcMut") {

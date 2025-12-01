@@ -7,10 +7,32 @@
 #include <crab/box.hpp>
 #include <crab/ref.hpp>
 
-namespace crab::rc {
-  template<typename T>
-  class Rc;
+template<typename T>
+class Rc;
 
+template<typename T>
+class RcMut;
+
+namespace crab::option {
+  template<typename T, template<typename Inner> typename Container>
+  struct RcStorage;
+
+  template<typename T>
+  struct Storage;
+
+  template<typename T>
+  struct Storage<Rc<T>> final {
+    using type = RcStorage<T, Rc>;
+  };
+
+  template<typename T>
+  struct Storage<RcMut<T>> final {
+    using type = RcStorage<T, RcMut>;
+  };
+
+}
+
+namespace crab::rc {
   namespace helper {
     template<typename T, bool thread_safe = false>
     class RcInterior final {
@@ -108,6 +130,8 @@ namespace crab::rc {
  */
 template<typename T>
 class Rc final {
+  friend struct crab::option::RcStorage<T, ::Rc>;
+
   using Interior = crab::rc::helper::RcInterior<T>;
 
   Interior* interior;
@@ -416,6 +440,7 @@ public:
 
 template<typename T>
 class RcMut final {
+  friend struct crab::option::RcStorage<T, ::RcMut>;
   using Interior = crab::rc::helper::RcInterior<T>;
 
   Interior* interior;
@@ -779,3 +804,49 @@ namespace crab {
   }
 
 } // namespace crab
+
+#include "./option.hpp"
+
+namespace crab::option {
+  template<typename T, template<typename Inner> typename Container>
+  struct RcStorage final {
+    using RefCounted = Container<T>;
+
+    inline constexpr explicit RcStorage(RefCounted value): inner{std::move(value)} {}
+
+    inline constexpr explicit RcStorage(const None& = crab::none): inner{nullptr} {}
+
+    inline constexpr auto operator=(RefCounted&& value) -> RcStorage& {
+      debug_assert(value.inner != nullptr, "Option<Rc<T>>, RcStorage::operator= called with an Rc");
+      inner = std::move(value);
+      return *this;
+    }
+
+    inline constexpr auto operator=(const None&) -> RcStorage& {
+      if (in_use()) {
+        std::ignore = RefCounted{std::move(inner)};
+      }
+      return *this;
+    }
+
+    [[nodiscard]] inline constexpr auto value() const& -> const RefCounted& {
+      return inner;
+    }
+
+    [[nodiscard]] inline constexpr auto value() & -> RefCounted& {
+      return inner;
+    }
+
+    [[nodiscard]] inline constexpr auto value() && -> RefCounted {
+      return std::move(inner);
+    }
+
+    [[nodiscard]] inline constexpr auto in_use() const -> bool {
+      return inner.is_valid();
+    }
+
+  private:
+
+    RefCounted inner;
+  };
+}

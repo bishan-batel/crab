@@ -12,9 +12,11 @@ namespace crab::fn {
   /**
    * @brief Identity Function, f(x)=x forall x
    */
-  constexpr auto identity = []<typename T>(T&& x) {
-    static_assert(std::move_constructible<T>, "Cannot create an identity function for a type that cannot be moved.");
-    return std::forward<T>(x);
+  constexpr auto identity{
+    []<typename T>(T&& x) {
+      static_assert(std::move_constructible<T>, "Cannot create an identity function for a type that cannot be moved.");
+      return std::forward<T>(x);
+    },
   };
 
   /**
@@ -24,7 +26,7 @@ namespace crab::fn {
    * @param x Any integer value to check
    */
   constexpr auto constant{
-    []<std::copy_constructible T>(T x) { return [x = std::move(x)]<typename... Args>(Args&&...) -> T { return x; }; },
+    []<ty::copy_constructible T>(T x) { return [x = std::move(x)]<typename... Args>(Args&&...) -> T { return x; }; },
   };
 
   /**
@@ -44,7 +46,7 @@ namespace crab::fn {
   template<typename Derived>
   struct cast_s final {
 
-    [[nodiscard]] inline constexpr auto operator()(auto& value) const requires(not std::is_const_v<decltype(value)>)
+    [[nodiscard]] inline constexpr auto operator()(auto& value) const requires ty::non_const<decltype(value)>
     {
       return ref::cast<Derived>(value);
     }
@@ -75,15 +77,12 @@ namespace crab::fn {
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()( //
-      const Box<T>& value
-    ) const -> Option<const Derived&> {
+    [[nodiscard]] inline constexpr auto operator()(const Box<T>& value) const -> Option<const Derived&> {
       return operator()(*value);
     }
 
     template<typename T>
-    [[nodiscard]]
-    inline constexpr auto operator()(Box<T>& value) const -> Option<Derived&> {
+    [[nodiscard]] inline constexpr auto operator()(Box<T>& value) const -> Option<Derived&> {
       return operator()(*value);
     }
   };

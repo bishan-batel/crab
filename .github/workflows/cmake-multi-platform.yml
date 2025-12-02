@@ -44,7 +44,7 @@ jobs:
 
     - uses: hustcer/setup-nu@v3
       with:
-        version: "v0.90"
+        version: "v3.21"
         
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.

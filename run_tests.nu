@@ -1,6 +1,6 @@
 #!/usr/bin/env nu
 
-
+let generator = "Ninja"
 
 let gcc = {
 	name: "GCC",
@@ -18,10 +18,10 @@ def cmake_test [build_type: string, compiler: record] {
 	let builddir = $"build/_($compiler.name)_($build_type)"
 
 	print "> Setting up cmake"
-	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)"
+	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" $"-G($generator)"
 
 	print "> Compiling"
-	make -C $builddir
+	cmake --build $builddir -j(nproc)
 
 	print "> Running tests"
 

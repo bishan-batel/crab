@@ -24,17 +24,17 @@ namespace crab {
   class Error {
   public:
 
-    constexpr Error() = default;
+    CRAB_CONSTEXPR Error() = default;
 
-    constexpr Error(const Error&) = default;
+    CRAB_CONSTEXPR Error(const Error&) = default;
 
-    constexpr Error(Error&&) = default;
+    CRAB_CONSTEXPR Error(Error&&) = default;
 
-    constexpr Error& operator=(const Error&) = default;
+    CRAB_CONSTEXPR Error& operator=(const Error&) = default;
 
-    constexpr Error& operator=(Error&&) = default;
+    CRAB_CONSTEXPR Error& operator=(Error&&) = default;
 
-    constexpr virtual ~Error() = default;
+    CRAB_CONSTEXPR virtual ~Error() = default;
 
     /**
      * @brief Converts this crab Error into a runtime exception that can be
@@ -42,14 +42,14 @@ namespace crab {
      *
      * @return
      */
-    [[nodiscard]] auto as_exception() const -> std::runtime_error {
+    CRAB_PURE_INLINE_CONSTEXPR auto as_exception() const -> std::runtime_error {
       return std::runtime_error{what()};
     }
 
     /**
      * @brief Stringified error message for logging purposes
      */
-    [[nodiscard]] constexpr virtual auto what() const -> String = 0;
+    CRAB_PURE_CONSTEXPR virtual auto what() const -> String = 0;
   };
 } // namespace crab
 
@@ -64,7 +64,7 @@ namespace crab {
    * @brief Converts a given error to its stringified representation.
    */
   template<error_type E>
-  [[nodiscard]] inline constexpr auto error_to_string(const E& err) {
+  CRAB_PURE_INLINE_CONSTEXPR auto error_to_string(const E& err) {
     if constexpr (requires {
                     { err.what() } -> crab::ty::convertible<String>;
                   }) {
@@ -105,12 +105,12 @@ namespace crab {
     using Inner = T;
     T value;
 
-    constexpr explicit Ok(T value): value(std::move(value)) {}
+    CRAB_INLINE_CONSTEXPR explicit Ok(T value): value(std::move(value)) {}
   };
 
   template<typename T>
   struct Ok<T&> : Ok<std::reference_wrapper<T>> {
-    inline constexpr explicit Ok(T& value): Ok<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
+    CRAB_INLINE_CONSTEXPR explicit Ok(T& value): Ok<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
   };
 
   /**
@@ -125,12 +125,12 @@ namespace crab {
 
     E value;
 
-    inline constexpr explicit Err(E value): value(std::move(value)) {}
+    CRAB_INLINE_CONSTEXPR explicit Err(E value): value(std::move(value)) {}
   };
 
   template<typename T>
   struct Err<T&> : Err<std::reference_wrapper<T>> {
-    inline constexpr explicit Err(T& value): Err<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
+    CRAB_INLINE_CONSTEXPR explicit Err(T& value): Err<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
   };
 
   namespace helper {
@@ -194,11 +194,13 @@ public:
    */
   using OkType = T;
 
-  static constexpr bool is_same = std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<E>>;
+  inline static CRAB_CONSTEXPR bool is_same{std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<E>>};
 
-  static constexpr bool is_copyable = std::copyable<T> and std::copyable<E>;
+  inline static CRAB_CONSTEXPR bool is_copyable{std::copyable<T> and std::copyable<E>};
 
-  static constexpr bool is_trivially_copyable = std::is_trivially_copyable_v<T> and std::is_trivially_copyable_v<E>;
+  inline static CRAB_CONSTEXPR bool is_trivially_copyable{
+    std::is_trivially_copyable_v<T> and std::is_trivially_copyable_v<E>,
+  };
 
 private:
 
@@ -208,29 +210,29 @@ private:
 
 public:
 
-  inline constexpr Result(const T& from) requires(not is_same and std::copyable<T>)
+  CRAB_INLINE_CONSTEXPR Result(const T& from) requires(not is_same and std::copyable<T>)
       : Result{T{from}} {}
 
-  inline constexpr Result(const E& from) requires(not is_same and std::copyable<E>)
+  CRAB_INLINE_CONSTEXPR Result(const E& from) requires(not is_same and std::copyable<E>)
       : Result{E{from}} {}
 
-  inline constexpr Result(T&& from) requires(not is_same)
+  CRAB_INLINE_CONSTEXPR Result(T&& from) requires(not is_same)
       : Result{Ok{std::forward<T>(from)}} {}
 
-  inline constexpr Result(E&& from) requires(not is_same)
+  CRAB_INLINE_CONSTEXPR Result(E&& from) requires(not is_same)
       : Result{Err{std::forward<E>(from)}} {}
 
-  inline constexpr Result(Ok&& from): inner{std::forward<Ok>(from)} {}
+  CRAB_INLINE_CONSTEXPR Result(Ok&& from): inner{std::forward<Ok>(from)} {}
 
-  inline constexpr Result(Err&& from): inner{std::forward<Err>(from)} {}
+  CRAB_INLINE_CONSTEXPR Result(Err&& from): inner{std::forward<Err>(from)} {}
 
-  inline constexpr Result(Result&& from) noexcept: inner{std::exchange(from.inner, invalidated{})} {}
+  CRAB_INLINE_CONSTEXPR Result(Result&& from) noexcept: inner{std::exchange(from.inner, invalidated{})} {}
 
-  inline constexpr Result(const Result& res): inner{res.inner} {
+  CRAB_INLINE_CONSTEXPR Result(const Result& res): inner{res.inner} {
     static_assert(is_copyable, "Cannot copy a result with a non-copyable Err or Ok type");
   }
 
-  inline constexpr auto operator=(const Result& res) -> Result& {
+  CRAB_INLINE_CONSTEXPR auto operator=(const Result& res) -> Result& {
     static_assert(is_copyable, "cannot copy a result with a non-copyable err or ok type");
     if (&res == this) {
       return *this;
@@ -241,44 +243,44 @@ public:
     return *this;
   }
 
-  inline constexpr auto operator=(Result&& res) noexcept -> Result& {
+  CRAB_INLINE_CONSTEXPR auto operator=(Result&& res) noexcept -> Result& {
     inner = std::exchange(res.inner, invalidated{});
     return *this;
   }
 
-  inline constexpr auto operator=(Ok&& from) -> Result& {
+  CRAB_INLINE_CONSTEXPR auto operator=(Ok&& from) -> Result& {
     inner = std::forward<Ok>(from);
     return *this;
   }
 
-  inline constexpr auto operator=(Err&& from) -> Result& {
+  CRAB_INLINE_CONSTEXPR auto operator=(Err&& from) -> Result& {
     inner = std::forward<Err>(from);
     return *this;
   }
 
-  inline constexpr auto operator=(T&& from) -> Result& requires(not is_same) {
+  CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Result& requires(not is_same) {
     return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  inline constexpr auto operator=(E&& from) -> Result& requires(not is_same) {
+  CRAB_INLINE_CONSTEXPR auto operator=(E&& from) -> Result& requires(not is_same) {
     return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
   }
 
-  [[nodiscard]] inline constexpr explicit operator bool() const {
+  CRAB_PURE_INLINE_CONSTEXPR explicit operator bool() const {
     return is_ok();
   }
 
   /**
    * @brief Does this result hold an ok value
    */
-  [[nodiscard]] inline constexpr auto is_ok() const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto is_ok() const -> bool {
     return std::holds_alternative<Ok>(inner);
   }
 
   /**
    * @brief Does this result hold an err value
    */
-  [[nodiscard]] inline constexpr auto is_err() const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto is_err() const -> bool {
     return std::holds_alternative<Err>(inner);
   }
 
@@ -290,7 +292,7 @@ public:
    * Result<i32,String>{10}.is_ok_and(crab::fn::odd) -> false
    */
   template<crab::ty::predicate<const T&> F>
-  [[nodiscard]] inline constexpr auto is_ok_and(F&& functor) const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto is_ok_and(F&& functor) const -> bool {
     return is_ok() and std::invoke(functor, get_unchecked());
   }
 
@@ -299,7 +301,7 @@ public:
    * match with the given predicate
    */
   template<crab::ty::predicate<const E&> F>
-  [[nodiscard]] inline constexpr auto is_err_and(F&& functor) const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto is_err_and(F&& functor) const -> bool {
     return is_err() and std::invoke(functor, get_err_unchecked());
   }
 
@@ -307,7 +309,7 @@ public:
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
-  [[nodiscard]] inline constexpr auto get_unchecked(const SourceLocation loc = SourceLocation::current()) -> T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto get_unchecked(const SourceLocation loc = SourceLocation::current()) -> T& {
     ensure_valid(loc);
 
     debug_assert_transparent(
@@ -324,7 +326,7 @@ public:
    * @brief Gets a reference to the contained Error value, if there is no Error
    * value this will panic and crash.
    */
-  [[nodiscard]] inline constexpr auto get_err_unchecked(const SourceLocation loc = SourceLocation::current()) -> E& {
+  CRAB_PURE_INLINE_CONSTEXPR auto get_err_unchecked(const SourceLocation loc = SourceLocation::current()) -> E& {
     ensure_valid(loc);
 
     debug_assert_transparent(is_err(), loc, "Called unwrap with Ok value");
@@ -336,7 +338,7 @@ public:
    * @brief Gets a reference to the contained inner Ok value, if there is no Ok
    * value this will panic and crash.
    */
-  [[nodiscard]] inline constexpr auto get_unchecked(const SourceLocation loc = SourceLocation::current()) const
+  CRAB_PURE_INLINE_CONSTEXPR auto get_unchecked(const SourceLocation loc = SourceLocation::current()) const
     -> const T& {
     ensure_valid(loc);
 
@@ -354,7 +356,7 @@ public:
    * @brief Gets a reference to the contained Error value, if there is no Error
    * value this will panic and crash.
    */
-  [[nodiscard]] inline constexpr auto get_err_unchecked(const SourceLocation loc = SourceLocation::current()) const
+  CRAB_PURE_INLINE_CONSTEXPR auto get_err_unchecked(const SourceLocation loc = SourceLocation::current()) const
     -> const E& {
     ensure_valid(loc);
 
@@ -363,7 +365,7 @@ public:
     return std::get<Err>(inner).value;
   }
 
-  [[nodiscard]] inline constexpr auto unwrap(const SourceLocation loc = SourceLocation::current()) && -> T {
+  CRAB_PURE_INLINE_CONSTEXPR auto unwrap(const SourceLocation loc = SourceLocation::current()) && -> T {
     ensure_valid(loc);
 
     debug_assert_transparent(
@@ -376,7 +378,7 @@ public:
     return std::get<Ok>(std::exchange(inner, invalidated{})).value;
   }
 
-  [[nodiscard]] inline constexpr auto unwrap_err(const SourceLocation loc = SourceLocation::current()) && -> E {
+  CRAB_PURE_INLINE_CONSTEXPR auto unwrap_err(const SourceLocation loc = SourceLocation::current()) && -> E {
     ensure_valid(loc);
 
     debug_assert_transparent(is_err(), loc, "Called unwrap_err on result with Ok value");
@@ -387,7 +389,7 @@ public:
   /**
    * @brief Internal method for preventing use-after-movas
    */
-  inline constexpr auto ensure_valid(const SourceLocation loc = SourceLocation::current()) const -> void {
+  CRAB_INLINE_CONSTEXPR auto ensure_valid(const SourceLocation loc = SourceLocation::current()) const -> void {
 
     debug_assert_transparent(not std::holds_alternative<invalidated>(inner), loc, "Invalid use of moved result");
   }
@@ -400,7 +402,7 @@ public:
     return os << "Ok(" << result.get_unchecked() << ")";
   }
 
-  [[nodiscard]] inline constexpr auto copied(const SourceLocation loc = SourceLocation::current()) const -> Result {
+  CRAB_PURE_INLINE_CONSTEXPR auto copied(const SourceLocation loc = SourceLocation::current()) const -> Result {
     static_assert(is_copyable, "Cannot copy a result whose Ok and Err types are not both copyable");
 
     ensure_valid(loc);
@@ -415,7 +417,7 @@ public:
   // ============================ map functions ================================
   //
   template<typename Into>
-  [[nodiscard]] inline constexpr auto map() && -> Result<Into, E> {
+  CRAB_PURE_INLINE_CONSTEXPR auto map() && -> Result<Into, E> {
     static_assert(
       crab::ty::convertible<T, Into>,
       "'Result<T, E>::map<Into>()' can only be done if T is convertible to Into"
@@ -426,12 +428,12 @@ public:
 
   template<typename Into>
   requires is_copyable
-  [[nodiscard]] inline constexpr auto map() const& -> Result<Into, E> {
+  CRAB_PURE_INLINE_CONSTEXPR auto map() const& -> Result<Into, E> {
     return copied().template map<Into>();
   }
 
   template<typename Into>
-  [[nodiscard]] inline constexpr auto map_err() && -> Result<T, Into> {
+  CRAB_PURE_INLINE_CONSTEXPR auto map_err() && -> Result<T, Into> {
     static_assert(
       crab::ty::convertible<E, Into>,
       "'Result<T, E>::map<Into>()' can only be done if E is convertible to Into"
@@ -442,7 +444,7 @@ public:
 
   template<typename Into>
   requires is_copyable
-  [[nodiscard]] inline constexpr auto map_err() const& -> Result<T, E> {
+  CRAB_PURE_INLINE_CONSTEXPR auto map_err() const& -> Result<T, E> {
     return copied().template map_err<Into>();
   }
 
@@ -452,7 +454,7 @@ public:
    * @return
    */
   template<crab::ty::mapper<T> F>
-  [[nodiscard]] inline constexpr auto map(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
+  CRAB_PURE_INLINE_CONSTEXPR auto map(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
     using R = crab::ty::mapper_codomain<F, T>;
 
     ensure_valid(loc);
@@ -470,7 +472,7 @@ public:
    * @return
    */
   template<crab::ty::mapper<E> F>
-  [[nodiscard]] inline constexpr auto map_err(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
+  CRAB_PURE_INLINE_CONSTEXPR auto map_err(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
     using R = crab::ty::mapper_codomain<F, E>;
 
     ensure_valid(loc);
@@ -490,7 +492,7 @@ public:
    * @return
    */
   template<crab::ty::mapper<T> F>
-  [[nodiscard]] inline constexpr auto map(F&& functor, const SourceLocation loc = SourceLocation::current()) const& {
+  CRAB_PURE_INLINE_CONSTEXPR auto map(F&& functor, const SourceLocation loc = SourceLocation::current()) const& {
     static_assert(
       is_trivially_copyable,
       "Only results with trivial Ok & Err types may be implicitly copied when "
@@ -506,8 +508,7 @@ public:
    * @return
    */
   template<crab::ty::mapper<E> F>
-  [[nodiscard]] inline constexpr auto map_err(F&& functor, const SourceLocation loc = SourceLocation::current())
-    const& {
+  CRAB_PURE_INLINE_CONSTEXPR auto map_err(F&& functor, const SourceLocation loc = SourceLocation::current()) const& {
     static_assert(
       is_trivially_copyable,
       "Only results with trivial Ok & Err types may be implicitly copied when "
@@ -525,7 +526,7 @@ public:
    * If the mapped function is Ok(type M), it returns Result<M, Error>
    */
   template<crab::ty::mapper<T> F>
-  [[nodiscard]] inline constexpr auto and_then(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
+  CRAB_PURE_INLINE_CONSTEXPR auto and_then(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
     using R = crab::ty::mapper_codomain<F, T>;
 
     static_assert(crab::result_type<R>, "and_then functor parameter must return a Result<T,E> type");
@@ -551,8 +552,7 @@ public:
    * Result<M, Error>
    */
   template<crab::ty::mapper<T> F>
-  [[nodiscard]] inline constexpr auto and_then(F&& functor, const SourceLocation loc = SourceLocation::current())
-    const& {
+  CRAB_PURE_INLINE_CONSTEXPR auto and_then(F&& functor, const SourceLocation loc = SourceLocation::current()) const& {
 
     static_assert(
       is_trivially_copyable,
@@ -570,7 +570,7 @@ public:
    * This function is for use when wanting to abstract away any specific error
    * type to simply 'none'.
    */
-  [[nodiscard]] inline constexpr auto ok(const SourceLocation loc = SourceLocation::current()) && -> Option<T> {
+  CRAB_PURE_INLINE_CONSTEXPR auto ok(const SourceLocation loc = SourceLocation::current()) && -> Option<T> {
     ensure_valid(loc);
 
     return is_ok() ? Option<T>{std::move(*this).unwrap(loc)} : Option<T>{};
@@ -583,7 +583,7 @@ public:
    * This function is for use when wanting to abstract away any specific Ok type
    * to simply 'none'.
    */
-  [[nodiscard]] inline constexpr auto err(const SourceLocation loc = SourceLocation::current()) && -> Option<E> {
+  CRAB_PURE_INLINE_CONSTEXPR auto err(const SourceLocation loc = SourceLocation::current()) && -> Option<E> {
     ensure_valid(loc);
 
     return is_err() ? Option<E>{std::move(*this).unwrap_err(loc)} : Option<E>{};
@@ -596,7 +596,7 @@ public:
    * This function is for use when wanting to abstract away any specific error
    * type to simply 'none'.
    */
-  [[nodiscard]] inline constexpr auto ok(const SourceLocation loc = SourceLocation::current()) const& -> Option<T> {
+  CRAB_PURE_INLINE_CONSTEXPR auto ok(const SourceLocation loc = SourceLocation::current()) const& -> Option<T> {
     static_assert(
       std::is_trivially_copyable_v<T>,
       "Only results with trivial Ok types may be implicitly copied when "
@@ -614,7 +614,7 @@ public:
    * This function is for use when wanting to abstract away any specific Ok type
    * to simply 'none'.
    */
-  [[nodiscard]] inline constexpr auto err(const SourceLocation loc = SourceLocation::current()) const& -> Option<E> {
+  CRAB_PURE_INLINE_CONSTEXPR auto err(const SourceLocation loc = SourceLocation::current()) const& -> Option<E> {
     static_assert(
       std::is_trivially_copyable_v<E>,
       "Only results with trivial Ok types may be implicitly copied when "
@@ -634,13 +634,13 @@ namespace crab {
     struct fallible {
 
       template<typename... T>
-      [[nodiscard]] inline constexpr auto operator()(Tuple<T...> tuple) const {
+      CRAB_PURE_INLINE_CONSTEXPR auto operator()(Tuple<T...> tuple) const {
         return Result<Tuple<T...>, Error>{std::forward<Tuple<T...>>(tuple)};
       }
 
       template<typename PrevResults, crab::ty::provider F, crab::ty::provider... Rest>
       requires result_type<crab::ty::functor_result<F>>
-      [[nodiscard]] inline constexpr auto operator()(
+      CRAB_PURE_INLINE_CONSTEXPR auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         F&& function,
         Rest&&... other_functions
@@ -655,7 +655,7 @@ namespace crab {
 
       template<typename PrevResults, std::invocable F, std::invocable... Rest>
       requires(option_type<std::invoke_result_t<F>> and std::is_default_constructible_v<Error>)
-      [[nodiscard]] inline constexpr auto operator()(
+      CRAB_PURE_INLINE_CONSTEXPR auto operator()(
         PrevResults tuple /* Tuple<T...>*/,
         F&& function,
         Rest&&... other_functions
@@ -672,8 +672,11 @@ namespace crab {
 
       template<typename PrevResults, std::invocable F, std::invocable... Rest>
       requires(not result_type<std::invoke_result_t<F>>)
-      inline constexpr auto operator()(PrevResults tuple /* Tuple<T...>*/, F&& function, Rest&&... other_functions)
-        const {
+      CRAB_PURE_INLINE_CONSTEXPR auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
+        F&& function,
+        Rest&&... other_functions
+      ) const {
         return operator()(
           std::tuple_cat(std::move(tuple), Tuple<std::invoke_result_t<F>>(std::invoke(function))),
           std::forward<Rest>(other_functions)...
@@ -682,7 +685,11 @@ namespace crab {
 
       template<typename PrevResults, typename V, typename... Rest>
       requires(not std::invocable<V> and not result_type<V>)
-      inline constexpr auto operator()(PrevResults tuple /* Tuple<T...>*/, V&& value, Rest&&... other_functions) const {
+      CRAB_PURE_INLINE_CONSTEXPR auto operator()(
+        PrevResults tuple /* Tuple<T...>*/,
+        V&& value,
+        Rest&&... other_functions
+      ) const {
         return operator()(
           std::tuple_cat(std::move(tuple), Tuple<V>{std::forward<V>(value)}),
           std::forward<Rest>(other_functions)...
@@ -691,7 +698,7 @@ namespace crab {
 
       template<typename PrevResults, typename V, typename... Rest>
       requires(not std::invocable<V>)
-      inline constexpr auto operator()(
+      CRAB_PURE_INLINE_CONSTEXPR auto operator()(
         PrevResults tuple, /* Tuple<T...>*/
         Result<V, Error> value,
         Rest&&... other_functions
@@ -708,38 +715,36 @@ namespace crab {
   } // namespace result
 
   template<error_type E, std::invocable... F>
-  inline constexpr auto fallible(F&&... fallible) {
+  CRAB_PURE_INLINE_CONSTEXPR auto fallible(F&&... fallible) {
     return result::fallible<E>{}(Tuple<>{}, std::forward<F>(fallible)...);
   }
 
   template<ok_type T>
-  [[nodiscard]] inline constexpr auto ok(std::type_identity_t<T>&& value) {
+  CRAB_PURE_INLINE_CONSTEXPR auto ok(std::type_identity_t<T>&& value) {
     return Ok<T>{std::forward<T>(value)};
   }
 
   template<error_type E>
-  [[nodiscard]] inline constexpr auto err(std::type_identity_t<E>&& value) {
+  CRAB_PURE_INLINE_CONSTEXPR auto err(std::type_identity_t<E>&& value) {
     return Err<E>{std::forward<E>(value)};
   }
 
-  [[nodiscard]] inline constexpr auto ok(auto value) {
+  CRAB_PURE_INLINE_CONSTEXPR auto ok(auto value) {
     return ok<std::remove_cvref_t<decltype(value)>>(std::move(value));
   }
 
-  [[nodiscard]] inline constexpr auto err(auto value) {
+  CRAB_PURE_INLINE_CONSTEXPR auto err(auto value) {
     return err<std::remove_cvref_t<decltype(value)>>(std::move(value));
   }
 
   template<typename T, typename E>
-  [[nodiscard]] inline constexpr auto unwrap(
-    Result<T, E>&& result,
-    const SourceLocation loc = SourceLocation::current()
-  ) -> T {
+  CRAB_PURE_INLINE_CONSTEXPR auto unwrap(Result<T, E>&& result, const SourceLocation loc = SourceLocation::current())
+    -> T {
     return std::forward<Result<T, E>>(result).unwrap(loc);
   }
 
   template<typename T, typename E>
-  [[nodiscard]] inline constexpr auto unwrap_err(
+  CRAB_PURE_INLINE_CONSTEXPR auto unwrap_err(
     Result<T, E>&& result,
     const SourceLocation loc = SourceLocation::current()
   ) -> E {

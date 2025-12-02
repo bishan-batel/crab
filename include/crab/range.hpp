@@ -25,7 +25,7 @@ public:
     using pointer = T;
     using reference = T;
 
-    CRAB_CONSTEXPR explicit Iterator(T pos): pos(pos) {}
+    CRAB_INLINE_CONSTEXPR explicit Iterator(T pos): pos(pos) {}
 
     CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> reference {
       return pos;
@@ -35,7 +35,7 @@ public:
       return pos;
     }
 
-    constexpr auto operator++() -> Iterator& {
+    CRAB_INLINE_CONSTEXPR auto operator++() -> Iterator& {
       ++pos;
       return *this;
     }
@@ -62,7 +62,7 @@ public:
   /**
    * Constructs a range from min to max, this will panic if max > min
    */
-  constexpr Range(T min, T max, const SourceLocation loc = SourceLocation::current()): min(min), max(max) {
+  CRAB_INLINE_CONSTEXPR Range(T min, T max, const SourceLocation loc = SourceLocation::current()): min(min), max(max) {
     debug_assert_transparent(min <= max, loc, "Invalid Range, max cannot be greater than min");
   }
 

@@ -68,7 +68,7 @@ public:
     return *pointer;
   }
 
-  friend constexpr auto operator<<(std::ostream& os, const Ref& val) -> std::ostream& {
+  friend CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const Ref& val) -> std::ostream& {
     if constexpr (requires(const T& val) { os << val; }) {
       return os << *val;
     } else {
@@ -83,13 +83,14 @@ private:
 
 template<crab::ref::is_valid_type T>
 class RefMut final {
-  constexpr explicit RefMut(T* const pointer, SourceLocation loc = SourceLocation::current()): pointer(pointer) {
+  CRAB_INLINE_CONSTEXPR explicit RefMut(T* const pointer, SourceLocation loc = SourceLocation::current()):
+      pointer(pointer) {
     debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL RefMut object");
   }
 
 public:
 
-  constexpr RefMut(T& ref): RefMut(&ref) {}
+  CRAB_INLINE_CONSTEXPR RefMut(T& ref): RefMut(&ref) {}
 
   CRAB_PURE_INLINE_CONSTEXPR static RefMut from_unchecked(T* const pointer) {
     return RefMut(pointer);
@@ -144,7 +145,7 @@ public:
     return Ref<T>(get_mut_ref());
   }
 
-  friend constexpr auto operator<<(std::ostream& os, const RefMut& val) -> std::ostream& {
+  friend CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const RefMut& val) -> std::ostream& {
     if constexpr (requires(const T& val) { os << val; }) {
       return os << *val;
     } else {

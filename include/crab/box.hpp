@@ -75,12 +75,12 @@ class Box {
   );
 
   // SizeType size;
-  CRAB_INLINE CRAB_CONSTEXPR explicit Box(T* const from): obj(from) {}
+  CRAB_INLINE_CONSTEXPR explicit Box(T* const from): obj(from) {}
 
   /**
    * Deletes the inner content, leaving this value partially formed
    */
-  CRAB_INLINE CRAB_CONSTEXPR auto drop() -> void {
+  CRAB_INLINE_CONSTEXPR auto drop() -> void {
     if constexpr (crab::ty::array<T>) {
       delete[] obj;
     } else {
@@ -115,10 +115,10 @@ public:
 
   Box(const Box&) = delete;
 
-  CRAB_INLINE CRAB_CONSTEXPR Box(Box&& from) noexcept: obj{std::exchange(from.obj, nullptr)} {}
+  CRAB_INLINE_CONSTEXPR Box(Box&& from) noexcept: obj{std::exchange(from.obj, nullptr)} {}
 
   template<std::derived_from<T> Derived>
-  CRAB_INLINE CRAB_CONSTEXPR Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
+  CRAB_INLINE_CONSTEXPR Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
       Box{Box<Derived>::unwrap(std::move(from))} {
     debug_assert_transparent(obj != nullptr, loc, "Invalid Box, moved from invalid box.");
   }
@@ -126,55 +126,55 @@ public:
   /**
    * Destructor of Box<T>
    */
-  CRAB_INLINE CRAB_CONSTEXPR ~Box() {
+  CRAB_INLINE_CONSTEXPR ~Box() {
     drop();
   }
 
   /**
    * Implicit conversion from `Box<T>` -> `T&`
    */
-  CRAB_INLINE CRAB_CONSTEXPR operator T&() {
+  CRAB_INLINE_CONSTEXPR operator T&() {
     return *raw_ptr();
   }
 
   /**
    * Implicit conversion from `const Box<T>` -> `const T&`
    */
-  CRAB_INLINE CRAB_CONSTEXPR operator const T&() const {
+  CRAB_INLINE_CONSTEXPR operator const T&() const {
     return *raw_ptr();
   }
 
   template<std::derived_from<T> Base>
-  CRAB_INLINE CRAB_CONSTEXPR operator Base&() {
+  CRAB_INLINE_CONSTEXPR operator Base&() {
     return *raw_ptr();
   }
 
   template<std::derived_from<T> Base>
-  CRAB_INLINE CRAB_CONSTEXPR operator const Base&() const {
+  CRAB_INLINE_CONSTEXPR operator const Base&() const {
     return *raw_ptr();
   }
 
-  CRAB_INLINE CRAB_CONSTEXPR operator Ref<T>() const {
+  CRAB_INLINE_CONSTEXPR operator Ref<T>() const {
     return *raw_ptr();
   }
 
-  CRAB_INLINE CRAB_CONSTEXPR operator RefMut<T>() {
-    return *raw_ptr();
-  }
-
-  template<std::derived_from<T> Base>
-  CRAB_INLINE CRAB_CONSTEXPR operator Ref<Base>() const {
+  CRAB_INLINE_CONSTEXPR operator RefMut<T>() {
     return *raw_ptr();
   }
 
   template<std::derived_from<T> Base>
-  CRAB_INLINE CRAB_CONSTEXPR operator RefMut<Base>() {
+  CRAB_INLINE_CONSTEXPR operator Ref<Base>() const {
+    return *raw_ptr();
+  }
+
+  template<std::derived_from<T> Base>
+  CRAB_INLINE_CONSTEXPR operator RefMut<Base>() {
     return *raw_ptr();
   }
 
   auto operator=(const Box&) -> void = delete;
 
-  CRAB_INLINE CRAB_CONSTEXPR auto operator=(Box&& rhs) noexcept -> Box& {
+  CRAB_INLINE_CONSTEXPR auto operator=(Box&& rhs) noexcept -> Box& {
     if (rhs.obj == obj) {
       return *this;
     }
@@ -186,7 +186,7 @@ public:
   }
 
   template<std::derived_from<T> Derived>
-  CRAB_INLINE CRAB_CONSTEXPR auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
+  CRAB_INLINE_CONSTEXPR auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
     if (obj == static_cast<T*>(rhs.as_ptr())) {
       return *this;
     }
@@ -213,7 +213,7 @@ public:
     return *as_ptr();
   }
 
-  CRAB_INLINE CRAB_CONSTEXPR friend auto operator<<(std::ostream& os, const Box& rhs) -> std::ostream& {
+  CRAB_INLINE_CONSTEXPR friend auto operator<<(std::ostream& os, const Box& rhs) -> std::ostream& {
     return os << *rhs;
   }
 
@@ -306,17 +306,17 @@ namespace crab::option {
   struct BoxStorage final {
     using Box = ::Box<T>;
 
-    CRAB_INLINE CRAB_CONSTEXPR explicit BoxStorage(Box value): inner{std::move(value)} {}
+    CRAB_INLINE_CONSTEXPR explicit BoxStorage(Box value): inner{std::move(value)} {}
 
-    CRAB_INLINE CRAB_CONSTEXPR explicit BoxStorage(const None& = crab::none): inner{nullptr} {}
+    CRAB_INLINE_CONSTEXPR explicit BoxStorage(const None& = crab::none): inner{nullptr} {}
 
-    CRAB_INLINE CRAB_CONSTEXPR auto operator=(Box&& value) -> BoxStorage& {
+    CRAB_INLINE_CONSTEXPR auto operator=(Box&& value) -> BoxStorage& {
       debug_assert(value.obj != nullptr, "Option<Box<T>>, BoxStorage::operator= called with an invalid box");
       inner = std::move(value);
       return *this;
     }
 
-    CRAB_INLINE CRAB_CONSTEXPR auto operator=(const None&) -> BoxStorage& {
+    CRAB_INLINE_CONSTEXPR auto operator=(const None&) -> BoxStorage& {
       std::ignore = Box{std::move(inner)};
       return *this;
     }

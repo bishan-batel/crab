@@ -32,97 +32,95 @@ namespace crab::option {
 
 }
 
-namespace crab::rc {
-  namespace helper {
-    template<typename T, bool thread_safe = false>
-    class RcInterior final {
-      using Counter = std::conditional_t<thread_safe, std::atomic_size_t, usize>;
+namespace crab::rc::helper {
+  template<typename T, bool thread_safe = false>
+  class RcInterior final {
+    using Counter = std::conditional_t<thread_safe, std::atomic_size_t, usize>;
 
-      Counter weak_ref_count;
-      Counter ref_count;
-      T* data;
+    Counter weak_ref_count;
+    Counter ref_count;
+    T* data;
 
-    public:
+  public:
 
-      RcInterior(const usize ref_count, const usize weak_ref_count, T* const data):
-          weak_ref_count{weak_ref_count}, ref_count{ref_count}, data{data} {}
+    RcInterior(const usize ref_count, const usize weak_ref_count, T* const data):
+        weak_ref_count{weak_ref_count}, ref_count{ref_count}, data{data} {}
 
-      auto increment_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
-        debug_assert_transparent(
-          not should_free_data(),
-          loc,
-          "Corrupted Rc<T>: ref_count being increased after reaching zero"
-        );
-        ref_count++;
+    CRAB_CONSTEXPR auto increment_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
+      debug_assert_transparent(
+        not should_free_data(),
+        loc,
+        "Corrupted Rc<T>: ref_count being increased after reaching zero"
+      );
+      ref_count++;
+    }
+
+    CRAB_CONSTEXPR auto decrement_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
+      debug_assert_transparent(
+        not should_free_data(),
+        loc,
+        "Corrupted Rc<T>: ref_count being decreased after reaching zero"
+      );
+      ref_count--;
+    }
+
+    CRAB_PURE_INLINE_CONSTEXPR auto is_unique() const -> bool {
+      return ref_count == 1;
+    }
+
+    CRAB_PURE_INLINE_CONSTEXPR auto get_ref_count() const -> usize {
+      return ref_count;
+    }
+
+    CRAB_PURE_INLINE_CONSTEXPR auto is_data_valid() const -> bool {
+      return data != nullptr;
+    }
+
+    CRAB_PURE_INLINE_CONSTEXPR auto should_free_data() const -> bool {
+      return ref_count == 0 and is_data_valid();
+    }
+
+    CRAB_PURE_INLINE_CONSTEXPR auto should_free_self() const -> bool {
+      return ref_count == 0 and weak_ref_count == 0;
+    }
+
+    CRAB_CONSTEXPR auto free_data(const SourceLocation loc = SourceLocation::current()) -> void {
+      debug_assert_transparent(
+        should_free_data(),
+        loc,
+        "Invalid use of Rc<T>: Data cannot be freed when there are existing "
+        "references."
+      );
+      delete std::exchange(data, nullptr);
+    }
+
+    template<std::derived_from<T> Derived = T>
+    CRAB_PURE_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> Derived* {
+      debug_assert_transparent(is_data_valid(), loc, "Invalid access of Rc<T> or RcMut<T>, data is nullptr");
+      return static_cast<Derived*>(data);
+    }
+
+    template<typename Base>
+    requires std::derived_from<T, Base>
+    CRAB_PURE_INLINE_CONSTEXPR auto upcast() const -> RcInterior<Base>* {
+      return std::bit_cast<RcInterior<Base>*>(this);
+    }
+
+    template<std::derived_from<T> Derived>
+    CRAB_PURE_CONSTEXPR auto downcast() const -> Option<RcInterior<Derived>*> {
+      if (dynamic_cast<Derived*>(data)) {
+        return some(std::bit_cast<RcInterior<Derived>*>(this));
       }
 
-      auto decrement_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
-        debug_assert_transparent(
-          not should_free_data(),
-          loc,
-          "Corrupted Rc<T>: ref_count being decreased after reaching zero"
-        );
-        ref_count--;
-      }
+      return crab::none;
+    }
 
-      [[nodiscard]] auto is_unique() const -> bool {
-        return ref_count == 1;
-      }
-
-      [[nodiscard]] auto get_ref_count() const -> usize {
-        return ref_count;
-      }
-
-      [[nodiscard]] auto is_data_valid() const -> bool {
-        return data != nullptr;
-      }
-
-      [[nodiscard]] auto should_free_data() const -> bool {
-        return ref_count == 0 and is_data_valid();
-      }
-
-      [[nodiscard]] auto should_free_self() const -> bool {
-        return ref_count == 0 and weak_ref_count == 0;
-      }
-
-      auto free_data(const SourceLocation loc = SourceLocation::current()) -> void {
-        debug_assert_transparent(
-          should_free_data(),
-          loc,
-          "Invalid use of Rc<T>: Data cannot be freed when there are existing "
-          "references."
-        );
-        delete std::exchange(data, nullptr);
-      }
-
-      template<std::derived_from<T> Derived = T>
-      [[nodiscard]] auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> Derived* {
-        debug_assert_transparent(is_data_valid(), loc, "Invalid access of Rc<T> or RcMut<T>, data is nullptr");
-        return static_cast<Derived*>(data);
-      }
-
-      template<typename Base>
-      requires std::derived_from<T, Base>
-      [[nodiscard]] auto upcast() const -> RcInterior<Base>* {
-        return std::bit_cast<RcInterior<Base>*>(this);
-      }
-
-      template<std::derived_from<T> Derived>
-      [[nodiscard]] auto downcast() const -> Option<RcInterior<Derived>*> {
-        if (dynamic_cast<Derived*>(data)) {
-          return some(std::bit_cast<RcInterior<Derived>*>(this));
-        }
-
-        return crab::none;
-      }
-
-      [[nodiscard]] auto release(const SourceLocation loc = SourceLocation::current()) -> Box<T> {
-        decrement_ref_count(loc);
-        return Box<T>::wrap_unchecked(std::exchange(data, nullptr));
-      }
-    };
-  } // namespace helper
-} // namespace crab::rc
+    [[nodiscard]] auto release(const SourceLocation loc = SourceLocation::current()) -> Box<T> {
+      decrement_ref_count(loc);
+      return Box<T>::wrap_unchecked(std::exchange(data, nullptr));
+    }
+  };
+} // namespace crab::rc::helper
 
 /**
  * @brief Reference Counting for a value of type T on the heap, equivalent to
@@ -812,35 +810,35 @@ namespace crab::option {
   struct RcStorage final {
     using RefCounted = Container<T>;
 
-    inline constexpr explicit RcStorage(RefCounted value): inner{std::move(value)} {}
+    CRAB_INLINE_CONSTEXPR explicit RcStorage(RefCounted value): inner{std::move(value)} {}
 
-    inline constexpr explicit RcStorage(const None& = crab::none): inner{nullptr} {}
+    CRAB_INLINE_CONSTEXPR explicit RcStorage(const None& = crab::none): inner{nullptr} {}
 
-    inline constexpr auto operator=(RefCounted&& value) -> RcStorage& {
+    CRAB_INLINE_CONSTEXPR auto operator=(RefCounted&& value) -> RcStorage& {
       inner = std::move(value);
       return *this;
     }
 
-    inline constexpr auto operator=(const None&) -> RcStorage& {
+    CRAB_INLINE_CONSTEXPR auto operator=(const None&) -> RcStorage& {
       if (in_use()) {
         std::ignore = RefCounted{std::move(inner)};
       }
       return *this;
     }
 
-    [[nodiscard]] inline constexpr auto value() const& -> const RefCounted& {
+    CRAB_PURE_INLINE_CONSTEXPR auto value() const& -> const RefCounted& {
       return inner;
     }
 
-    [[nodiscard]] inline constexpr auto value() & -> RefCounted& {
+    CRAB_PURE_INLINE_CONSTEXPR auto value() & -> RefCounted& {
       return inner;
     }
 
-    [[nodiscard]] inline constexpr auto value() && -> RefCounted {
+    CRAB_PURE_INLINE_CONSTEXPR auto value() && -> RefCounted {
       return std::move(inner);
     }
 
-    [[nodiscard]] inline constexpr auto in_use() const -> bool {
+    CRAB_PURE_INLINE_CONSTEXPR auto in_use() const -> bool {
       return inner.is_valid();
     }
 

@@ -42,14 +42,14 @@ namespace crab {
      *
      * @return
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto as_exception() const -> std::runtime_error {
+    CRAB_NODISCARD auto as_exception() const -> std::runtime_error {
       return std::runtime_error{what()};
     }
 
     /**
      * @brief Stringified error message for logging purposes
      */
-    CRAB_PURE_CONSTEXPR virtual auto what() const -> String = 0;
+    CRAB_NODISCARD virtual auto what() const -> String = 0;
   };
 } // namespace crab
 
@@ -64,7 +64,7 @@ namespace crab {
    * @brief Converts a given error to its stringified representation.
    */
   template<error_type E>
-  CRAB_PURE_INLINE_CONSTEXPR auto error_to_string(const E& err) {
+  CRAB_PURE_CONSTEXPR auto error_to_string(const E& err) {
     if constexpr (requires {
                     { err.what() } -> crab::ty::convertible<String>;
                   }) {
@@ -194,11 +194,11 @@ public:
    */
   using OkType = T;
 
-  inline static CRAB_CONSTEXPR bool is_same{std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<E>>};
+  inline static constexpr bool is_same{std::same_as<std::remove_cvref_t<T>, std::remove_cvref_t<E>>};
 
-  inline static CRAB_CONSTEXPR bool is_copyable{std::copyable<T> and std::copyable<E>};
+  inline static constexpr bool is_copyable{std::copyable<T> and std::copyable<E>};
 
-  inline static CRAB_CONSTEXPR bool is_trivially_copyable{
+  inline static constexpr bool is_trivially_copyable{
     std::is_trivially_copyable_v<T> and std::is_trivially_copyable_v<E>,
   };
 

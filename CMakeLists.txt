@@ -17,8 +17,7 @@ CPMAddPackage("gh:fmtlib/fmt#7.1.3")
 # Setting up library & install
 include(GNUInstallDirs)
 
-add_library(crab SHARED
-        include/crab/preamble.hpp
+add_library(${PROJECT_NAME} SHARED
         include/crab/type_traits.hpp
         include/crab/debug.hpp
         include/crab/option.hpp
@@ -43,7 +42,6 @@ endif()
 if(UNIX)
         target_compile_definitions(crab PUBLIC "_UNIX=1")
 endif()
-
 
 # Public API
 set_target_properties(crab PROPERTIES

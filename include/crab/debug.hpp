@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <crab/preamble.hpp>
-#include "crab/core.hpp"
+#include "./preamble.hpp"
+#include "./core.hpp"
 
 #if _DEBUG
 

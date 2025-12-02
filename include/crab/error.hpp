@@ -1,7 +1,5 @@
 #pragma once
 
-#include <format>
-
 #include "./preamble.hpp"
 #include "./fmt.hpp"
 

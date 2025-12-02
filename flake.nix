@@ -27,7 +27,7 @@
             buildInputs = with pkgs; [
               llvm.clang-tools
               llvm.clang
-
+              gcc
             ];
 
             nativeBuildInputs = with pkgs; [

@@ -52,7 +52,8 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
     - name: Configure CMake
-      run: sh ${{ github.workspace }}/run_tests.nu
+      shell: "nu"
+      run: ${{ github.workspace }}/run_tests.nu
         # cmake -B ${{ steps.strings.outputs.build-output-dir }}
         # -GNinja
         # -DCRAB_TESTS=ON

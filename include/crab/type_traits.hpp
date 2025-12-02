@@ -4,10 +4,9 @@
 
 #pragma once
 
+#include <crab/preamble.hpp>
 #include <concepts>
 #include <type_traits>
-
-#include <crab/preamble.hpp>
 
 namespace crab {
   template<typename... Args>

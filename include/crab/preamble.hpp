@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "./core.hpp"
+
 #include <cstdint>
 #include <functional>
 #include <numbers>
@@ -13,8 +15,6 @@
 #include <sstream>
 #include <string>
 #include <utility>
-
-#define nameof(x) #x
 
 /**
  * @brief 32 Bit Floating Point Number
@@ -226,10 +226,7 @@ using Vec = std::vector<T>;
 /**
  * @brief Unordered set of elements
  */
-template<
-  typename T,
-  typename Hash = std::hash<T>,
-  typename Predicate = std::equal_to<T>>
+template<typename T, typename Hash = std::hash<T>, typename Predicate = std::equal_to<T>>
 using Set = std::unordered_set<T, Hash, Predicate>;
 #endif
 
@@ -238,11 +235,7 @@ using Set = std::unordered_set<T, Hash, Predicate>;
 /**
  * @brief Unordered key-value collection
  */
-template<
-  typename Key,
-  typename Value,
-  typename Hash = std::hash<Key>,
-  typename Predicate = std::equal_to<Key>>
+template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Predicate = std::equal_to<Key>>
 using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 #endif
 
@@ -265,12 +258,12 @@ struct unit {
    * Unit has not state, all instances of until are equal
    * (this will always return true)
    */
-  [[nodiscard]] constexpr auto operator==(const unit&) const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator==(const unit&) const -> bool {
     return true;
   }
 };
 
-inline constexpr unit unit::val{};
+inline CRAB_CONSTEXPR unit unit::val{};
 
 constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
   return os << "unit";
@@ -279,107 +272,106 @@ constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
 /**
  * @brief Literal for converting a degree literal -> radians
  */
-[[nodiscard]] consteval f32 operator""_deg(const f64 literal) {
+CRAB_PURE_CONSTEVAL f32 operator""_deg(const f64 literal) {
   return static_cast<f32>(literal * std::numbers::pi / 180.f);
 }
 
-[[nodiscard]] consteval f32 operator""_f32(const f64 literal) {
+CRAB_PURE_CONSTEVAL f32 operator""_f32(const f64 literal) {
   return static_cast<f32>(literal);
 }
 
-[[nodiscard]] consteval f64 operator""_f64(const f64 literal) {
+CRAB_PURE_CONSTEVAL f64 operator""_f64(const f64 literal) {
   return literal;
 }
 
 /**
  * @brief Converts literal to an i8
  */
-[[nodiscard]] consteval i8 operator""_i8(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL i8 operator""_i8(const unsigned long long literal) {
   return static_cast<i8>(literal);
 }
 
 /**
  * @brief Converts literal to an i16
  */
-[[nodiscard]] consteval i16 operator""_i16(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL i16 operator""_i16(const unsigned long long literal) {
   return static_cast<i16>(literal);
 }
 
 /**
  * @brief Converts literal to an i32
  */
-[[nodiscard]] consteval i32 operator""_i32(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL i32 operator""_i32(const unsigned long long literal) {
   return static_cast<i32>(literal);
 }
 
 /**
  * @brief Converts literal to an i64
  */
-[[nodiscard]] consteval i64 operator""_i64(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL i64 operator""_i64(const unsigned long long literal) {
   return static_cast<i64>(literal);
 }
 
 /**
  * @brief Converts literal to an imax
  */
-[[nodiscard]] consteval imax operator""_imax(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL imax operator""_imax(const unsigned long long literal) {
   return static_cast<imax>(literal);
 }
 
 /**
  * @brief Converts literal to an iptr
  */
-[[nodiscard]] consteval iptr operator""_iptr(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL iptr operator""_iptr(const unsigned long long literal) {
   return static_cast<iptr>(literal);
 }
 
 /**
  * @brief Converts literal to an u8
  */
-[[nodiscard]] consteval u8 operator""_u8(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL u8 operator""_u8(const unsigned long long literal) {
   return static_cast<u8>(literal);
 }
 
 /**
  * @brief Converts literal to an u16
  */
-[[nodiscard]] consteval u16 operator""_u16(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL u16 operator""_u16(const unsigned long long literal) {
   return static_cast<u16>(literal);
 }
 
 /**
  * @brief Converts literal to an u32
  */
-[[nodiscard]] consteval u32 operator""_u32(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL u32 operator""_u32(const unsigned long long literal) {
   return static_cast<u32>(literal);
 }
 
 /**
  * @brief Converts literal to an u64
  */
-[[nodiscard]] consteval u64 operator""_u64(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL u64 operator""_u64(const unsigned long long literal) {
   return static_cast<u64>(literal);
 }
 
 /**
  * @brief Converts literal to an usize
  */
-[[nodiscard]] consteval usize operator""_usize(const unsigned long long literal
-) {
+CRAB_PURE_CONSTEVAL usize operator""_usize(const unsigned long long literal) {
   return static_cast<usize>(literal);
 }
 
 /**
  * @brief Converts literal to an umax
  */
-[[nodiscard]] consteval umax operator""_umax(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL umax operator""_umax(const unsigned long long literal) {
   return static_cast<umax>(literal);
 }
 
 /**
  * @brief Converts literal to an uptr
  */
-[[nodiscard]] consteval uptr operator""_uptr(const unsigned long long literal) {
+CRAB_PURE_CONSTEVAL uptr operator""_uptr(const unsigned long long literal) {
   return static_cast<uptr>(literal);
 }
 

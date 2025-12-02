@@ -11,10 +11,11 @@
 #include <type_traits>
 #include <variant>
 
-#include "crab/preamble.hpp"
-#include "crab/debug.hpp"
-#include "crab/type_traits.hpp"
-#include "option.hpp"
+#include "./preamble.hpp"
+#include "./fmt.hpp"
+#include "./debug.hpp"
+#include "./type_traits.hpp"
+#include "./option.hpp"
 
 namespace crab {
   /**
@@ -81,7 +82,7 @@ namespace crab {
     }
 
     else if constexpr (std::is_enum_v<E>) {
-      return fmt::format("{}[{}]", typeid(E).name(), static_cast<std::underlying_type_t<E>>(err));
+      return crab::format("{}[{}]", typeid(E).name(), static_cast<std::underlying_type_t<E>>(err));
     } else {
       return typeid(E).name();
     }

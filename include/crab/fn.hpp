@@ -12,7 +12,7 @@ namespace crab::fn {
   /**
    * @brief Identity Function, f(x)=x forall x
    */
-  constexpr auto identity{
+  CRAB_CONSTEXPR auto identity{
     []<typename T>(T&& x) {
       static_assert(std::move_constructible<T>, "Cannot create an identity function for a type that cannot be moved.");
       return std::forward<T>(x);
@@ -25,48 +25,48 @@ namespace crab::fn {
    *
    * @param x Any integer value to check
    */
-  constexpr auto constant{
+  CRAB_CONSTEXPR auto constant{
     []<ty::copy_constructible T>(T x) { return [x = std::move(x)]<typename... Args>(Args&&...) -> T { return x; }; },
   };
 
   /**
    * Predicate for whether the input is even
    */
-  constexpr auto is_even{
+  CRAB_CONSTEXPR auto is_even{
     [](auto&& x) -> bool { return x % 2 == 0; },
   };
 
   /**
    * Predicate for whether the input is odd
    */
-  constexpr auto is_odd{
+  CRAB_CONSTEXPR auto is_odd{
     [](auto&& x) -> bool { return not is_even(x); },
   };
 
   template<typename Derived>
   struct cast_s final {
 
-    [[nodiscard]] inline constexpr auto operator()(auto& value) const requires ty::non_const<decltype(value)>
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(auto& value) const requires ty::non_const<decltype(value)>
     {
       return ref::cast<Derived>(value);
     }
 
-    [[nodiscard]] inline constexpr auto operator()(const auto& value) const {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(const auto& value) const {
       return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()(RefMut<T> value) const {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(RefMut<T> value) const {
       return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()(Ref<T> value) const -> Option<Ref<Derived>> {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(Ref<T> value) const -> Option<Ref<Derived>> {
       return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()(RcMut<T> value) const {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(RcMut<T> value) const {
       return value.template downcast<T>();
     }
 
@@ -77,12 +77,12 @@ namespace crab::fn {
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()(const Box<T>& value) const -> Option<const Derived&> {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(const Box<T>& value) const -> Option<const Derived&> {
       return operator()(*value);
     }
 
     template<typename T>
-    [[nodiscard]] inline constexpr auto operator()(Box<T>& value) const -> Option<Derived&> {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(Box<T>& value) const -> Option<Derived&> {
       return operator()(*value);
     }
   };
@@ -96,5 +96,5 @@ namespace crab::fn {
    * functions around as objects
    */
   template<typename Derived>
-  inline static constexpr cast_s<Derived> cast{};
+  inline static CRAB_CONSTEXPR cast_s<Derived> cast{};
 }

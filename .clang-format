@@ -2,6 +2,7 @@
 Language: Cpp
 BasedOnStyle: LLVM
 LineEnding: LF
+StatementMacros: ['CRAB_TRAIT_FN']
 AlignAfterOpenBracket: BlockIndent
 AlignArrayOfStructures: Left
 AlignConsecutiveAssignments: false
@@ -19,10 +20,10 @@ AllowShortLoopsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Empty
 AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
+AllowShortFunctionsOnASingleLine: Empty
 AllowShortLambdasOnASingleLine: All
 AlwaysBreakTemplateDeclarations: Yes
-# BreakTemplateDeclarations: Yes
+BreakTemplateDeclarations: Yes
 AlwaysBreakBeforeMultilineStrings: false
 BinPackArguments: false
 BinPackParameters: false
@@ -46,7 +47,7 @@ BraceWrapping:
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
 BreakBeforeBraces: Custom
-BreakBeforeConceptDeclarations: Never
+BreakBeforeConceptDeclarations: Always
 BreakBeforeTernaryOperators: true
 BreakBeforeBinaryOperators: NonAssignment
 BreakConstructorInitializers: AfterColon
@@ -54,10 +55,8 @@ BreakConstructorInitializersBeforeComma: false
 BreakInheritanceList: AfterComma
 BracedInitializerIndentWidth: 2
 BreakAfterAttributes: Leave
-# AlwaysBreakAfterDefinitionReturnType: None
-# AlwaysBreakAfterReturnType: None
 PenaltyReturnTypeOnItsOwnLine: 9990
-ColumnLimit: 80
+ColumnLimit: 120
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 IncludeCategories: 
   - Regex: '^<.*'
@@ -69,7 +68,7 @@ IncludeCategories:
 IncludeIsMainRegex: '([-_](test|unittest))?$'
 IndentCaseLabels: true
 IndentCaseBlocks: true
-IndentPPDirectives: BeforeHash
+IndentPPDirectives: None
 InsertBraces: true
 InsertNewlineAtEOF: true
 MacroBlockBegin: ''

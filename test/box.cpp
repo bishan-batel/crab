@@ -1,14 +1,82 @@
-#include "box.hpp"
 
 #include <catch2/catch_test_macros.hpp>
-#include <preamble.hpp>
+#include <memory>
+#include <crab/preamble.hpp>
+#include <crab/box.hpp>
+#include <crab/error.hpp>
+#include <utility>
 #include "test_types.hpp"
 
-struct SelfReferential {
-private:
+struct SelfReferential;
 
+struct SelfReferential {
   Option<Box<SelfReferential>> test;
 };
+
+struct Type {};
+
+void fun(i32&) {
+  std::cout << "fun1" << std::endl;
+}
+
+void fun(i32&&) {
+  std::cout << "fun2" << std::endl;
+}
+
+class EpicBacon {
+public:
+
+  explicit EpicBacon(i32 x): number{new i32{x}} {}
+
+  EpicBacon(const EpicBacon& from): number{new i32{*from.number}} {}
+
+  EpicBacon(EpicBacon&& from) noexcept: number{from.number} {
+    from.number = nullptr;
+  }
+
+  ~EpicBacon() {
+    delete number;
+  }
+
+  i32* number;
+};
+
+EpicBacon some_function() {
+  return EpicBacon{42};
+}
+
+void another_function(EpicBacon e) {
+  std::cout << e.number << "\n";
+  EpicBacon{std::move(e)};
+}
+
+void epic() {
+  EpicBacon resource{some_function()};
+
+  // do something ...
+
+  another_function(std::move(resource));
+}
+
+void box() {
+  Box<Derived> derived{crab::make_box<Derived>()};
+
+  // this would not compile, you need to move / transfer ownership
+  // Derived* raw_ptr = Box<Derived>::unwrap(derived);
+
+  // this would not compile, you need to move / transfer ownership
+  Derived* raw_ptr = Box<Derived>::unwrap(std::move(derived));
+
+  delete raw_ptr;
+}
+
+void unique() {
+  std::unique_ptr<Derived> derived{std::make_unique<Derived>()};
+
+  Derived* a = derived.release();
+
+  delete a;
+}
 
 TEST_CASE("Preamble", "[unit]") {
   REQUIRE(unit{} == unit{});
@@ -18,18 +86,17 @@ TEST_CASE("Preamble", "[unit]") {
 TEST_CASE("Box", "[box]") {
   SECTION("Box Moving") {
     Box<u32> a = crab::make_box<u32>(10);
-    REQUIRE_NOTHROW(a.as_ptr() != nullptr);
+    CHECK_NOTHROW(a.as_ptr() != nullptr);
 
     const Box<u32> moved = std::move(a);
-    REQUIRE_THROWS(a.as_ptr());
-    REQUIRE_NOTHROW(moved.as_ptr());
+    std::cout << moved << std::endl;
+    CHECK_THROWS(a.as_ptr() == nullptr);
+    CHECK_THROWS(a.as_ptr());
+    CHECK_NOTHROW(moved.as_ptr());
 
-    REQUIRE(*moved == 10);
-    REQUIRE(moved == 10);
+    CHECK(*moved == 10);
+    CHECK(moved == 10);
   }
-
-  STATIC_REQUIRE(sizeof(Box<u32>) == sizeof(u32*));
-  STATIC_REQUIRE(sizeof(Box<MoveOnly>) == sizeof(MoveOnly*));
 
   SECTION("Const Correctness") {
     const Box<u32> var = crab::make_box<u32>(42);
@@ -45,7 +112,7 @@ TEST_CASE("Box", "[box]") {
     REQUIRE(*raw_ptr == 420);
 
     u32* b;
-    REQUIRE_NOTHROW(b = crab::release(std::move(single)));
+    REQUIRE_NOTHROW(b = Box<u32>::unwrap(std::move(single)));
 
     REQUIRE(b == raw_ptr);
 
@@ -53,9 +120,32 @@ TEST_CASE("Box", "[box]") {
 
     REQUIRE(*b == 420);
 
-    REQUIRE_THROWS(crab::release(std::move(single)));
+    REQUIRE_THROWS(Box<u32>::unwrap(std::move(single)));
 
     // Generics<G>
     delete b;
   }
+}
+
+TEST_CASE("Box Option Niche Optimization") {
+  Option<Box<i32>> opt{crab::make_box<i32>(10)};
+
+  static_assert(sizeof(Option<Box<i32>>) == sizeof(Box<i32>));
+
+  REQUIRE(opt.is_some());
+  REQUIRE_NOTHROW(opt.get_unchecked());
+  REQUIRE_NOTHROW(*opt.get_unchecked() == 10);
+
+  Box<int>& a{opt.get_unchecked()};
+  REQUIRE_NOTHROW(std::move(a));
+
+  Option moved_into{std::move(opt)};
+  CHECK(moved_into.is_some());
+
+  CHECK_THROWS(opt.get_unchecked().as_ptr());
+  CHECK(opt.is_none());
+  CHECK(not opt.is_some());
+
+  opt = crab::none;
+  CHECK(opt.is_none());
 }

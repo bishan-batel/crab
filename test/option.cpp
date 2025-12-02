@@ -1,53 +1,31 @@
 #include <algorithm>
-#include <result.hpp>
-#include <option.hpp>
+#include <concepts>
+#include <ranges>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
-#include "box.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
-#include <preamble.hpp>
-#include <ref.hpp>
+#include <crab/box.hpp>
+#include <crab/ref.hpp>
 #include <crab/fn.hpp>
-#include <range.hpp>
+#include <crab/range.hpp>
+#include <crab/result.hpp>
+#include <crab/option.hpp>
+#include <utility>
 
 TEST_CASE("Option", "Tests for all option methods") {
   const auto life = crab::fn::constant(42);
 
   STATIC_CHECK(sizeof(crab::None) == 1);
 
-  SECTION("Type traits") {
-    // is ref helpers
+  SECTION("Option<T>::GenericStorage Reference Optimisation") {
     assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-      namespace ref = crab::ref;
-
-      // none of these types should be triggered as ref / ref mut
-      assert::for_types(
-        assert::types<const T&, T&, T*, const T*, T>,
-        []<typename K>(assert::type<K>) {
-          STATIC_CHECK(not ref::is_ref_type<K>::value);
-          STATIC_CHECK(not ref::is_ref_mut_type<K>::value);
-        }
-      );
-
-      assert::for_types(assert::ref_types<T>, []<typename K>(assert::type<K>) {
-        // normal types should not trigger these flags
-
-        using underlying = typename ref::decay_type<K>::underlying_type;
-
-        STATIC_CHECK(std::same_as<underlying, T>);
-      });
-
-      STATIC_CHECK(ref::is_ref_type<Ref<T>>::value);
-      STATIC_CHECK(not ref::is_ref_mut_type<Ref<T>>::value);
-
-      STATIC_CHECK(not ref::is_ref_type<RefMut<T>>::value);
-      STATIC_CHECK(ref::is_ref_mut_type<RefMut<T>>::value);
+      STATIC_CHECK(sizeof(T*) == sizeof(Option<T&>));
+      STATIC_CHECK(sizeof(T*) == sizeof(Option<const T&>));
     });
   }
 
   SECTION("Constructors & Move Semantics") {
-
     // general construction
     assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
       constexpr bool copyable = std::copyable<T>;
@@ -84,24 +62,33 @@ TEST_CASE("Option", "Tests for all option methods") {
 
         counter->valid(expected);
 
-        // std::move, and assignment
-        //      expected.moves += 2;
-        //      opt = std::move(opt);
-
-        //      counter->valid(expected);
-
         // explicit constructor, std::move, and assignmnet
+
         expected.moves += 3;
         CHECK_NOTHROW(opt = MoveTracker<T>(std::move(opt).unwrap()));
-
+        //
         if constexpr (copyable) {
-
           // rvalue from made copy, then assignment
-          expected.moves += 2;
+          expected.moves++;
           expected.copies++;
           CHECK_NOTHROW(opt = Option(opt));
 
           counter->valid(expected);
+
+          CHECK_NOTHROW(opt = opt);
+          CHECK(opt.is_some());
+
+          counter->valid(expected);
+
+          Option copy{opt};
+          expected.copies++;
+          counter->valid(expected);
+
+          CHECK_NOTHROW(opt = copy);
+          expected.copies++;
+
+          counter->valid(expected);
+          CHECK(opt.is_some());
         }
       }
     });
@@ -112,12 +99,10 @@ TEST_CASE("Option", "Tests for all option methods") {
 
     CHECK(opt.is_some());
     CHECK(static_cast<bool>(opt));
-    CHECK(static_cast<const bool&>(opt));
     CHECK(opt);
 
     opt = crab::none;
     CHECK_FALSE(opt.is_some());
-    CHECK_FALSE(static_cast<bool>(opt));
     CHECK_FALSE(opt);
   }
 
@@ -154,17 +139,17 @@ TEST_CASE("Option", "Tests for all option methods") {
     CHECK(Option<String>{}.get_or_default() == "");
   }
 
-  SECTION("as_ref and as_ref_mut") {
+  SECTION("as_ref and as_mut") {
     Option<i32> value{10};
     CHECK(value.is_some());
 
-    CHECK_NOTHROW(*value.as_ref().unwrap() == 10);
-    CHECK_NOTHROW(*value.as_ref_mut().unwrap() = 42);
+    CHECK_NOTHROW(value.as_ref().unwrap() == 10);
+    CHECK_NOTHROW(value.as_mut().unwrap() = 42);
     CHECK(value == Option{42});
   }
 
   SECTION("Functor methods between Option and Result") {
-    CHECK(Option{10}.ok_or("what").unwrap() == 10);
+    CHECK(Option{10}.ok_or<const char*>("what").unwrap() == 10);
     CHECK(Option<i32>{}.ok_or<String>("what").unwrap_err() == "what");
 
     CHECK(Option{10}.take_ok_or<String>("what").unwrap() == 10);
@@ -189,49 +174,126 @@ TEST_CASE("Option", "Tests for all option methods") {
     CHECK(Option{10}.map(crab::fn::constant(42)) == Option{42});
     CHECK(Option<i32>{}.map(crab::fn::constant(42)) == crab::none);
 
-    CHECK(Option<RefMut<Derived>>{}.map<Base>() == crab::none);
-    CHECK(Option<RefMut<Derived>>{}.map<Derived>() == crab::none);
-    CHECK(Option<RefMut<Derived>>{}.map<Derived>() == crab::none);
-    CHECK(
-      Option<RefMut<Base>>().flat_map(crab::fn::cast<Derived>) == crab::none
-    );
+    CHECK(Option<Derived&>{}.map<Base>() == crab::none);
+    CHECK(Option<Derived&>{}.map<Derived>() == crab::none);
+    CHECK(Option<Derived&>{}.map<Derived>() == crab::none);
+
+    auto c = crab::fn::cast<Derived>;
+    CHECK(Option<Derived&>{}.flat_map(c) == crab::none);
   }
 
-  SECTION("as_ref/as_ref_mut") {
+  SECTION("as_ref/as_mut") {
     SECTION("copyable") {
       Option<String> name{"Hello"};
-      Option<RefMut<String>> ref = name.as_ref_mut();
-      Option<Ref<String>> ref_mut = name.as_ref();
+      Option<String&> ref = name.as_mut();
+      Option<const String&> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
       REQUIRE(ref.is_some());
       REQUIRE(ref_mut.is_some());
 
-      REQUIRE(*ref.get_unchecked() == "Hello");
-      REQUIRE(*ref_mut.get_unchecked() == "Hello");
+      REQUIRE(ref.get_unchecked() == "Hello");
+      REQUIRE(ref_mut.get_unchecked() == "Hello");
 
       name.get_unchecked() += " World";
 
-      REQUIRE(*ref.get_unchecked() == "Hello World");
-      REQUIRE(*ref_mut.get_unchecked() == "Hello World");
+      REQUIRE(ref.get_unchecked() == "Hello World");
+      REQUIRE(ref_mut.get_unchecked() == "Hello World");
     }
 
     SECTION("move only") {
       Option<MoveOnly> name{MoveOnly{"Hello"}};
-      Option<RefMut<MoveOnly>> ref = name.as_ref_mut();
-      Option<Ref<MoveOnly>> ref_mut = name.as_ref();
+      Option<MoveOnly&> ref = name.as_mut();
+      Option<const MoveOnly&> ref_mut = name.as_ref();
 
       REQUIRE(name.is_some());
       REQUIRE(ref.is_some());
       REQUIRE(ref_mut.is_some());
 
-      REQUIRE(ref.get_unchecked()->get_name() == "Hello");
-      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello");
+      REQUIRE(ref.get_unchecked().get_name() == "Hello");
+      REQUIRE(ref_mut.get_unchecked().get_name() == "Hello");
 
       name.get_unchecked().set_name("Hello World");
 
-      REQUIRE(ref.get_unchecked()->get_name() == "Hello World");
-      REQUIRE(ref_mut.get_unchecked()->get_name() == "Hello World");
+      REQUIRE(ref.get_unchecked().get_name() == "Hello World");
+      REQUIRE(ref_mut.get_unchecked().get_name() == "Hello World");
     }
+
+    SECTION("reference types") {
+
+      assert::for_types<i32&, const i32&>([]<typename T>(assert::type<T>) {
+        Option<T> a;
+
+        REQUIRE(a.is_none());
+        REQUIRE_THROWS(a.get_unchecked());
+
+        i32 i = 10;
+        i32 j = 10;
+
+        a = i;
+
+        REQUIRE(a.is_some());
+        CHECK(a.get_unchecked() == i);
+        CHECK(a.get_unchecked() == 10);
+
+        CHECK(a != crab::none);
+        CHECK(a == Option<T>{a});
+        CHECK(a == Option<T>{i});
+        CHECK(a == Option<T>{j});
+
+        REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 10);
+      });
+
+      Option<i32&> a;
+
+      REQUIRE(a.is_none());
+      REQUIRE_THROWS(a.get_unchecked());
+
+      i32 i = 10;
+      i32 j = 10;
+
+      a = i;
+
+      a.get_unchecked() = 11;
+
+      REQUIRE(a.is_some());
+      CHECK(a.get_unchecked() == i);
+      CHECK(a.get_unchecked() == 11);
+
+      CHECK(a != crab::none);
+      CHECK(a == Option<i32&>{a});
+      CHECK(a == Option<i32&>{i});
+      CHECK(a != Option<i32&>{j});
+
+      REQUIRE_NOTHROW(a.filter(crab::fn::constant(true)));
+
+      REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 11);
+    }
+  }
+
+  SECTION("flatten") {
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      STATIC_REQUIRE(not requires(Option<T> opt) { opt.flatten(); });
+      STATIC_REQUIRE(requires(Option<Option<T>> opt) { Option<T>{std::move(opt).flatten()}; });
+    });
+  }
+
+  SECTION("crab::some implicit vs explicit template") {
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      assert::for_types(assert::types<T, T&, const T&>, []<typename K>(assert::type<K>) {
+        if constexpr (std::copy_constructible<T>) {
+          STATIC_REQUIRE( //
+            std::same_as<
+              Option<T>,
+              decltype(crab::some(std::declval<K>()))> //
+          );
+        }
+
+        STATIC_REQUIRE(std::same_as<
+                       Option<K>,
+                       decltype(crab::some<K>(std::declval<K>()))> //
+        );
+      });
+    });
   }
 }

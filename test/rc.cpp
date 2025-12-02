@@ -2,9 +2,10 @@
 // Created by bishan_ on 5/20/24.
 //
 
-#include "rc.hpp"
+#include <crab/rc.hpp>
 
 #include <catch2/catch_test_macros.hpp>
+#include <utility>
 #include "test_types.hpp"
 
 #if CATCH2_TESTS
@@ -55,6 +56,12 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE(original.get_ref_count() == 2);
       REQUIRE_NOTHROW(std::move(returned).unwrap());
       REQUIRE(original.is_unique());
+
+      returned = original.downcast<Derived>();
+
+      Rc<Derived> moved{std::move(returned.get_unchecked())};
+      REQUIRE(returned.is_none());
+      REQUIRE(moved.is_valid());
     }
 
     SECTION("RcMut") {
@@ -66,5 +73,14 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE_NOTHROW(std::move(returned).unwrap());
       REQUIRE(original.is_unique());
     }
+  }
+
+  SECTION("Option Niche Optimisation") {
+
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(RcMut<T>));
+      STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(Option<Rc<T>>));
+      STATIC_REQUIRE(sizeof(RcMut<T>) == sizeof(Option<RcMut<T>>));
+    });
   }
 }

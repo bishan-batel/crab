@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Refresh Cmake (debug)",
+      "type": "shell",
+      "command": "cmake --preset debug"
+    },
+    {
+      "label": "Build (debug)",
+      "type": "shell",
+      "command": "cmake --build build/debug"
+    },
+    {
+      "label": "Run Testing (debug)",
+      "type": "shell",
+      "command": "./build/debug/test/crab-tests",
+      "dependsOn": [
+        "Build (debug)"
+      ]
+    }
+  ]
+}

@@ -1,20 +1,22 @@
 #pragma once
-#include <preamble.hpp>
+
+#include <concepts>
 #include <utility>
-#include "box.hpp"
-#include "rc.hpp"
-#include "ref.hpp"
+
+#include <crab/preamble.hpp>
+#include <crab/box.hpp>
+#include <crab/rc.hpp>
+#include <crab/ref.hpp>
 
 namespace crab::fn {
   /**
    * @brief Identity Function, f(x)=x forall x
    */
-  constexpr auto identity = []<typename T>(T&& x) -> T {
-    static_assert(
-      std::move_constructible<T>,
-      "Cannot create an identity function for a type that cannot be moved."
-    );
-    return std::forward<T>(x);
+  CRAB_CONSTEXPR auto identity{
+    []<typename T>(T&& x) {
+      static_assert(std::move_constructible<T>, "Cannot create an identity function for a type that cannot be moved.");
+      return std::forward<T>(x);
+    },
   };
 
   /**
@@ -23,80 +25,67 @@ namespace crab::fn {
    *
    * @param x Any integer value to check
    */
-  constexpr auto constant = []<typename T>(T&& x) {
-    static_assert(
-      std::move_constructible<T>,
-      "Cannot create a constant function for a type that cannot be moved."
-    );
-    return [x = std::forward<T>(x)]<typename... Args>(Args&&...) {
-      return decltype(x){x};
-    };
+  CRAB_CONSTEXPR auto constant{
+    []<ty::copy_constructible T>(T x) { return [x = std::move(x)]<typename... Args>(Args&&...) -> T { return x; }; },
   };
 
   /**
    * Predicate for whether the input is even
    */
-  constexpr auto is_even = [](const auto& x) -> bool { return x % 2 == 0; };
+  CRAB_CONSTEXPR auto is_even{
+    [](auto&& x) -> bool { return x % 2 == 0; },
+  };
 
   /**
    * Predicate for whether the input is odd
    */
-  constexpr auto is_odd = [](const auto& x) -> bool { return not is_even(x); };
+  CRAB_CONSTEXPR auto is_odd{
+    [](auto&& x) -> bool { return not is_even(x); },
+  };
 
   template<typename Derived>
   struct cast_s final {
-    [[nodiscard]] constexpr auto operator()(auto& value
-    ) const -> Option<RefMut<Derived>>
-      requires(not std::is_const_v<decltype(value)>)
+
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(auto& value) const requires ty::non_const<decltype(value)>
     {
-      return crab::ref::cast<Derived>(value);
+      return ref::cast<Derived>(value);
     }
 
-    [[nodiscard]] constexpr auto operator()(const auto& value
-    ) const -> Option<Ref<Derived>> {
-      return crab::ref::cast<Derived>(value);
-    }
-
-    template<typename T>
-    [[nodiscard]] constexpr auto operator()(RefMut<T> value
-    ) const -> Option<RefMut<Derived>> {
-      return operator()(*value);
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(const auto& value) const {
+      return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(Ref<T> value
-    ) const -> Option<Ref<Derived>> {
-      return operator()(*value);
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(RefMut<T> value) const {
+      return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(RcMut<T> value
-    ) const -> Option<RcMut<Derived>> {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(Ref<T> value) const -> Option<Ref<Derived>> {
+      return ref::cast<Derived>(value);
+    }
+
+    template<typename T>
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(RcMut<T> value) const {
       return value.template downcast<T>();
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(Rc<T> value
-    ) const -> Option<Rc<Derived>> {
+    [[nodiscard]]
+    inline constexpr auto operator()(Rc<T> value) const -> Option<Rc<Derived>> {
       return value.template downcast<T>();
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(const Box<T>& value
-    ) const -> Option<Ref<Derived>> {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(const Box<T>& value) const -> Option<const Derived&> {
       return operator()(*value);
     }
 
     template<typename T>
-    [[nodiscard]] constexpr auto operator()(Box<T>& value
-    ) const -> Option<RefMut<Derived>> {
+    CRAB_PURE_INLINE_CONSTEXPR auto operator()(Box<T>& value) const -> Option<Derived&> {
       return operator()(*value);
     }
   };
-
-  // a particle needs to keep track of its lifetime
-  // its all in the same compute shader
-  // because when a lifetime restarts it needs to reset it
 
   /**
    * @brief Function Object that is basically the same thing as
@@ -107,17 +96,5 @@ namespace crab::fn {
    * functions around as objects
    */
   template<typename Derived>
-  inline static constexpr auto cast = cast_s<Derived>{};
-
-  template<typename T, typename R, typename... Args>
-  [[nodiscard]] constexpr auto method(R (T::*method)(Args&&...)) {
-    return [method](auto&& x, Args&&... args) {
-      RefMut<T> ref{x};
-      return ((*ref).*method)(std::forward<Args>(args)...);
-    };
-  }
-
-  /// -------------------------------------------------------------------------
-  /// Range Functions
-
+  inline static CRAB_CONSTEXPR cast_s<Derived> cast{};
 }

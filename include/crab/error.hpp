@@ -1,6 +1,7 @@
 #pragma once
-#include <format>
-#include "preamble.hpp"
+
+#include "./preamble.hpp"
+#include "./fmt.hpp"
 
 namespace crab {
   namespace error {
@@ -9,10 +10,9 @@ namespace crab {
 
     public:
 
-      explicit todo_exception(const String& msg):
-          msg{fmt::format("TODO Exception: {}", msg)} {}
+      explicit todo_exception(const String& msg): msg{crab::format("TODO Exception: {}", msg)} {}
 
-      [[nodiscard]] auto what() const noexcept -> const char* final {
+      CRAB_NODISCARD auto what() const noexcept -> const char* final {
         return msg.c_str();
       }
     };
@@ -21,11 +21,14 @@ namespace crab {
   /**
    * Does not return, use when you are waiting to implement a function.
    */
-  template<typename... T>
-  [[noreturn]] unit todo(const String& msg, T&&...) {
-#if DEBUG
+  template<typename... ArgsToIgnore>
+  CRAB_NORETURN unit todo(const String& msg, ArgsToIgnore&&... args) {
+    ((std::ignore = args), ...);
+
+#if _DEBUG
     throw error::todo_exception{msg};
 #else
+    std::ignore = msg;
     static_assert(false, "Cannot compile on release with lingering TODOs");
 #endif
   };

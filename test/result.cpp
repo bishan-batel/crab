@@ -4,7 +4,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <result.hpp>
+#include <crab/result.hpp>
 
 class Error final : public crab::Error {
 public:
@@ -136,9 +136,20 @@ TEST_CASE("Result", "[result]") {
 
     REQUIRE(non_zero(0).get_err_unchecked() == String{"Zero."});
   }
-}
 
-void what() {
-  const i32 a = 10;
-  printf("%d\n", a);
+  SECTION("Result of references") {
+
+    String str{"Hello"};
+
+    {
+      Result<String&, const char*> b{str};
+
+      CHECK(b.is_ok());
+      CHECK(b.is_ok_and([](const String& str) { return str == "Hello"; }));
+
+      b = crab::err("what");
+      CHECK(b.is_err());
+      CHECK(b.is_err_and([](StringView err) { return err == "what"; }));
+    }
+  }
 }

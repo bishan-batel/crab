@@ -27,7 +27,7 @@ public:
   constexpr Ref(const T& ref): Ref(&ref) {}
 
   /**
-   * You cannot construct a reference to a prvalue / temporary
+   * You cannot construct a reference to a xalue
    */
   constexpr Ref(T&& ref) = delete;
 

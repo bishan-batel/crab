@@ -817,7 +817,6 @@ namespace crab::option {
     inline constexpr explicit RcStorage(const None& = crab::none): inner{nullptr} {}
 
     inline constexpr auto operator=(RefCounted&& value) -> RcStorage& {
-      debug_assert(value.inner != nullptr, "Option<Rc<T>>, RcStorage::operator= called with an Rc");
       inner = std::move(value);
       return *this;
     }

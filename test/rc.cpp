@@ -5,6 +5,7 @@
 #include <crab/rc.hpp>
 
 #include <catch2/catch_test_macros.hpp>
+#include <utility>
 #include "test_types.hpp"
 
 #if CATCH2_TESTS
@@ -72,5 +73,14 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE_NOTHROW(std::move(returned).unwrap());
       REQUIRE(original.is_unique());
     }
+  }
+
+  SECTION("Option Niche Optimisation") {
+
+    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+      STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(RcMut<T>));
+      STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(Option<Rc<T>>));
+      STATIC_REQUIRE(sizeof(RcMut<T>) == sizeof(Option<RcMut<T>>));
+    });
   }
 }

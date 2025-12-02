@@ -31,11 +31,13 @@ TEST_CASE("Monadic Operations (Option)") {
 
       // indempotent behavior
       for (usize i = 0; i < 10; i++) {
-        Option<usize> val = crab::some(i) //
-                              .filter(is_even)
-                              .filter(is_even)
-                              .filter(is_even)
-                              .filter(is_even);
+        Option<usize> val{
+          crab::some(i) //
+            .filter(is_even)
+            .filter(is_even)
+            .filter(is_even)
+            .filter(is_even),
+        };
 
         REQUIRE(val.is_some() == is_even(i));
         if (val.is_some()) {
@@ -47,9 +49,7 @@ TEST_CASE("Monadic Operations (Option)") {
     SECTION("move") {
       Option<MoveOnly> value{MoveOnly{"message"}};
 
-      constexpr auto not_empty = [](const MoveOnly& x) {
-        return not x.get_name().empty();
-      };
+      constexpr auto not_empty = [](const MoveOnly& x) { return not x.get_name().empty(); };
 
       Option<MoveOnly> moved = std::move(value).filter(not_empty);
       REQUIRE(value.is_none());
@@ -58,11 +58,9 @@ TEST_CASE("Monadic Operations (Option)") {
       REQUIRE(std::move(value).filter(crab::fn::constant(true)).is_none());
       REQUIRE(std::move(value).filter(crab::fn::constant(false)).is_none());
 
-      // compilation test
-      // in gross lambda to force the static assert to happen in a
-      // templated context
-      [](const auto& ty) {
-        STATIC_REQUIRE(not requires {
+      // compilation test, in gross lambda to force the static assert to happen in a templated context
+      [](const auto& ty) {            //
+        STATIC_REQUIRE(not requires { //
           ty.filter([](const auto&) { return true; });
         });
       }(moved);
@@ -80,12 +78,9 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move-only") {
-      Option<MoveOnly> number =
-        crab::then(true, [] { return MoveOnly{"test"}; });
+      Option<MoveOnly> number = crab::then(true, [] { return MoveOnly{"test"}; });
 
-      REQUIRE_NOTHROW(
-        number.is_some() and number.get_unchecked().get_name() == "test"
-      );
+      REQUIRE_NOTHROW(number.is_some() and number.get_unchecked().get_name() == "test");
 
       number = crab::then(false, [] { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());
@@ -102,12 +97,9 @@ TEST_CASE("Monadic Operations (Option)") {
     }
 
     SECTION("move-only") {
-      Option<MoveOnly> number =
-        crab::unless(false, [] { return MoveOnly{"test"}; });
+      Option<MoveOnly> number = crab::unless(false, [] { return MoveOnly{"test"}; });
 
-      REQUIRE_NOTHROW(
-        number.is_some() and number.get_unchecked().get_name() == "test"
-      );
+      REQUIRE_NOTHROW(number.is_some() and number.get_unchecked().get_name() == "test");
 
       number = crab::unless(true, [] { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());

@@ -1115,9 +1115,7 @@ public:
   }
 
   template<typename S>
-  [[nodiscard]] inline constexpr auto operator<=>( //
-    const Option<S>& other
-  ) const -> std::partial_ordering {
+  [[nodiscard]] inline constexpr auto operator<=>(const Option<S>& other) const -> std::partial_ordering {
     static_assert(
       std::three_way_comparable_with<T, S>,
       "Cannot compare to options if the inner types are not comparable with "
@@ -1187,8 +1185,6 @@ private:
 
   Storage value;
 };
-
-#undef CRAB_OPTION_ASSERT_COPYABLE
 
 template<typename T>
 inline constexpr auto operator<<(std::ostream& os, const Option<T>& opt) -> std::ostream& {

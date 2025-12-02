@@ -50,11 +50,6 @@ void another_function(EpicBacon e) {
   EpicBacon{std::move(e)};
 }
 
-template<class T>
-constexpr T&& move(T& value) {
-  return static_cast<T&&>(value);
-}
-
 void epic() {
   EpicBacon resource{some_function()};
 

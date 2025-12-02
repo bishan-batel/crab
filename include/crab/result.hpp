@@ -394,7 +394,7 @@ public:
     debug_assert_transparent(not std::holds_alternative<invalidated>(inner), loc, "Invalid use of moved result");
   }
 
-  inline friend constexpr auto operator<<(std::ostream& os, const Result& result) -> std::ostream& {
+  friend CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const Result& result) -> std::ostream& {
     if (result.is_err()) {
       return os << "Err(" << crab::error_to_string(result.get_err_unchecked()) << ")";
     }

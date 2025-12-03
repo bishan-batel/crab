@@ -98,7 +98,8 @@ namespace crab {
      */
     template<class Derived, std::derived_from<Derived> Base>
     CRAB_PURE_INLINE_CONSTEXPR auto is(const Base& obj) noexcept -> bool {
-      return dynamic_cast<const Derived*>(&obj) != nullptr;
+      const auto* casted{dynamic_cast<const Derived*>(&obj)};
+      return casted != nullptr;
     }
 
     /**

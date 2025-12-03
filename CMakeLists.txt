@@ -1,23 +1,30 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(crab VERSION 1.0.1 DESCRIPTION "crab description")
+project(crab VERSION 2.0 DESCRIPTION "crab description")
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+
+set(CPM_SOURCE_CACHE_DEFAULT ON)
 
 # CPM should find local packages before trying to download
 
 # CPM
 include(cmake/CPM.cmake)
 
+option(CRAB_USE_FMT "Should crab use / require FMT to format" OFF)
+
 set(CPM_USE_LOCAL_PACKAGES ON)
-CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+
+if(CRAB_USE_FMT)
+        CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+endif()
 
 # Setting up library & install
 include(GNUInstallDirs)
 
-add_library(${PROJECT_NAME} SHARED
+add_library(${PROJECT_NAME} STATIC
         include/crab/type_traits.hpp
         include/crab/debug.hpp
         include/crab/option.hpp
@@ -56,14 +63,18 @@ target_include_directories(crab PUBLIC
         $<INSTALL_INTERFACE:include>
 )
 
-target_compile_definitions(crab
-        PUBLIC
-        "_DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
-        "_RELEASE=$<IF:$<CONFIG:Debug>,0,1>"
-        "_NDEBUG=$<IF:$<CONFIG:Debug>,0,1>"
-)
+target_compile_definitions(crab PUBLIC
+        "CRAB_DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
+        "CRAB_RELEASE=$<IF:$<CONFIG:RELEASE>,1,0>")
 
-target_link_libraries(crab PUBLIC fmt)
+
+if(CRAB_USE_FMT)
+        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=1")
+        target_link_libraries(crab PUBLIC fmt)
+else()
+        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=0")
+endif()
+
 
 install(TARGETS crab DESTINATION lib)
 install(DIRECTORY include/crab/ DESTINATION include/crab)

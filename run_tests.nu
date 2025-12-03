@@ -2,6 +2,8 @@
 
 let generator = "Ninja"
 
+let num_threads = 24;
+
 let gcc = {
 	name: "GCC",
 	c: (which gcc | first | get path),
@@ -18,10 +20,10 @@ def cmake_test [build_type: string, compiler: record] {
 	let builddir = $"build/_($compiler.name)_($build_type)"
 
 	print "> Setting up cmake"
-	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" $"-G($generator)"
+	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" $"-G($generator)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 
 	print "> Compiling"
-	cmake --build $builddir -j(nproc)
+	cmake --build $builddir -j($num_threads)
 
 	print "> Running tests"
 

@@ -476,7 +476,7 @@ public:
   {
     static_assert(crab::ty::default_constructible<T>, "take_or_default requires that T is default constructible");
 
-    return std::move(*this).take_or([] { return T{}; });
+    return std::move(*this).take_or([]() { return T{}; });
   }
 
   /**

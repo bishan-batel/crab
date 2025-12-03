@@ -25,11 +25,11 @@ namespace crab {
   CRAB_NORETURN unit todo(const String& msg, ArgsToIgnore&&... args) {
     ((std::ignore = args), ...);
 
-#if _DEBUG
-    throw error::todo_exception{msg};
-#else
+#if NDEBUG
     std::ignore = msg;
     static_assert(false, "Cannot compile on release with lingering TODOs");
+#else
+    throw error::todo_exception{msg};
 #endif
   };
 }; // namespace crab

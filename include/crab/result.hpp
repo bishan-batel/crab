@@ -258,11 +258,13 @@ public:
     return *this;
   }
 
-  CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Result& requires(not is_same) {
+  CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Result& requires(not is_same)
+  {
     return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
   }
 
-  CRAB_INLINE_CONSTEXPR auto operator=(E&& from) -> Result& requires(not is_same) {
+  CRAB_INLINE_CONSTEXPR auto operator=(E&& from) -> Result& requires(not is_same)
+  {
     return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
   }
 
@@ -661,7 +663,7 @@ namespace crab {
         Rest&&... other_functions
       ) const {
         return std::invoke(function).template ok_or<Error>(
-                                      [] -> Error { return Error{}; }
+                                      []() -> Error { return Error{}; }
         ).flat_map([&]<typename R>(R&& result) {
           return operator()(
             std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),

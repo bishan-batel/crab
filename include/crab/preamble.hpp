@@ -96,11 +96,19 @@ using imax = std::intmax_t;
  */
 using iptr = std::intptr_t;
 
+#if __cpp_char8_t
 /**
  * @brief UTF-8 Encoded Character
  */
 using char8 = char8_t;
+#else
+/**
+ * @brief UTF-8 Encoded Character
+ */
+using char8 = char;
+#endif
 
+#if __cpp_unicode_characters
 /**
  * @brief UTF-16 Encoded Character
  */
@@ -110,6 +118,17 @@ using char16 = char16_t;
  * @brief UTF-32 Encoded Character
  */
 using char32 = char32_t;
+#else
+/**
+ * @brief UTF-16 Encoded Character
+ */
+using char16 = u16;
+
+/**
+ * @brief UTF-32 Encoded Character
+ */
+using char32 = u32;
+#endif
 
 /**
  * @brief std::string, fat pointer to a heap allocated string
@@ -265,7 +284,7 @@ struct unit {
 
 inline CRAB_CONSTEXPR unit unit::val{};
 
-constexpr auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
+inline auto operator<<(std::ostream& os, const unit&) -> std::ostream& {
   return os << "unit";
 }
 

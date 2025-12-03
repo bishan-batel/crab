@@ -93,9 +93,7 @@ TEST_CASE("Fallible (Option)") {
     }
 
     SECTION("Failure Cases") {
-      REQUIRE_FALSE(crab::fallible(crab::fn::constant(0), []() {
-        return non_zero(0);
-      }));
+      REQUIRE_FALSE(crab::fallible(crab::fn::constant(0), []() { return non_zero(0); }));
 
       REQUIRE_FALSE( //
         crab::fallible(Option<i32>{}, []() { return non_zero(0); })
@@ -110,24 +108,26 @@ TEST_CASE("Fallible (Option)") {
       SECTION("Short Circuiting") {
         usize a = 0;
 
-        CHECK_FALSE(crab::fallible(
-          [&] {
-            a++;
-            return crab::some(0);
-          },
-          [&] {
-            a++;
-            return crab::some("hi");
-          },
-          [&] -> Option<i32> {
-            a++;
-            return crab::none;
-          },
-          [&] -> Option<i32> {
-            a++;
-            return 10;
-          }
-        ));
+        CHECK_FALSE(
+          crab::fallible(
+            [&]() {
+              a++;
+              return crab::some(0);
+            },
+            [&]() {
+              a++;
+              return crab::some("hi");
+            },
+            [&]() -> Option<i32> {
+              a++;
+              return crab::none;
+            },
+            [&]() -> Option<i32> {
+              a++;
+              return 10;
+            }
+          )
+        );
         REQUIRE(a == 3);
       }
     }

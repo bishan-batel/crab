@@ -7,7 +7,7 @@
 #include "./preamble.hpp"
 #include "./core.hpp"
 
-#if _DEBUG
+#if !NDEBUG
 
 #include <source_location>
 #include "./fmt.hpp"

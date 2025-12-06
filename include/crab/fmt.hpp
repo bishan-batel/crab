@@ -78,12 +78,17 @@ namespace crab {
       []<std::floating_point Ty>(Ty&& x) { return std::to_string(x); },
       [](const bool x) { return String{x ? "true" : "false"}; },
       [](String str) { return str; },
-      [](const auto& x) {
-        std::stringstream stream{};
-        stream << x;
-        return std::move(stream).str();
-      },
-      [](auto&&) { return String{typeid(T).name()}; },
+      [](auto&& x) -> String {
+        constexpr bool pipeable = requires(std::stringstream stream) { stream << std::declval<T&&>(); };
+
+        if constexpr (pipeable) {
+          std::stringstream stream{};
+          stream << x;
+          return std::move(stream).str();
+        } else {
+          return typeid(T).name();
+        }
+      }
     }(obj);
   }
 
@@ -99,7 +104,7 @@ namespace crab {
 #else
   template<typename T>
   CRAB_PURE_CONSTEXPR auto to_string(T&& obj) -> String {
-    return builtin_to_string<T>(std::forward<T>(obj));
+    return builtin_to_string(std::forward<T>(obj));
   }
 #endif
 
@@ -119,8 +124,11 @@ namespace crab {
   template<typename... Args>
   CRAB_NODISCARD auto format(auto&& fmt, Args&&... args) -> String {
     std::stringstream stream{};
+    stream << "FORMAT_STRING(\"";
     stream << fmt;
-    ((stream << to_string(args)), ...);
+    stream << "\") % (";
+    (..., (stream << ", " << to_string(args)));
+    stream << ')';
 
     return std::move(stream).str();
   }

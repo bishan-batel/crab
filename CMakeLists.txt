@@ -47,7 +47,7 @@ endif()
 set_target_properties(crab PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        PUBLIC_HEADER "include/preamble.hpp"
+        PUBLIC_HEADER "include/crab/all.hpp"
         LINKER_LANGUAGE CXX
 )
 
@@ -64,15 +64,13 @@ target_compile_definitions(crab PUBLIC
 if(CRAB_USE_FMT)
         target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=1")
         target_link_libraries(crab PUBLIC fmt)
-else()
-        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=2")
 endif()
 
 
 install(TARGETS crab DESTINATION lib)
 install(DIRECTORY include/crab/ DESTINATION include/crab)
 
-option(CRAB_TESTS OFF "Whether to compile / include crab tests")
+option(CRAB_TESTS "Whether to compile / include crab tests" OFF)
 
 if(CRAB_TESTS)
         add_subdirectory(test)

@@ -1,6 +1,13 @@
 #pragma once
 
+#include <concepts>
+#include "crab/type_traits.hpp"
 #include "preamble.hpp"
+#include <string>
+
+#ifndef CRAB_FMT_USAGE
+#define CRAB_FMT_USAGE 2
+#endif
 
 // Enum for what format library crab will use
 #define CRAB_FMT_USAGE_STD           0
@@ -8,14 +15,14 @@
 #define CRAB_FMT_USAGE_COMPATABILITY 2
 
 // Determining support for std::format
-#if __has_include("format")
+#if CRAB_HAS_INCLUDE("format")
 #define CRAB_SUPPORTS_STD_FORMAT true
 #else
 #define CRAB_SUPPORTS_STD_FORMAT false
 #endif
 
 // Determine support for fmt::format
-#if __has_include("fmt/format.h")
+#if CRAB_HAS_INCLUDE("fmt/format.h")
 #define CRAB_SUPPORTS_FMTLIB true
 #else
 #define CRAB_SUPPORTS_FMTLIB false
@@ -62,9 +69,39 @@
   "Macro CRAB_FMT_USAGE_COMPATABILITY set to an invalid number, must either be 0 (std::format), 1 (fmt::format), or 2 (compatability)"
 #endif
 
-#define CRAB_FORMAT()
-
 namespace crab {
+
+  template<typename T>
+  CRAB_NODISCARD auto builtin_to_string(T&& obj) -> String {
+    return crab::cases{
+      []<std::integral Ty>(Ty&& x) { return std::to_string(x); },
+      []<std::floating_point Ty>(Ty&& x) { return std::to_string(x); },
+      [](const bool x) { return String{x ? "true" : "false"}; },
+      [](String str) { return str; },
+      [](const auto& x) {
+        std::stringstream stream{};
+        stream << x;
+        return std::move(stream).str();
+      },
+      [](auto&&) { return String{typeid(T).name()}; },
+    }(obj);
+  }
+
+#if CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
+  template<typename T>
+  CRAB_PURE_CONSTEXPR auto to_string(T&& obj) -> String {
+    if constexpr (fmt::has_formatter<T, fmt::format_context>::value) {
+      return fmt::to_string(std::forward<T>(obj));
+    } else {
+      return builtin_to_string<T>(std::forward<T>(obj));
+    }
+  }
+#else
+  template<typename T>
+  CRAB_PURE_CONSTEXPR auto to_string(T&& obj) -> String {
+    return builtin_to_string<T>(std::forward<T>(obj));
+  }
+#endif
 
 #if CRAB_FMT_USAGE == CRAB_FMT_USAGE_STD
   template<typename... Args>
@@ -76,10 +113,16 @@ namespace crab {
   CRAB_PURE_INLINE_CONSTEXPR auto format(fmt::format_string<Args...>&& fmt, Args&&... args) -> decltype(auto) {
     return fmt::format(std::forward<fmt::format_string<Args...>>(fmt), std::forward<Args>(args)...);
   }
-#elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_COMPATABILITY
+#else
+  namespace helper::fmt {}
+
   template<typename... Args>
-  CRAB_PURE_INLINE_CONSTEXPR auto format(fmt::format_string<Args...>&& fmt, Args&&... args) -> String {
-    return fmt::format(std::forward<fmt::format_string<Args...>>(fmt), std::forward<Args>(args)...);
+  CRAB_NODISCARD auto format(auto&& fmt, Args&&... args) -> String {
+    std::stringstream stream{};
+    stream << fmt;
+    ((stream << to_string(args)), ...);
+
+    return std::move(stream).str();
   }
 #endif
 }

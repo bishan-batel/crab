@@ -10,10 +10,7 @@ struct MoveCount {
   usize moves{0};
   usize copies{0};
 
-  auto valid(
-    const MoveCount& expected,
-    std::source_location loc = std::source_location::current()
-  ) const -> void {
+  auto valid(const MoveCount& expected, std::source_location loc = std::source_location::current()) const -> void {
     do {
       (void)__builtin_constant_p(moves == expected.moves);
       Catch ::AssertionHandler catchAssertionHandler(
@@ -23,15 +20,12 @@ struct MoveCount {
         Catch ::ResultDisposition ::ContinueOnFailure
       );
       try {
-        catchAssertionHandler.handleExpr(
-          (Catch ::Decomposer() <= moves) == expected.moves
-        );
+        catchAssertionHandler.handleExpr((Catch ::Decomposer() <= moves) == expected.moves);
       } catch (...) {
         (catchAssertionHandler).handleUnexpectedInflightException();
       }
       catchAssertionHandler.complete();
-    } while ((void)0,
-             (false) && static_cast<const bool&>(!!(moves == expected.moves)));
+    } while ((void)0, (false) && static_cast<const bool&>(!!(moves == expected.moves)));
     do {
       (void)__builtin_constant_p(copies == expected.copies);
       Catch ::AssertionHandler catchAssertionHandler(
@@ -41,16 +35,12 @@ struct MoveCount {
         Catch ::ResultDisposition ::ContinueOnFailure
       );
       try {
-        catchAssertionHandler.handleExpr(
-          (Catch ::Decomposer() <= copies) == expected.copies
-        );
+        catchAssertionHandler.handleExpr((Catch ::Decomposer() <= copies) == expected.copies);
       } catch (...) {
         (catchAssertionHandler).handleUnexpectedInflightException();
       }
       catchAssertionHandler.complete();
-    } while ((void)0,
-             (false) && static_cast<const bool&>(!!(copies == expected.copies))
-    );
+    } while ((void)0, (false) && static_cast<const bool&>(!!(copies == expected.copies)));
   }
 };
 
@@ -59,8 +49,7 @@ struct MoveCount {
  */
 template<typename T>
 class MoveTracker {
-  static constexpr bool copyable =
-    std::copyable<T> and std::is_copy_assignable_v<T>;
+  static constexpr bool copyable = std::copyable<T> and std::is_copy_assignable_v<T>;
 
 private:
 
@@ -71,13 +60,11 @@ private:
 public:
 
   template<typename... Args>
-  [[nodiscard]] static auto from(RcMut<MoveCount> count, Args&&... value)
-    -> MoveTracker {
+  [[nodiscard]] static auto from(RcMut<MoveCount> count, Args&&... value) -> MoveTracker {
     return MoveTracker<T>(std::forward<Args>(value)..., std::move(count));
   }
 
-  MoveTracker(MoveTracker&& from) noexcept:
-      value{std::move(from.value)}, count{from.count} {
+  MoveTracker(MoveTracker&& from) noexcept: value{std::move(from.value)}, count{from.count} {
     count->moves++;
   }
 
@@ -111,9 +98,13 @@ public:
     return *this;
   }
 
-  [[nodiscard]] auto inner() -> T& { return value; }
+  [[nodiscard]] auto inner() -> T& {
+    return value;
+  }
 
-  [[nodiscard]] auto inner() const -> const T& { return value; }
+  [[nodiscard]] auto inner() const -> const T& {
+    return value;
+  }
 
 private:
 
@@ -144,7 +135,9 @@ public:
     return *this;
   }
 
-  constexpr auto set_name(String name) -> void { this->name = std::move(name); }
+  constexpr auto set_name(String name) -> void {
+    this->name = std::move(name);
+  }
 
   [[nodiscard]] constexpr auto get_name() const -> const String& {
     return name;
@@ -161,7 +154,9 @@ struct Copyable {
 
   constexpr explicit Copyable(String name): name{std::move(name)} {}
 
-  constexpr auto set_name(String name) -> void { this->name = std::move(name); }
+  constexpr auto set_name(String name) -> void {
+    this->name = std::move(name);
+  }
 
   [[nodiscard]] constexpr auto get_name() const -> const String& {
     return name;
@@ -175,11 +170,15 @@ private:
 struct Base {
   virtual ~Base() = default;
 
-  [[nodiscard]] virtual auto name() const -> StringView { return "Base"; }
+  [[nodiscard]] virtual auto name() const -> StringView {
+    return "Base";
+  }
 };
 
 struct Derived : public Base {
-  [[nodiscard]] auto name() const -> StringView override { return "Derived"; }
+  [[nodiscard]] auto name() const -> StringView override {
+    return "Derived";
+  }
 };
 
 constexpr auto test_values = []<typename... T>(const auto& test, T&&... types) {
@@ -191,31 +190,12 @@ constexpr auto test_values = []<typename... T>(const auto& test, T&&... types) {
 };
 
 namespace assert {
-  constexpr auto common_types = assert::types<
-    i8,
-    i32,
-    i64,
-    u8,
-    u32,
-    u64,
-    usize,
-    String,
-    StringView,
-    MoveOnly,
-    Copyable>;
+  constexpr auto common_types =
+    assert::types<i8, i32, i64, u8, u32, u64, usize, String, StringView, MoveOnly, Copyable>;
 
   template<typename T>
-  constexpr auto cvref_supertypes = assert::types<
-    T,
-    T*,
-    const T*,
-    T&,
-    const T&,
-    volatile T,
-    volatile T*,
-    volatile const T*,
-    volatile T&,
-    volatile const T&>;
+  constexpr auto cvref_supertypes = assert::
+    types<T, T*, const T*, T&, const T&, volatile T, volatile T*, volatile const T*, volatile T&, volatile const T&>;
 
   template<typename T>
   constexpr auto ref_types = assert::types<Ref<T>, RefMut<T>, T&, const T&>;

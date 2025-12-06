@@ -3,7 +3,6 @@
 #include <memory>
 #include <crab/preamble.hpp>
 #include <crab/box.hpp>
-#include <crab/error.hpp>
 #include <utility>
 #include "test_types.hpp"
 

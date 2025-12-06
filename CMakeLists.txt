@@ -24,16 +24,9 @@ endif()
 # Setting up library & install
 include(GNUInstallDirs)
 
-add_library(${PROJECT_NAME} STATIC
-        include/crab/type_traits.hpp
-        include/crab/debug.hpp
-        include/crab/option.hpp
-        include/crab/error.hpp
-        include/crab/result.hpp
-        include/crab/ref.hpp
-        include/crab/box.hpp
-        include/crab/rc.hpp
-)
+set(CRAB_HEADERS "")
+file(GLOB CRAB_HEADERS "include/crab/*")
+add_library(crab STATIC ${CRAB_HEADERS})
 
 # Platform Specific flags
 if (APPLE)
@@ -72,7 +65,7 @@ if(CRAB_USE_FMT)
         target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=1")
         target_link_libraries(crab PUBLIC fmt)
 else()
-        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=0")
+        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=2")
 endif()
 
 

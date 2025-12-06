@@ -64,8 +64,11 @@ TEST_CASE("Option", "Tests for all option methods") {
 
         // explicit constructor, std::move, and assignmnet
 
-        expected.moves += 3;
+        expected.moves += 2;
         CHECK_NOTHROW(opt = MoveTracker<T>(std::move(opt).unwrap()));
+
+        counter->valid(expected);
+
         //
         if constexpr (copyable) {
           // rvalue from made copy, then assignment

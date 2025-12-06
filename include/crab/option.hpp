@@ -78,7 +78,8 @@ namespace crab::option {
      */
     CRAB_INLINE_CONSTEXPR explicit GenericStorage(const crab::None& = crab::none): in_use_flag{false} {}
 
-    CRAB_CONSTEXPR GenericStorage(const GenericStorage& from): in_use_flag{from.in_use_flag} {
+    CRAB_CONSTEXPR GenericStorage(const GenericStorage& from) requires crab::ty::copy_constructible<T>
+        : in_use_flag{from.in_use_flag} {
       if (in_use()) {
         std::construct_at<T, const T&>(address(), from.value());
       }
@@ -86,7 +87,7 @@ namespace crab::option {
 
     CRAB_CONSTEXPR GenericStorage(GenericStorage&& from) noexcept: in_use_flag{from.in_use_flag} {
       if (in_use()) {
-        std::construct_at<T, T&&>(address(), std::move(*from.address()));
+        std::construct_at<T, T&&>(address(), std::move(from.value()));
         std::destroy_at(from.address());
         from.in_use_flag = false;
       }
@@ -107,9 +108,7 @@ namespace crab::option {
       return *this;
     }
 
-    CRAB_CONSTEXPR GenericStorage& operator=( //
-      GenericStorage&& from
-    ) noexcept(std::is_nothrow_move_assignable_v<T>) {
+    CRAB_CONSTEXPR GenericStorage& operator=(GenericStorage&& from) noexcept(std::is_nothrow_move_assignable_v<T>) {
       if (not from.in_use()) {
         operator=(None{});
         return *this;
@@ -152,12 +151,12 @@ namespace crab::option {
     /**
      * Copy reassign to Some(value)
      */
-    CRAB_CONSTEXPR auto operator=(const T& value) -> GenericStorage& requires crab::ty::copy_assignable<T>
+    CRAB_CONSTEXPR auto operator=(const T& from) -> GenericStorage& requires crab::ty::copy_assignable<T>
     {
       if (in_use_flag) {
-        *address() = value;
+        value() = from;
       } else {
-        std::construct_at<T, const T&>(address(), value);
+        std::construct_at<T, const T&>(address(), from);
         in_use_flag = true;
       }
       return *this;
@@ -177,18 +176,26 @@ namespace crab::option {
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto value() const& -> const T& {
-      return *address();
+      return reinterpret_cast<const T&>(bytes);
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto value() & -> T& {
-      return *address();
+      return reinterpret_cast<T&>(bytes);
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto value() && -> T {
-      T value = std::move(*address());
-      std::destroy_at(address());
+#if CRAB_GCC_VERSION
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+      T moved{std::move(reinterpret_cast<T&>(bytes))};
+
+#if CRAB_GCC_VERSION
+#pragma GCC diagnostic pop
+#endif
+      std::destroy_at<T>(address());
       in_use_flag = false;
-      return value;
+      return moved;
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto in_use() const -> bool {
@@ -197,15 +204,16 @@ namespace crab::option {
 
   private:
 
-    CRAB_PURE_INLINE_CONSTEXPR auto address() -> T* {
-      return reinterpret_cast<T*>(&bytes[0]);
+    CRAB_PURE_INLINE_CONSTEXPR CRAB_RETURNS_NONNULL auto address() -> T* {
+      return reinterpret_cast<T*>(&bytes);
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto address() const -> const T* {
-      return reinterpret_cast<const T*>(&bytes[0]);
+    CRAB_PURE_INLINE_CONSTEXPR CRAB_RETURNS_NONNULL auto address() const -> const T* {
+      return reinterpret_cast<const T*>(&bytes);
     }
 
-    std::array<std::byte, sizeof(T)> bytes alignas(T);
+    alignas(T) SizedArray<std::byte, sizeof(T)> bytes{};
+
     bool in_use_flag;
   };
 
@@ -317,15 +325,13 @@ public:
   /**
    * Create an option that wraps Some(T)
    */
-  CRAB_INLINE_CONSTEXPR Option(const T& from) //
-    noexcept(std::is_nothrow_copy_constructible_v<T>) requires(not is_ref)
+  CRAB_INLINE_CONSTEXPR Option(const T& from) noexcept(std::is_nothrow_copy_constructible_v<T>) requires(not is_ref)
       : value{from} {}
 
   /**
    * Create an option that wraps Some(T)
    */
-  CRAB_INLINE_CONSTEXPR Option(T&& from) //
-    noexcept(std::is_nothrow_move_constructible_v<T>):
+  CRAB_INLINE_CONSTEXPR Option(T&& from) noexcept(std::is_nothrow_move_constructible_v<T>):
       value{std::forward<T>(from)} {}
 
   /**
@@ -535,7 +541,7 @@ public:
    */
   CRAB_PURE_INLINE_CONSTEXPR auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
     debug_assert_transparent(is_some(), loc, "Cannot unwrap a none option");
-    return std::exchange(value, crab::None{}).value();
+    return std::move(value).value();
   }
 
   /**
@@ -842,9 +848,7 @@ public:
    * ````
    */
   template<typename... Vals>
-  CRAB_PURE_INLINE_CONSTEXPR auto zip( //
-    Option<Vals>... other
-  ) && -> Option<Tuple<T, Vals...>> {
+  CRAB_PURE_INLINE_CONSTEXPR auto zip(Option<Vals>... other) && -> Option<Tuple<T, Vals...>> {
     if (is_none()) {
       return crab::None{};
     }

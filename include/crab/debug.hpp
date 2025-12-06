@@ -5,11 +5,9 @@
 #pragma once
 
 #include "./preamble.hpp"
-#include "./core.hpp"
 
 #if !NDEBUG
-
-#include <source_location>
+;
 #include "./fmt.hpp"
 
 namespace crab::debug {
@@ -53,8 +51,8 @@ namespace crab::debug {
  * fmt::format(fmt_string, a1, a2, ...)
  */
 #define debug_assert_transparent(condition, source_location, ...)                                                      \
-  if (!static_cast<bool>(condition)) do {                                                                              \
-      crab::debug::dbg_assert(source_location, #condition, crab::format(__VA_ARGS__));                                 \
+  if (not static_cast<bool>(condition)) do {                                                                           \
+      ::crab::debug::dbg_assert(source_location, #condition, ::crab::format(__VA_ARGS__));                             \
   } while (false)
 
 /**
@@ -65,13 +63,16 @@ namespace crab::debug {
  * fmt::format format string for the error message. The following arguments are format args akin to passing in
  * fmt::format(fmt_string, a1, a2, ...)
  */
-#define debug_assert(condition, ...) debug_assert_transparent(condition, SourceLocation::current(), __VA_ARGS__)
+#define debug_assert(condition, ...) debug_assert_transparent(condition, ::SourceLocation::current(), __VA_ARGS__)
 
 #else
 
 #define debug_assert_transparent(condition, source_location, ...)                                                      \
   do {                                                                                                                 \
-    std::ignore = source_location;                                                                                     \
+    ::std::ignore = source_location;                                                                                   \
+    if (not static_cast<bool>(condition)) {                                                                            \
+      ::crab::unreachable();                                                                                           \
+    }                                                                                                                  \
   } while (false)
 
 #define debug_assert(...)

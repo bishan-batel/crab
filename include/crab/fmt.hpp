@@ -5,10 +5,6 @@
 #include "preamble.hpp"
 #include <string>
 
-#ifndef CRAB_FMT_USAGE
-#define CRAB_FMT_USAGE 2
-#endif
-
 // Enum for what format library crab will use
 #define CRAB_FMT_USAGE_STD           0
 #define CRAB_FMT_USAGE_FMTLIB        1

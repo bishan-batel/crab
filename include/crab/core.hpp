@@ -3,7 +3,6 @@
 /**
  * Current version of crab's API
  */
-#include <cassert>
 #define CRAB_VERSION 200100
 
 #if defined(__clang__)

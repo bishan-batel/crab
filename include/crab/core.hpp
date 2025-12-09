@@ -159,7 +159,7 @@ namespace crab {
    * @brief Denotes unreachable paths
    * This should be used for optimisation purposes only.
    */
-  CRAB_NORETURN CRAB_PURE_CONSTEXPR auto unreachable() -> void {
+  CRAB_NORETURN CRAB_PURE_CONSTEXPR CRABB_INCRAB_INLINE auto unreachable() -> void {
     std::unreachable();
   }
 

@@ -110,9 +110,16 @@
 #if CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
 #define CRAB_ASSUME(condition) __assume(condition)
 #elif CRAB_CLANG_VERSION
-#define CRAB_ASSUME(condition) [[assume(condition)]]
+#define CRAB_ASSUME(condition)                                                                                         \
+  [[assume(condition)]];                                                                                               \
+  do {                                                                                                                 \
+  } while (false)
 #elif CRAB_GCC_VERSION
-#define CRAB_ASSUME(condition) __attribute__((assume(condition)))
+#define CRAB_ASSUME(condition)                                                                                         \
+  __attribute__((assume(condition)));                                                                                  \
+  do {                                                                                                                 \
+  } while (false)
+
 #endif
 
 namespace crab {
@@ -122,7 +129,7 @@ namespace crab {
    * @brief Denotes unreachable paths
    * This should be used for optimisation purposes only.
    */
-  CRAB_NORETURN CRAB_PURE_CONSTEXPR auto unreachable() -> void {
+  CRAB_NORETURN CRAB_PURE_CONSTEXPR CRABB_INCRAB_INLINE auto unreachable() -> void {
     std::unreachable();
   }
 

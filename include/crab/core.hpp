@@ -3,8 +3,11 @@
 /**
  * Current version of crab's API
  */
-#include <cassert>
 #define CRAB_VERSION 200100
+
+/// ===================================================================================================================
+///                                                 Preproc & Compile-Time Helpers
+/// ===================================================================================================================
 
 #if defined(__clang__)
 #define CRAB_CLANG_VERSION (__clang_major__ * 100 + __clang_minor__)
@@ -46,6 +49,19 @@
 #define CRAB_HAS_ATTRIBUTE(x) __has_cpp_attribute(x)
 #else
 #define CRAB_HAS_ATTRIBUTE(x) 0
+#endif
+
+#define CRAB_PRAGMA_(...)      _Pragma(#__VA_ARGS__)
+#define CRAB_PRAGMA(...)       CRAB_PRAGMA_(__VA_ARGS__)
+
+#define CRAB_STRINGIFY(...)    #__VA_ARGS__
+
+#define CRAB_DEFER(macro, ...) macro(__VA_ARGS__)
+
+#if CRAB_CLANG_VERSION || CRAB_GCC_VERSION
+#define CRAB_WARNING(msg) CRAB_PRAGMA(GCC warning msg)
+#else
+#define CRAB_WARNING(msg) CRAB_PRAGMA(message msg)
 #endif
 
 /// ===================================================================================================================
@@ -108,11 +124,32 @@
 #endif
 
 #if CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
-#define CRAB_ASSUME(condition) __assume(condition)
+#define CRAB_ASSUME(condition) __assume(static_cast<bool>(condition))
 #elif CRAB_CLANG_VERSION
-#define CRAB_ASSUME(condition) [[assume(condition)]]
+#define CRAB_ASSUME(condition) __builtin_assume(static_cast<bool>(condition))
 #elif CRAB_GCC_VERSION
-#define CRAB_ASSUME(condition) __attribute__((assume(condition)))
+
+#if CRAB_HAS_ATTRIBUTE(assume)
+#define CRAB_ASSUME(condition)                                                                                         \
+  do { __attribute__((assume(static_cast<bool>(condition))))} while(false)
+#else
+#define CRAB_ASSUME(condition)                                                                                         \
+  do {                                                                                                                 \
+    if (not static_cast<bool>(condition)) {                                                                            \
+      __builtin_unreachable();                                                                                         \
+    }                                                                                                                  \
+  } while (false)
+#endif
+
+#else
+
+#define CRAB_ASSUME(condition)                                                                                         \
+  do {                                                                                                                 \
+    if (not static_cast<bool>(condition)) {                                                                            \
+      while (true);                                                                                                    \
+    }                                                                                                                  \
+  } while (false)
+
 #endif
 
 namespace crab {
@@ -156,4 +193,22 @@ namespace crab {
   }
 #endif
 
+  namespace helper {
+    struct discard final {
+      template<typename... T>
+      CRAB_INLINE_CONSTEXPR auto operator()(T&&...) const -> const discard& {
+        return *this;
+      }
+
+      template<typename T>
+      CRAB_INLINE_CONSTEXPR auto operator=(T&&) -> discard& {
+        return *this;
+      }
+    };
+  }
+
+  /**
+   * Used to discard / explicitly ignore certain outputs
+   */
+  inline static constexpr helper::discard discard{};
 }

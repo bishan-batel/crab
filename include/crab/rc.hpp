@@ -6,6 +6,7 @@
 #include <crab/preamble.hpp>
 #include <crab/box.hpp>
 #include <crab/ref.hpp>
+#include "crab/core.hpp"
 
 template<typename T>
 class Rc;
@@ -46,7 +47,7 @@ namespace crab::rc::helper {
     RcInterior(const usize ref_count, const usize weak_ref_count, T* const data):
         weak_ref_count{weak_ref_count}, ref_count{ref_count}, data{data} {}
 
-    CRAB_CONSTEXPR auto increment_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
+    CRAB_INLINE_CONSTEXPR auto increment_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
       debug_assert_transparent(
         not should_free_data(),
         loc,
@@ -55,7 +56,7 @@ namespace crab::rc::helper {
       ref_count++;
     }
 
-    CRAB_CONSTEXPR auto decrement_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
+    CRAB_INLINE_CONSTEXPR auto decrement_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
       debug_assert_transparent(
         not should_free_data(),
         loc,
@@ -115,7 +116,7 @@ namespace crab::rc::helper {
       return crab::none;
     }
 
-    [[nodiscard]] auto release(const SourceLocation loc = SourceLocation::current()) -> Box<T> {
+    CRAB_NODISCARD auto release(const SourceLocation loc = SourceLocation::current()) -> Box<T> {
       decrement_ref_count(loc);
       return Box<T>::wrap_unchecked(std::exchange(data, nullptr));
     }
@@ -330,36 +331,36 @@ public:
   /**
    * Implicitly coerce into a reference to the contained
    */
-  [[nodiscard]] operator const T&() const { // NOLINT(*-explicit-constructor)
+  CRAB_PURE_INLINE_CONSTEXPR operator const T&() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to a pointer to the contained value
    */
-  [[nodiscard]] operator const T*() const { // NOLINT(*-explicit-constructor)
+  CRAB_PURE_INLINE_CONSTEXPR operator const T*() const { // NOLINT(*-explicit-constructor)
     return raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to the contained
    */
-  [[nodiscard]] operator Ref<T>() const { // NOLINT(*-explicit-constructor)
+  CRAB_PURE_INLINE_CONSTEXPR operator Ref<T>() const { // NOLINT(*-explicit-constructor)
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> const T* {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator->() const -> const T* {
     return raw_ptr();
   }
 
-  [[nodiscard]] auto operator*() const -> const T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> const T& {
     return *raw_ptr();
   }
 
   /**
    * @brief Gets a const reference object to the value inside.
    */
-  [[nodiscard]] auto as_ref() const -> const T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto as_ref() const -> const T& {
     return *raw_ptr();
   }
 
@@ -367,35 +368,35 @@ public:
    * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
    * remains. This will also consider Weak references.
    */
-  [[nodiscard]] auto is_unique() const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto is_unique() const -> bool {
     return is_valid() and get_interior()->is_unique();
   }
 
   /**
    * @brief How many references exist to the given resource
    */
-  [[nodiscard]] auto get_ref_count() const -> usize {
+  CRAB_PURE_INLINE_CONSTEXPR auto get_ref_count() const -> usize {
     return not is_valid() ? 0 : get_interior()->get_ref_count();
   }
 
   /**
    * @brief Queries if this instance has been
    */
-  [[nodiscard]] auto is_valid() const -> bool {
+  CRAB_PURE_INLINE_CONSTEXPR auto is_valid() const -> bool {
     return interior != nullptr;
   }
 
   /**
    * @brief Returns a reference to the underlying data
    */
-  [[nodiscard]] auto get(const SourceLocation loc = SourceLocation::current()) const -> const T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto get(const SourceLocation loc = SourceLocation::current()) const -> const T& {
     return *raw_ptr(loc);
   }
 
   /**
    * @brief Returns a raw pointer to the underlying data
    */
-  [[nodiscard]] auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
+  CRAB_PURE_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
     return get_interior(loc)->raw_ptr();
   }
 
@@ -403,7 +404,8 @@ public:
    * @brief Gets raw pointer to the RcInterior, do not use this unless you have
    * a very good reason for messing with the invariants of Rc
    */
-  [[nodiscard]] auto get_interior(const SourceLocation loc = SourceLocation::current()) const -> Interior* {
+  CRAB_PURE_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) const
+    -> Interior* {
     debug_assert_transparent(
       is_valid(),
       loc,
@@ -417,7 +419,7 @@ public:
    * @brief UNSAFE: Gets raw pointer to the RcInterior, do not use this unless
    * you have a reason to mess with Rc directly
    */
-  [[nodiscard]] auto get_interior(const SourceLocation loc = SourceLocation::current()) -> Interior*& {
+  CRAB_PURE_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) -> Interior*& {
     debug_assert_transparent(
       is_valid(),
       loc,
@@ -431,7 +433,7 @@ public:
    * @brief  Attempts to take ownership of the shared value, this will only
    * suceed if this is the only reference to the instance.
    */
-  [[nodiscard]] auto try_release(const SourceLocation loc = SourceLocation::current()) && -> Option<Box<T>> {
+  CRAB_PURE_CONSTEXPR auto try_release(const SourceLocation loc = SourceLocation::current()) && -> Option<Box<T>> {
     return std::exchange(interior, nullptr)->release(loc);
   }
 };
@@ -662,44 +664,44 @@ public:
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator T&() const { // NOLINT(*-explicit-constructor)
+  CRAB_PURE_INLINE_CONSTEXPR operator T&() const { // NOLINT(*-explicit-constructor)
     return *raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to a pointer to the contained value
    */
-  operator T*() const { // NOLINT(*-explicit-constructor)
+  CRAB_PURE_INLINE_CONSTEXPR operator T*() const { // NOLINT(*-explicit-constructor)
     return raw_ptr();
   }
 
   /**
    * Implicitly coerce into a reference to the contained
    */
-  operator RefMut<T>() const { // NOLINT(*-explicit-constructor)
+  CRAB_PURE_INLINE_CONSTEXPR operator RefMut<T>() const { // NOLINT(*-explicit-constructor)
     return as_ref();
   }
 
-  [[nodiscard]] auto operator->() const -> T* {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator->() const -> T* {
     return raw_ptr();
   }
 
-  [[nodiscard]] auto operator*() const -> T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> T& {
     return *raw_ptr();
   }
 
-  [[nodiscard]] auto operator->() -> T* {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator->() -> T* {
     return raw_ptr();
   }
 
-  [[nodiscard]] auto operator*() -> T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator*() -> T& {
     return *raw_ptr();
   }
 
   /**
    * @brief Gets a const reference to the value inside.
    */
-  [[nodiscard]] auto as_ref(const SourceLocation loc = SourceLocation::current()) const -> T& {
+  CRAB_PURE_INLINE_CONSTEXPR auto as_ref(const SourceLocation loc = SourceLocation::current()) const -> T& {
     return *raw_ptr(loc);
   }
 

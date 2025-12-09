@@ -28,6 +28,7 @@ target_compile_options(crab-tests PUBLIC
     -Werror 
     -Wpedantic 
     -Wextra 
+    -pedantic
     -O3
     -fsanitize-trap=undefined
 )

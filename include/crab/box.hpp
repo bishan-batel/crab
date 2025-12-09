@@ -317,7 +317,7 @@ namespace crab::option {
     }
 
     CRAB_INLINE_CONSTEXPR auto operator=(const None&) -> BoxStorage& {
-      std::ignore = Box{std::move(inner)};
+      crab::discard(Box{std::move(inner)});
       return *this;
     }
 

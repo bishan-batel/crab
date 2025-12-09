@@ -7,7 +7,7 @@
 #include "./preamble.hpp"
 
 #if !NDEBUG
-;
+
 #include "./fmt.hpp"
 
 namespace crab::debug {
@@ -55,6 +55,18 @@ namespace crab::debug {
       ::crab::debug::dbg_assert(source_location, #condition, ::crab::format(__VA_ARGS__));                             \
   } while (false)
 
+#else
+
+#define debug_assert_transparent(condition, source_location, ...)                                                      \
+  do {                                                                                                                 \
+    if (not static_cast<bool>(condition)) {                                                                            \
+      crab::discard(source_location, __VA_ARGS__);                                                                     \
+      ::crab::unreachable();                                                                                           \
+    }                                                                                                                  \
+  } while (false)
+
+#endif
+
 /**
  * Asserts that the given condition is true when compiled in debug mode, if not then this will halt the program &
  * print the given error.
@@ -64,17 +76,3 @@ namespace crab::debug {
  * fmt::format(fmt_string, a1, a2, ...)
  */
 #define debug_assert(condition, ...) debug_assert_transparent(condition, ::SourceLocation::current(), __VA_ARGS__)
-
-#else
-
-#define debug_assert_transparent(condition, source_location, ...)                                                      \
-  do {                                                                                                                 \
-    ::std::ignore = source_location;                                                                                   \
-    if (not static_cast<bool>(condition)) {                                                                            \
-      ::crab::unreachable();                                                                                           \
-    }                                                                                                                  \
-  } while (false)
-
-#define debug_assert(...)
-
-#endif

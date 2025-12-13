@@ -4,6 +4,7 @@
 #include <crab/preamble.hpp>
 #include <crab/box.hpp>
 #include <utility>
+#include "crab/type_traits.hpp"
 #include "test_types.hpp"
 
 struct SelfReferential;
@@ -11,8 +12,6 @@ struct SelfReferential;
 struct SelfReferential {
   Option<Box<SelfReferential>> test;
 };
-
-struct Type {};
 
 void fun(i32&) {
   std::cout << "fun1" << std::endl;

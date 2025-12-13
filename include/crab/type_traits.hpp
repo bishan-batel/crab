@@ -338,7 +338,7 @@ class Ref;
 template<crab::ref::is_valid_type T>
 class RefMut;
 
-namespace crab {
+namespace crab::ty {
   namespace helper {
 
     /**
@@ -369,7 +369,7 @@ namespace crab {
      * helper type constructor for crab::ref_decay
      */
     template<typename T>
-    struct ref_decay final {
+    struct crab_ref_decay final {
       using type = T;
     };
 
@@ -377,7 +377,7 @@ namespace crab {
      * Specialisation for crab::ref_decay for Ref<T> -> const T&
      */
     template<typename T>
-    struct ref_decay<Ref<T>> final {
+    struct crab_ref_decay<Ref<T>> final {
       using type = const T&;
     };
 
@@ -385,7 +385,7 @@ namespace crab {
      * Specialisation for crab::ref_decay for RefMut<T> -> T&
      */
     template<typename T>
-    struct ref_decay<RefMut<T>> final {
+    struct crab_ref_decay<RefMut<T>> final {
       using type = T&;
     };
 
@@ -397,7 +397,7 @@ namespace crab {
    * this will simply be aliased to T
    */
   template<typename T>
-  using ref_decay = helper::ref_decay<T>::type;
+  using crab_ref_decay = helper::crab_ref_decay<T>::type;
 
   /**
    * Type predicate for whether or not the given type T is a crab

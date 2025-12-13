@@ -363,7 +363,7 @@ public:
    * Conversion constructor for options of the form Option<Ref<T>> to be able to
    * convert implicitly to Option<const T&>
    */
-  CRAB_PURE_INLINE_CONSTEXPR operator Option<crab::ref_decay<T>>() requires(crab::crab_ref<T>)
+  CRAB_PURE_INLINE_CONSTEXPR operator Option<crab::ty::crab_ref_decay<T>>() requires(crab::ty::crab_ref<T>)
   {
     return map<const T&>();
   }
@@ -372,7 +372,7 @@ public:
    * Conversion constructor for options of the form Option<Ref<T>> to be able to
    * convert implicitly to Option<T&>
    */
-  CRAB_PURE_INLINE_CONSTEXPR operator Option<crab::ref_decay<T>>() requires(crab::crab_ref_mut<T>)
+  CRAB_PURE_INLINE_CONSTEXPR operator Option<crab::ty::crab_ref_decay<T>>() requires(crab::ty::crab_ref_mut<T>)
   {
     return map<T&>();
   }
@@ -382,7 +382,8 @@ public:
    * If this option previously contained Some(K), the previous value is
    * discarded and is replaced by Some(T)
    */
-  CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref) {
+  CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref)
+  {
     value = std::forward<T>(from);
     return *this;
   }
@@ -586,8 +587,8 @@ public:
    * @param error_generator Function to generate an error to replace "None".
    */
   template<typename E, crab::ty::provider<E> F>
-  CRAB_PURE_INLINE_CONSTEXPR auto ok_or(F&& error_generator) const -> Result<T, E>
-    requires crab::ty::copy_constructible<T>
+  CRAB_PURE_INLINE_CONSTEXPR auto ok_or(F&& error_generator) const
+    -> Result<T, E> requires crab::ty::copy_constructible<T>
   {
     if (is_some()) {
       return crab::Ok<T>{get_unchecked()};

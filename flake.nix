@@ -11,7 +11,14 @@
     }: flake-utils.lib.eachDefaultSystem (system: let
       pkgs = nixpkgs.legacyPackages.${system};
       llvm = pkgs.llvmPackages;
+
+      crab = pkgs.callPackage ./nix/crab.nix { };
+      crab-tests = crab.override { doCheck = true; };
+
     in {
+      packages.default = crab;
+      packages.tests = crab-tests;
+
       devShells = { 
         default = pkgs.mkShell.override {
           stdenv = llvm.stdenv;

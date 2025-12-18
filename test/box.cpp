@@ -146,6 +146,4 @@ TEST_CASE("Box Option Niche Optimization") {
 
   opt = crab::none;
   CHECK(opt.is_none());
-
-  REQUIRE(typeid(i32) == typeid(const i32&));
 }

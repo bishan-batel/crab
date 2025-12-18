@@ -10,6 +10,8 @@ set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTOR
 
 set(CPM_SOURCE_CACHE_DEFAULT ON)
 
+option(USE_CPM "Should crab try to use CPM for dependencies" ON)
+
 # CPM should find local packages before trying to download
 
 # CPM
@@ -17,9 +19,12 @@ include(cmake/CPM.cmake)
 
 option(CRAB_USE_FMT "Should crab use / require FMT to format" OFF)
 
-
 if(CRAB_USE_FMT)
-        CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+        if  (USE_CPM) 
+                CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+        else()
+                find_package(fmt REQUIRED)
+        endif()
 endif()
 
 # Setting up library & install
@@ -74,5 +79,6 @@ install(DIRECTORY include/crab/ DESTINATION include/crab)
 option(CRAB_TESTS "Whether to compile / include crab tests" OFF)
 
 if(CRAB_TESTS)
+        enable_testing()
         add_subdirectory(test)
 endif()

@@ -1,4 +1,10 @@
-CPMAddPackage("gh:catchorg/Catch2@3.5.4")
+if  (USE_CPM) 
+    CPMAddPackage("gh:catchorg/Catch2@3.5.4")
+else()
+    find_package(Catch2 REQUIRED)
+endif()
+
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
 if (${FORCE_COLORED_OUTPUT})
@@ -32,3 +38,9 @@ target_compile_options(crab-tests PUBLIC
     -O3
     -fsanitize-trap=undefined
 )
+
+target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")
+
+include(CTest)
+include(Catch)
+catch_discover_tests(crab-tests)

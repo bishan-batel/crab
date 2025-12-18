@@ -13,11 +13,37 @@
       llvm = pkgs.llvmPackages;
 
       crab = pkgs.callPackage ./nix/crab.nix { };
-      crab-tests = crab.override { doCheck = true; };
+      crab-tests = pkgs.callPackage ./nix/crab.nix { doCheck = true; };
 
     in {
-      packages.default = crab;
-      packages.tests = crab-tests;
+      
+      packages = {
+        default = crab;
+
+        crab_tests_gcc_debug = pkgs.callPackage ./nix/crab.nix { 
+          doCheck = true;
+          stdenv = pkgs.stdenv;
+          doDebug = true;
+        };
+
+        crab_tests_gcc_release = pkgs.callPackage ./nix/crab.nix { 
+          doCheck = true;
+          stdenv = pkgs.stdenv;
+          doDebug = false;
+        };
+
+        crab_tests_clang_debug = pkgs.callPackage ./nix/crab.nix { 
+          doCheck = true;
+          stdenv = llvm.stdenv;
+          doDebug = true;
+        };
+
+        crab_tests_clang_release = pkgs.callPackage ./nix/crab.nix { 
+          doCheck = true;
+          stdenv = llvm.stdenv;
+          doDebug = false;
+        };
+      };
 
       devShells = { 
         default = pkgs.mkShell.override {

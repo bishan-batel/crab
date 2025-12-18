@@ -53,7 +53,7 @@ endif()
 set_target_properties(crab PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        PUBLIC_HEADER "include/crab/all.hpp"
+        # PUBLIC_HEADER "include/crab/all.hpp"
         LINKER_LANGUAGE CXX
 )
 

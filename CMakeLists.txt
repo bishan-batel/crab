@@ -17,7 +17,6 @@ include(cmake/CPM.cmake)
 
 option(CRAB_USE_FMT "Should crab use / require FMT to format" OFF)
 
-set(CPM_USE_LOCAL_PACKAGES ON)
 
 if(CRAB_USE_FMT)
         CPMAddPackage("gh:fmtlib/fmt#7.1.3")

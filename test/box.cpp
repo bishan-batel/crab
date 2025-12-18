@@ -128,7 +128,7 @@ TEST_CASE("Box", "[box]") {
 TEST_CASE("Box Option Niche Optimization") {
   Option<Box<i32>> opt{crab::make_box<i32>(10)};
 
-  static_assert(sizeof(Option<Box<i32>>) == sizeof(Box<i32>));
+  STATIC_CHECK(sizeof(Option<Box<i32>>) == sizeof(Box<i32>));
 
   REQUIRE(opt.is_some());
   REQUIRE_NOTHROW(opt.get_unchecked());
@@ -146,4 +146,6 @@ TEST_CASE("Box Option Niche Optimization") {
 
   opt = crab::none;
   CHECK(opt.is_none());
+
+  REQUIRE(typeid(i32) == typeid(const i32&));
 }

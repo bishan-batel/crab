@@ -12,7 +12,9 @@ struct MoveCount {
 
   auto valid(const MoveCount& expected, std::source_location loc = std::source_location::current()) const -> void {
     do {
+#if 0
       (void)__builtin_constant_p(moves == expected.moves);
+#endif
       Catch ::AssertionHandler catchAssertionHandler(
         "CHECK"_catch_sr,
         ::Catch ::SourceLineInfo(loc.file_name(), loc.line()),
@@ -26,8 +28,11 @@ struct MoveCount {
       }
       catchAssertionHandler.complete();
     } while ((void)0, (false) && static_cast<const bool&>(!!(moves == expected.moves)));
+
     do {
+#if 0
       (void)__builtin_constant_p(copies == expected.copies);
+#endif
       Catch ::AssertionHandler catchAssertionHandler(
         "CHECK"_catch_sr,
         ::Catch ::SourceLineInfo(loc.file_name(), loc.line()),
@@ -41,6 +46,7 @@ struct MoveCount {
       }
       catchAssertionHandler.complete();
     } while ((void)0, (false) && static_cast<const bool&>(!!(copies == expected.copies)));
+
   }
 };
 

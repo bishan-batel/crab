@@ -721,22 +721,30 @@ namespace crab {
     return result::fallible<E>{}(Tuple<>{}, std::forward<F>(fallible)...);
   }
 
-  template<ok_type T>
-  CRAB_PURE_INLINE_CONSTEXPR auto ok(std::type_identity_t<T>&& value) {
-    return Ok<T>{std::forward<T>(value)};
+  template<ok_type T, typename... Args>
+  CRAB_PURE_INLINE_CONSTEXPR auto ok(Args&&... args) {
+    return Ok<T>{T{std::forward<Args>(args)...}};
   }
 
-  template<error_type E>
-  CRAB_PURE_INLINE_CONSTEXPR auto err(std::type_identity_t<E>&& value) {
-    return Err<E>{std::forward<E>(value)};
+  template<error_type E, typename... Args>
+  CRAB_PURE_INLINE_CONSTEXPR auto err(Args&&... args) {
+    return Err<E>{E{std::forward<Args>(args)...}};
   }
 
   CRAB_PURE_INLINE_CONSTEXPR auto ok(auto value) {
-    return ok<std::remove_cvref_t<decltype(value)>>(std::move(value));
+    using T = std::remove_cvref_t<decltype(value)>;
+
+    static_assert(ok_type<T>, "Value must be a possible 'Ok<T>' type for use in Result<T, E>");
+
+    return ok<T>(std::forward(value));
   }
 
   CRAB_PURE_INLINE_CONSTEXPR auto err(auto value) {
-    return err<std::remove_cvref_t<decltype(value)>>(std::move(value));
+    using E = std::remove_cvref_t<decltype(value)>;
+
+    static_assert(ok_type<E>, "Value must be a possible 'Err<E>' type for use in Result<T, E>");
+
+    return err<E>(std::forward(value));
   }
 
   template<typename T, typename E>
@@ -753,3 +761,4 @@ namespace crab {
     return std::forward<Result<T, E>>(result).unwrap_err(loc);
   }
 } // namespace crab
+

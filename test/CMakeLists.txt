@@ -29,15 +29,22 @@ add_executable(crab-tests
 )
 
 target_link_libraries(crab-tests PRIVATE crab Catch2::Catch2WithMain)
-target_compile_options(crab-tests PUBLIC 
-    -Wall 
-    -Werror 
-    -Wpedantic 
-    -Wextra 
-    -pedantic
-    -O3
-    -fsanitize-trap=undefined
-)
+
+if (MSVC)
+    target_compile_options(crab-tests PUBLIC 
+        /W3 /WX
+    )
+else()
+    target_compile_options(crab-tests PUBLIC 
+        -Wall 
+        -Werror 
+        -Wpedantic 
+        -Wextra 
+        -pedantic
+        -O3
+        -fsanitize-trap=undefined
+    )
+endif()
 
 target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")
 

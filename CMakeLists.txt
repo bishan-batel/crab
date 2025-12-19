@@ -32,21 +32,21 @@ include(GNUInstallDirs)
 
 set(CRAB_HEADERS "")
 file(GLOB CRAB_HEADERS "include/crab/*")
-add_library(crab STATIC ${CRAB_HEADERS})
+add_library(crab INTERFACE ${CRAB_HEADERS})
 
 # Platform Specific flags
 if (APPLE)
-        target_compile_definitions(crab PUBLIC "_OSX=1")
+        target_compile_definitions(crab INTERFACE "_OSX=1")
 elseif (LINUX)
-        target_compile_definitions(crab PUBLIC "_LINUX=1")
+        target_compile_definitions(crab INTERFACE "_LINUX=1")
 elseif(BSD)
-        target_compile_definitions(crab PUBLIC "_BSD=1")
+        target_compile_definitions(crab INTERFACE "_BSD=1")
 elseif(WIN32)
-        target_compile_definitions(crab PUBLIC "_WIN32=1")
+        target_compile_definitions(crab INTERFACE "_WIN32=1")
 endif()
 
 if(UNIX)
-        target_compile_definitions(crab PUBLIC "_UNIX=1")
+        target_compile_definitions(crab INTERFACE "_UNIX=1")
 endif()
 
 # Public API
@@ -57,23 +57,23 @@ set_target_properties(crab PROPERTIES
         LINKER_LANGUAGE CXX
 )
 
-target_include_directories(crab PUBLIC
+target_include_directories(crab INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>
 )
 
-target_compile_definitions(crab PUBLIC
+target_compile_definitions(crab INTERFACE
         "CRAB_DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
         "CRAB_RELEASE=$<IF:$<CONFIG:RELEASE>,1,0>")
 
 
 if(CRAB_USE_FMT)
-        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=1")
-        target_link_libraries(crab PUBLIC fmt)
+        target_compile_definitions(crab INTERFACE "CRAB_FMT_USAGE=1")
+        target_link_libraries(crab INTERFACE fmt)
 endif()
 
 
-install(TARGETS crab DESTINATION lib)
+# install(TARGETS crab DESTINATION lib)
 install(DIRECTORY include/crab/ DESTINATION include/crab)
 
 option(CRAB_TESTS "Whether to compile / include crab tests" OFF)

@@ -22,6 +22,7 @@
 #include <crab/type_traits.hpp>
 #include <crab/debug.hpp>
 #include <crab/hash.hpp>
+#include "crab/core.hpp"
 
 namespace crab {
   /**
@@ -212,7 +213,7 @@ namespace crab::option {
       return reinterpret_cast<const T*>(&bytes);
     }
 
-    alignas(T) SizedArray<std::byte, sizeof(T)> bytes{};
+    alignas(T) std::array<std::byte, sizeof(T)> bytes CRAB_MAY_ALIAS;
 
     bool in_use_flag;
   };
@@ -1251,4 +1252,3 @@ namespace crab {
 } // namespace crab
 
 // NOLINTEND(*explicit*)
-

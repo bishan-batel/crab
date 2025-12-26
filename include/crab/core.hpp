@@ -3,6 +3,7 @@
 /**
  * Current version of crab's API
  */
+#include "crab/preamble.hpp"
 #define CRAB_VERSION 200100
 
 /// ===================================================================================================================
@@ -88,6 +89,18 @@
 #define CRAB_NODISCARDF(msg)
 #endif
 
+#if CRAB_HAS_ATTRIBUTE(maybe_unused)
+#define CRAB_MAYBE_UNUSED [[maybe_unused]]
+#else
+#define CRAB_MAYBE_UNUSED
+#endif
+
+#if CRAB_HAS_ATTRIBUTE(gnu::may_alias)
+#define CRAB_MAY_ALIAS [[gnu::may_alias]]
+#else
+#define CRAB_MAY_ALIAS
+#endif
+
 #define CRAB_CONSTEXPR constexpr
 
 #if ((CRAB_GCC_VERSION >= 1000 || CRAB_CLANG_VERSION >= 1101)                                                          \
@@ -154,61 +167,26 @@
 
 namespace crab {
 
+  /**
+   * @brief Denotes unreachable paths
+   * This should be used for optimisation purposes only.
+   */
+  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
 #if CRAB_HAS_UNREACHABLE
-  /**
-   * @brief Denotes unreachable paths
-   * This should be used for optimisation purposes only.
-   */
-  CRAB_NORETURN CRAB_PURE_CONSTEXPR CRABB_INCRAB_INLINE auto unreachable() -> void {
     std::unreachable();
-  }
-
 #elif CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
-
-  /**
-   * @brief Denotes unreachable paths
-   * This should be used for optimisation purposes only.
-   */
-  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
     CRAB_ASSUME(false);
-  }
-
 #elif CRAB_CLANG_VERSION || CRAB_GCC_VERSION
-
-  /**
-   * @brief Denotes unreachable paths
-   * This should be used for optimisation purposes only.
-   */
-  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
     __builtin_unreachable();
-  }
 #else
-  /**
-   * @brief Denotes unreachable paths
-   * This should be used for optimisation purposes only.
-   */
-  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
     CRAB_ASSUME(false);
     while (true);
   }
 #endif
-
-  namespace helper {
-    struct discard final {
-      template<typename... T>
-      CRAB_INLINE_CONSTEXPR auto operator()(T&&...) const -> const discard& {
-        return *this;
-      }
-
-      template<typename T>
-      CRAB_INLINE_CONSTEXPR auto operator=(T&&) -> discard& {
-        return *this;
-      }
-    };
   }
 
   /**
    * Used to discard / explicitly ignore certain outputs
    */
-  inline static constexpr helper::discard discard{};
+  CRAB_INLINE_CONSTEXPR auto discard(CRAB_MAYBE_UNUSED auto&&...) -> void {}
 }

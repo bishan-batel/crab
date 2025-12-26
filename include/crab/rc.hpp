@@ -823,7 +823,7 @@ namespace crab::option {
 
     CRAB_INLINE_CONSTEXPR auto operator=(const None&) -> RcStorage& {
       if (in_use()) {
-        std::ignore = RefCounted{std::move(inner)};
+        crab::discard(RefCounted{std::move(inner)});
       }
       return *this;
     }

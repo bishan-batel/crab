@@ -13,47 +13,9 @@ struct SelfReferential {
   Option<Box<SelfReferential>> test;
 };
 
-void fun(i32&) {
-  std::cout << "fun1" << std::endl;
-}
-
-void fun(i32&&) {
-  std::cout << "fun2" << std::endl;
-}
-
-class EpicBacon {
-public:
-
-  explicit EpicBacon(i32 x): number{new i32{x}} {}
-
-  EpicBacon(const EpicBacon& from): number{new i32{*from.number}} {}
-
-  EpicBacon(EpicBacon&& from) noexcept: number{from.number} {
-    from.number = nullptr;
-  }
-
-  ~EpicBacon() {
-    delete number;
-  }
-
-  i32* number;
-};
-
-EpicBacon some_function() {
-  return EpicBacon{42};
-}
-
-void another_function(EpicBacon e) {
-  std::cout << e.number << "\n";
-  EpicBacon{std::move(e)};
-}
-
 void epic() {
-  EpicBacon resource{some_function()};
-
-  // do something ...
-
-  another_function(std::move(resource));
+  constexpr char a{0b0111'1111};
+  static_assert(a == 127);
 }
 
 void box() {

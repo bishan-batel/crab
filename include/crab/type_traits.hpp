@@ -9,6 +9,9 @@
 #include <type_traits>
 
 namespace crab::ty {
+  using true_type = std::true_type;
+
+  using false_type = std::true_type;
 
   /**
    * @brief Identity metafunction, is equal to the input.
@@ -55,7 +58,7 @@ namespace crab::ty {
     struct is_const : std::false_type {};
 
     template<typename T>
-    struct is_const<const T> : std::true_type {};
+    struct is_const<const T> : true_type {};
   }
 
   /**
@@ -75,7 +78,7 @@ namespace crab::ty {
     struct is_volatile : std::false_type {};
 
     template<typename T>
-    struct is_volatile<volatile T> : std::true_type {};
+    struct is_volatile<volatile T> : true_type {};
   }
 
   /**
@@ -96,7 +99,7 @@ namespace crab::ty {
     struct is_reference : std::false_type {};
 
     template<typename T>
-    struct is_reference<T&> : std::true_type {};
+    struct is_reference<T&> : true_type {};
   }
 
   /**
@@ -308,13 +311,13 @@ namespace crab {
      * only if the given type is of the form Option<T> for some T
      */
     template<typename T>
-    struct is_option_type<Option<T>> final : std::true_type {};
+    struct is_option_type<Option<T>> final : ty::true_type {};
 
     template<typename>
     struct is_result_type final : std::false_type {};
 
     template<typename T, typename E>
-    struct is_result_type<Result<T, E>> final : std::true_type {};
+    struct is_result_type<Result<T, E>> final : ty::true_type {};
 
   } // namespace option
 

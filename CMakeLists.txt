@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(crab VERSION 2.0 DESCRIPTION "crab description")
+project(crab VERSION 2.1 DESCRIPTION "crab description")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -28,11 +28,16 @@ if(CRAB_USE_FMT)
 endif()
 
 # Setting up library & install
-include(GNUInstallDirs)
-
 set(CRAB_HEADERS "")
 file(GLOB CRAB_HEADERS "include/crab/*")
-add_library(crab INTERFACE ${CRAB_HEADERS})
+
+add_library(crab INTERFACE)
+
+target_include_directories(crab INTERFACE 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
+
 
 # Platform Specific flags
 if (APPLE)
@@ -73,8 +78,42 @@ if(CRAB_USE_FMT)
 endif()
 
 
-# install(TARGETS crab DESTINATION lib)
-install(DIRECTORY include/crab/ DESTINATION include/crab)
+include(GNUInstallDirs)
+
+install(TARGETS crab
+        EXPORT crab_Targets
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+include(CMakePackageConfigHelpers)
+
+write_basic_package_version_file(
+        "crabConfigVersion.cmake"
+         VERSION ${PROJECT_VERSION}
+         COMPATIBILITY SameMajorVersion
+)
+
+configure_package_config_file(
+  "${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+  "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+  INSTALL_DESTINATION
+  ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake)
+
+install(EXPORT ${PROJECT_NAME}_Targets
+        FILE ${PROJECT_NAME}Targets.cmake
+        NAMESPACE ${PROJECT_NAME}::
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+)
+
+install(
+        FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+              "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+)
+
+install(DIRECTORY ${PROJECT_SOURCE_DIR}/include/crab DESTINATION include)
 
 option(CRAB_TESTS "Whether to compile / include crab tests" OFF)
 

@@ -29,6 +29,7 @@
     "-DCRAB_TESTS=ON"
     "-DUSE_CPM=OFF"
     "-Wno-dev"
+    "-DCMAKE_INSTALL_LIBDIR=lib"
   ];
 
   # The checkPhase is where tests are run

@@ -32,16 +32,18 @@ namespace crab {
     /**
      * @brief Attempts to cast input of type Base into a Derived instances
      */
-    template<class Derived, std::derived_from<Derived> Base>
+    template<class Derived, class Base>
     CRAB_PURE_INLINE_CONSTEXPR auto cast(const Base& from) -> Option<const Derived&> {
+      static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<const Derived*>(std::addressof(from)));
     }
 
     /**
      * @brief Attempts to cast input of type Base into a Derived instances
      */
-    template<class Derived, std::derived_from<Derived> Base>
+    template<class Derived, class Base>
     CRAB_PURE_INLINE_CONSTEXPR auto cast(Base& from) -> Option<Derived&> {
+      static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<Derived*>(std::addressof(from)));
     }
 
@@ -50,6 +52,7 @@ namespace crab {
      */
     template<class Derived, std::derived_from<Derived> Base>
     CRAB_PURE_INLINE_CONSTEXPR auto cast(const Base* from) -> Option<const Derived&> {
+      static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<const Derived*>(from));
     }
 
@@ -58,6 +61,7 @@ namespace crab {
      */
     template<class Derived, std::derived_from<Derived> Base>
     CRAB_PURE_INLINE_CONSTEXPR auto cast(Base* from) -> Option<Derived&> {
+      static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<Derived*>(from));
     }
 
@@ -66,6 +70,7 @@ namespace crab {
      */
     template<class Derived, std::derived_from<Derived> Base>
     CRAB_PURE_INLINE_CONSTEXPR auto cast(Ref<Base> from) -> Option<Ref<Derived>> {
+      static_assert(std::derived_from<Derived, Base>);
       return cast<Derived, Base>(from.get_ref()).template map<Ref<Derived>>();
     }
 

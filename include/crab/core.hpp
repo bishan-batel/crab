@@ -4,7 +4,7 @@
  * Current version of crab's API
  */
 
-#include "crab/config.h"
+#include "crab/config.hpp"
 
 #define CRAB_USE_PRELUDE true
 

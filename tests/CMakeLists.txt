@@ -17,7 +17,7 @@ if (${FORCE_COLORED_OUTPUT})
 endif ()
 
 # Tests
-add_executable(crab::tests
+add_executable(crab-tests
         box.cpp
         result.cpp
         option.cpp
@@ -29,14 +29,14 @@ add_executable(crab::tests
         fallible.cpp
 )
 
-target_link_libraries(crab::tests PRIVATE crab Catch2::Catch2WithMain)
+target_link_libraries(crab-tests PRIVATE crab Catch2::Catch2WithMain)
 
 if (MSVC)
-    target_compile_options(crab::tests PUBLIC 
+    target_compile_options(crab-tests PUBLIC 
         /W3 /WX
     )
 else()
-    target_compile_options(crab::tests PUBLIC 
+    target_compile_options(crab-tests PUBLIC 
         -Wall 
         -Werror 
         -Wpedantic 
@@ -47,8 +47,8 @@ else()
     )
 endif()
 
-target_compile_definitions(crab::tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")
+target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")
 
 include(CTest)
 include(Catch)
-catch_discover_tests(crab::tests)
+catch_discover_tests(crab-tests)

@@ -19,7 +19,7 @@ endif()
 #                                     Options
 #===============================================================================
 
-option(CRAB_USE_FMTLIB "Should crab use fmtlib for formatting?" ON)
+option(CRAB_USE_FMT "Should crab use fmtlib for formatting?" OFF)
 option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
 option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
 option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
@@ -36,7 +36,7 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # fmtlib is optional
-if(CRAB_USE_FMTLIB)
+if(CRAB_USE_FMT)
         CPMAddPackage(
                 NAME fmt
                 GITHUB_REPOSITORY "fmtlib/fmt"
@@ -58,7 +58,7 @@ configure_file(
 )
 
 # interface library
-set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${PROJECT_NAME}")
+set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 add_library(${PROJECT_NAME} INTERFACE
         "${CRAB_CONFIG_HEADER}"
         "${CRAB_INCLUDE_DIR}/preamble.hpp"
@@ -81,7 +81,7 @@ add_library(${PROJECT_NAME} INTERFACE
 # crab only supports C++20 and above
 # target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
-if(CRAB_USE_FMTLIB)
+if(CRAB_USE_FMT)
         target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=1")
         target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
 endif()
@@ -103,12 +103,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 )
 
 # cmake target information (currently only one)
-install(
-        EXPORT ${PROJECT_NAME}_Targets
-        FILE ${PROJECT_NAME}Targets.cmake
-        NAMESPACE ${PROJECT_NAME}::
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
-)
+# install(
+#         EXPORT ${PROJECT_NAME}_Targets
+#         FILE ${PROJECT_NAME}Targets.cmake
+#         NAMESPACE ${PROJECT_NAME}::
+#         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+# )
 
 # install the library headers
 install(

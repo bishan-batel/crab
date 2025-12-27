@@ -725,20 +725,19 @@ namespace crab {
       return Err<E>{E{std::forward<Args>(args)...}};
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto ok(auto value) {
-      using T = std::remove_cvref_t<decltype(value)>;
-
+    template<typename T>
+    CRAB_PURE_INLINE_CONSTEXPR auto ok(T value) {
       static_assert(ty::ok_type<T>, "Value must be a possible 'Ok<T>' type for use in Result<T, E>");
 
-      return ok<T>(std::forward(value));
+      return Ok<T>{std::move(value)};
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto err(auto value) {
-      using E = std::remove_cvref_t<decltype(value)>;
+    template<typename E>
+    CRAB_PURE_INLINE_CONSTEXPR auto err(E value) {
 
       static_assert(ty::ok_type<E>, "Value must be a possible 'Err<E>' type for use in Result<T, E>");
 
-      return err<E>(std::forward(value));
+      return Err<E>{std::move(value)};
     }
 
     template<typename T, typename E>

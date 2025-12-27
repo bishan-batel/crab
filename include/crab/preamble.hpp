@@ -232,7 +232,7 @@ namespace crab {
     }
   };
 
-  inline CRAB_CONSTEXPR unit unit::val{};
+  inline const unit unit::val{};
 
   /**
    * @brief Alias for std::array
@@ -386,8 +386,14 @@ namespace crab {
   };
 } // namespace crab
 
-inline auto operator<<(std::ostream& os, const ::crab::unit&) -> std::ostream& {
+inline auto operator<<(std::ostream& os, ::crab::unit) -> decltype(auto) {
   return os << "unit";
+}
+
+template<std::derived_from<std::ostream> T>
+inline auto operator<<(T&& os, ::crab::unit) -> T&& {
+  os << ::crab::unit::val;
+  return os;
 }
 
 #if CRAB_USE_PRELUDE

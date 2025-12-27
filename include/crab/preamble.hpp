@@ -404,6 +404,26 @@ using ::crab::Func;
 using ::crab::Tuple;
 using ::crab::Pair;
 
+#if !CRAB_NO_TYPEDEF_ARRAY
+using ::crab::SizedArray;
+#endif
+
+#if !CRAB_NO_TYPEDEF_SPAN
+using ::crab::Span;
+#endif
+
+#if !CRAB_NO_TYPEDEF_VEC
+using ::crab::Vec;
+#endif
+
+#if !CRAB_NO_TYPEDEF_SET
+using ::crab::Set;
+#endif
+
+#if !CRAB_NO_TYPEDEF_DICTIONARY
+using ::crab::Dictionary;
+#endif
+
 using namespace ::crab::numeric_suffixes;
 using namespace ::crab::num;
 

@@ -3,9 +3,18 @@
 /**
  * Current version of crab's API
  */
-#define CRAB_VERSION 200100
+
+#include "crab/config.h"
 
 #define CRAB_USE_PRELUDE true
+
+#if NDEBUG
+#define CRAB_DEBUG   0
+#define CRAB_RELEASE 1
+#else
+#define CRAB_DEBUG   1
+#define CRAB_RELEASE 0
+#endif
 
 /// ===================================================================================================================
 ///                                                 Preproc & Compile-Time Helpers

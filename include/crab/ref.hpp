@@ -175,12 +175,16 @@ namespace crab::ref {
 template<typename T>
 struct std::hash<::crab::ref::Ref<T>> {
   CRAB_PURE_INLINE_CONSTEXPR auto operator()(const ::crab::ref::Ref<T>& mut) const -> usize {
-    return std::hash<const T*>(mut.as_ptr());
+    return std::hash<const T*>{}(mut.as_ptr());
   };
 };
 
 template<typename T>
-struct std::hash<::crab::ref::RefMut<T>> : std::hash<::crab::ref::Ref<T>> {};
+struct std::hash<::crab::ref::RefMut<T>> {
+  CRAB_PURE_INLINE_CONSTEXPR auto operator()(const ::crab::ref::RefMut<T>& mut) const -> usize {
+    return std::hash<const T*>{}(mut.as_ptr());
+  };
+};
 
 #if CRAB_USE_PRELUDE
 

@@ -700,7 +700,7 @@ namespace crab::option {
     CRAB_PURE_INLINE_CONSTEXPR auto map() && -> Option<Into> {
       static_assert(ty::convertible<T, Into>, "'Option<T>::map<Into>()' can only be done if T is convertible to Into");
 
-      return std::move(*this).map([](T&& value) { return static_cast<Into>(std::forward<T>(value)); });
+      return std::move(*this).map([](T&& value) -> Into { return static_cast<Into>(std::forward<T>(value)); });
     }
 
     template<typename Into>

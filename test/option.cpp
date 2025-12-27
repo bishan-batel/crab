@@ -18,7 +18,7 @@ namespace ty = crab::ty;
 TEST_CASE("Option", "Tests for all option methods") {
   const auto life = crab::fn::constant(42);
 
-  STATIC_CHECK(sizeof(crab::None) == 1);
+  STATIC_CHECK(sizeof(crab::option::None) == 1);
 
 
   SECTION("Option<T>::GenericStorage Reference Optimisation") {

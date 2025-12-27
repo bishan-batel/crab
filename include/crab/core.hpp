@@ -3,8 +3,9 @@
 /**
  * Current version of crab's API
  */
-#include "crab/preamble.hpp"
 #define CRAB_VERSION 200100
+
+#define CRAB_USE_PRELUDE true
 
 /// ===================================================================================================================
 ///                                                 Preproc & Compile-Time Helpers

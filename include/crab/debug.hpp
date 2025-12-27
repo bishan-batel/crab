@@ -75,4 +75,4 @@ namespace crab::debug {
  * fmt::format format string for the error message. The following arguments are format args akin to passing in
  * fmt::format(fmt_string, a1, a2, ...)
  */
-#define debug_assert(condition, ...) debug_assert_transparent(condition, ::SourceLocation::current(), __VA_ARGS__)
+#define debug_assert(condition, ...) debug_assert_transparent(condition, ::crab::SourceLocation::current(), __VA_ARGS__)

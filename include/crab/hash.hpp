@@ -36,18 +36,28 @@ namespace crab {
     return (next + 0x9e3779b9 + (seed << 6) + (seed >> 2)) ^ seed;
   }
 
+  CRAB_PURE_INLINE_CONSTEXPR auto hash_code_mix(std::initializer_list<hash_code> list) -> hash_code {
+    hash_code code{0};
+
+    for (const hash_code& h: list) {
+      code = crab::hash_code_mix(code, h);
+    }
+
+    return code;
+  }
+
   template<into_hash_code T, into_hash_code... Rest>
   CRAB_PURE_INLINE_CONSTEXPR auto hash_code_mix(const T& first, const Rest&... rest) -> hash_code {
-    return crab::hash_code_mix(first, crab::hash_code_mix<Rest...>(rest...));
+    return crab::hash_code_mix(std::initializer_list<hash_code>{crab::hash(first), crab::hash(rest)...});
   }
 
   template<ty::hashable FirstItem>
   CRAB_PURE_INLINE_CONSTEXPR auto hash_together(const FirstItem& first) -> hash_code {
-    return crab::hash<FirstItem>(std::forward<FirstItem>(first));
+    return crab::hash<FirstItem>(first);
   }
 
-  template<ty::hashable T, ty::hashable... Rest>
-  CRAB_NODISCARD CRAB_CONSTEXPR auto hash_together(const T& first, const Rest&... items) -> hash_code {
-    return crab::hash_code_mix(crab::hash(first), crab::hash_together(items...));
+  template<ty::hashable... T>
+  CRAB_NODISCARD CRAB_CONSTEXPR auto hash_together(const T&... items) -> hash_code {
+    return crab::hash_code_mix({crab::hash(items)...});
   }
 }

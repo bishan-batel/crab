@@ -38,7 +38,7 @@
   checkPhase = ''
     echo "Running C++ tests..."
     cmake --build . --target crab-tests
-    ${if debugBuild then "./test/crab-tests" else "./test/crab-tests -e"}
+    ${if debugBuild then "./tests/crab-tests" else "./tests/crab-tests -e"}
   '';
 
   # Ensures the tests are actually run during nix build

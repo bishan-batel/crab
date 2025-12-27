@@ -28,7 +28,7 @@ namespace crab {
   }
 
   template<ty::hashable T>
-  CRAB_PURE_INLINE_CONSTEXPR auto hash(T&& value) -> hash_code {
+  CRAB_PURE_INLINE_CONSTEXPR auto hash(const T& value) -> hash_code {
     return static_cast<hash_code>(std::hash<T>{}(value));
   }
 
@@ -37,20 +37,17 @@ namespace crab {
   }
 
   template<into_hash_code T, into_hash_code... Rest>
-  CRAB_PURE_INLINE_CONSTEXPR auto hash_code_mix(T&& first, Rest&&... rest) -> hash_code {
-    return crab::hash_code_mix(first, crab::hash_code_mix<Rest...>(std::forward<Rest>(rest)...));
+  CRAB_PURE_INLINE_CONSTEXPR auto hash_code_mix(const T& first, const Rest&... rest) -> hash_code {
+    return crab::hash_code_mix(first, crab::hash_code_mix<Rest...>(rest...));
   }
 
   template<ty::hashable FirstItem>
-  CRAB_PURE_INLINE_CONSTEXPR auto hash_together(FirstItem&& first) -> hash_code {
+  CRAB_PURE_INLINE_CONSTEXPR auto hash_together(const FirstItem& first) -> hash_code {
     return crab::hash<FirstItem>(std::forward<FirstItem>(first));
   }
 
   template<ty::hashable T, ty::hashable... Rest>
-  CRAB_NODISCARD CRAB_CONSTEXPR auto hash_together(T&& first, Rest&&... items) -> hash_code {
-    return crab::hash_code_mix(
-      crab::hash<T>(std::forward<T>(first)),
-      crab::hash_together<Rest...>(std::forward<Rest>(items)...)
-    );
+  CRAB_NODISCARD CRAB_CONSTEXPR auto hash_together(const T& first, const Rest&... items) -> hash_code {
+    return crab::hash_code_mix(crab::hash(first), crab::hash_together(items...));
   }
 }

@@ -50,9 +50,9 @@
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
 
 #if CRAB_SUPPORTS_FMTLIB
-#include <fmt/core.h>
+// #include <fmt/core.h>
 #include <fmt/format.h>
-#include <fmt/xchar.h>
+// #include <fmt/xchar.h>
 #else
 #error "CRAB_USE_FMT_LIB is true but fmtlib is not available."
 #endif

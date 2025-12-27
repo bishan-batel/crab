@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(crab VERSION 2.1 DESCRIPTION "crab description")
+file(READ ./VERSION CRAB_VERSION)
+project(crab VERSION ${CRAB_VERSION} DESCRIPTION "crab description")
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -53,6 +54,12 @@ endif()
 if(UNIX)
         target_compile_definitions(crab INTERFACE "_UNIX=1")
 endif()
+
+target_compile_definitions(crab INTERFACE 
+        "CRAB_PROJECT_VERSION_MAJOR=${PROJECT_VERSION_MAJOR}"
+        "CRAB_PROJECT_VERSION_MINOR=${PROJECT_VERSION_MINOR}"
+        "CRAB_PROJECT_VERSION_PATCH=${PROJECT_VERSION_PATCH}"
+)
 
 # Public API
 set_target_properties(crab PROPERTIES

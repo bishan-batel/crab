@@ -9,7 +9,7 @@
   ... 
 }: stdenv.mkDerivation rec {
   pname = "crab";
-  version = "2.1.1";
+  version = builtins.readFile ../VERSION;
 
   src = ./..;
 

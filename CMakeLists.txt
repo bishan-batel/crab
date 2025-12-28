@@ -19,7 +19,7 @@ endif()
 #                                     Options
 #===============================================================================
 
-option(CRAB_USE_FMT "Should crab use fmtlib for formatting?" OFF)
+option(CRAB_USE_FMT "Should crab use fmtlib for formatting?" ON)
 option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
 option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
 option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
@@ -37,6 +37,7 @@ include(CMakePackageConfigHelpers)
 
 # fmtlib is optional
 if(CRAB_USE_FMT)
+        message(STATUS "Adding fmtlib")
         CPMAddPackage(
                 NAME fmt
                 GITHUB_REPOSITORY "fmtlib/fmt"
@@ -82,6 +83,7 @@ add_library(${PROJECT_NAME} INTERFACE
 # target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
 if(CRAB_USE_FMT)
+        message(STATUS "Linking with fmtlib")
         target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=1")
         target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
 endif()

@@ -13,11 +13,6 @@ struct SelfReferential {
   Option<Box<SelfReferential>> test;
 };
 
-void epic() {
-  constexpr char a{0b0111'1111};
-  static_assert(a == 127);
-}
-
 void box() {
   Box<Derived> derived{crab::make_box<Derived>()};
 

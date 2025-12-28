@@ -1,7 +1,6 @@
 #pragma once
 
 #include <concepts>
-#include "crab/type_traits.hpp"
 #include "preamble.hpp"
 #include <string>
 
@@ -66,7 +65,6 @@
 #endif
 
 namespace crab {
-
   template<typename T>
   CRAB_NODISCARD auto builtin_to_string(T&& obj) -> String {
     return crab::cases{
@@ -89,9 +87,10 @@ namespace crab {
   }
 
 #if CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
+
   template<typename T>
   CRAB_PURE_CONSTEXPR auto to_string(T&& obj) -> String {
-    if constexpr (fmt::has_formatter<T, fmt::format_context>::value) {
+    if constexpr (fmt::formattable<T>) {
       return fmt::to_string(std::forward<T>(obj));
     } else {
       return builtin_to_string<T>(std::forward<T>(obj));
@@ -111,7 +110,7 @@ namespace crab {
   }
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
   template<typename... Args>
-  CRAB_PURE_INLINE_CONSTEXPR auto format(fmt::format_string<Args...>&& fmt, Args&&... args) -> decltype(auto) {
+  CRAB_PURE_INLINE_CONSTEXPR auto format(fmt::format_string<Args...> fmt, Args&&... args) -> decltype(auto) {
     return fmt::format(std::forward<fmt::format_string<Args...>>(fmt), std::forward<Args>(args)...);
   }
 #else

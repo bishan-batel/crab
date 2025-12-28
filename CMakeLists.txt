@@ -20,9 +20,15 @@ endif()
 #===============================================================================
 
 option(CRAB_USE_FMT "Should crab use fmtlib for formatting?" ON)
+option(CRAB_USE_STD_FORMAT "Should crab use std::format for formatting?" ON)
 option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
 option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
 option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
+
+if (CRAB_USE_STD_FORMAT AND CRAB_USE_FMT)
+        message(FATAL_ERROR "CRAB_USE_STD_FORMAT and CRAB_USE_FMT are mutually exclusive, choose whether crab should use std::format vs fmt::format")
+endif()
+
 
 #===============================================================================
 #                                   Dependencies
@@ -82,10 +88,13 @@ add_library(${PROJECT_NAME} INTERFACE
 # crab only supports C++20 and above
 # target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
-if(CRAB_USE_FMT)
-        message(STATUS "Linking with fmtlib")
+if(CRAB_USE_STD_FORMAT)
+        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=0")
+elseif(CRAB_USE_FMT)
         target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=1")
         target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
+else()
+        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=2")
 endif()
 
 target_include_directories(${PROJECT_NAME} INTERFACE

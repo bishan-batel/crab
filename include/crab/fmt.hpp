@@ -62,6 +62,7 @@
 
 #error                                                                                                                 \
   "Macro CRAB_FMT_USAGE_COMPATABILITY set to an invalid number, must either be 0 (std::format), 1 (fmt::format), or 2 (compatability)"
+
 #endif
 
 namespace crab {
@@ -90,7 +91,7 @@ namespace crab {
 
   template<typename T>
   CRAB_PURE_CONSTEXPR auto to_string(T&& obj) -> String {
-    if constexpr (fmt::formattable<T>) {
+    if constexpr (requires(const T& obj) { fmt::to_string(std::forward<T>(obj)); }) {
       return fmt::to_string(std::forward<T>(obj));
     } else {
       return builtin_to_string<T>(std::forward<T>(obj));
@@ -105,13 +106,13 @@ namespace crab {
 
 #if CRAB_FMT_USAGE == CRAB_FMT_USAGE_STD
   template<typename... Args>
-  CRAB_PURE_INLINE_CONSTEXPR auto format(std::format_string<Args...>&& fmt, Args&&... args) -> decltype(auto) {
-    return std::format(std::forward<std::format_string<Args...>>(fmt), std::forward<Args>(args)...);
+  CRAB_PURE_INLINE_CONSTEXPR auto format(std::format_string<Args...> fmt, Args&&... args) -> decltype(auto) {
+    return std::format(std::move(fmt), std::forward<Args>(args)...);
   }
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
-  template<typename... Args>
-  CRAB_PURE_INLINE_CONSTEXPR auto format(fmt::format_string<Args...> fmt, Args&&... args) -> decltype(auto) {
-    return fmt::format(std::forward<fmt::format_string<Args...>>(fmt), std::forward<Args>(args)...);
+  template<typename S, typename... Args>
+  CRAB_PURE_INLINE_CONSTEXPR auto format(const S& fmt, Args&&... args) -> decltype(auto) {
+    return fmt::format(fmt, std::forward<Args>(args)...);
   }
 #else
   namespace helper::fmt {}

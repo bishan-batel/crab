@@ -113,13 +113,19 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
         LINKER_LANGUAGE CXX
 )
 
+set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
 # cmake target information (currently only one)
-# install(
-#         EXPORT ${PROJECT_NAME}_Targets
-#         FILE ${PROJECT_NAME}Targets.cmake
-#         NAMESPACE ${PROJECT_NAME}::
-#         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
-# )
+install(TARGETS "${PROJECT_NAME}"
+    EXPORT "${PROJECT_NAME}Targets"
+)
+
+install(
+        EXPORT "${PROJECT_NAME}Targets"
+        FILE "${PROJECT_NAME}Targets.cmake"
+        NAMESPACE "${PROJECT_NAME}::"
+        DESTINATION "${conf_install_dir}"
+)
 
 # install the library headers
 install(
@@ -137,8 +143,6 @@ install(
 
 
 # Package Config files for use with find_package
-
-set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
 configure_package_config_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"

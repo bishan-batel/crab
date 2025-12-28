@@ -1,34 +1,37 @@
-{ 
+{
   stdenv,
   cmake,
-  lib, 
-  fmt, 
+  lib,
+  fmt,
   catch2_3,
-  pkg-config, 
   debugBuild ? false,
-  ... 
-}: stdenv.mkDerivation rec {
+  doCheck ? false,
+  useFmtLib ? false,
+  ...
+}:
+stdenv.mkDerivation {
   pname = "crab";
-  version = builtins.readFile ../VERSION;
+  version = builtins.readFile ./VERSION;
+  src = ./.;
 
-  src = ./..;
+  nativeBuildInputs =
+    [
+      cmake
+    ]
+    ++ lib.optional doCheck catch2_3
+    ++ lib.optional useFmtLib fmt;
 
-  nativeBuildInputs = [
-    cmake
-    catch2_3
-  ];
-
-  buildInputs = [
-    fmt
-    catch2_3
-  ];
+  buildInputs =
+    [
+    ]
+    ++ lib.optional doCheck catch2_3
+    ++ lib.optional useFmtLib fmt;
 
   checkTarget = "crab-tests";
 
   cmakeFlags = [
-    "-DCRAB_TESTS=ON"
-    "-DUSE_CPM=OFF"
-    "-Wno-dev"
+    "-DCRAB_TESTS=${if doCheck then "ON" else "OFF"}"
+    "-DCRAB_USE_FMT=${if useFmtLib then "ON" else "OFF"}"
     "-DCMAKE_INSTALL_LIBDIR=lib"
   ];
 
@@ -41,6 +44,5 @@
     ${if debugBuild then "./tests/crab-tests" else "./tests/crab-tests -e"}
   '';
 
-  # Ensures the tests are actually run during nix build
-  doCheck = true;
+  inherit doCheck;
 }

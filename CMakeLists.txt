@@ -123,8 +123,8 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 # install the library headers
 install(
-        DIRECTORY "${PROJECT_SOURCE_DIR}/${PROJECT_NAME}"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
+        DIRECTORY "${CRAB_INCLUDE_DIR}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         FILES_MATCHING PATTERN "*.hpp"
         PATTERN "*.in" EXCLUDE # exclude the config.hpp.in template
 )
@@ -132,7 +132,7 @@ install(
 # install the platform/version specific config.hpp
 install(
         FILES "${CRAB_CONFIG_HEADER}"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/include/${PROJECT_NAME}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
 )
 
 

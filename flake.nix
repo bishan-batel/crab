@@ -12,35 +12,34 @@
       pkgs = nixpkgs.legacyPackages.${system};
       llvm = pkgs.llvmPackages;
 
-      crab = pkgs.callPackage ./nix/crab.nix { };
-      crab-tests = pkgs.callPackage ./nix/crab.nix { doCheck = true; };
-
     in {
       
       packages = {
-        default = crab;
+        default = pkgs.callPackage ./default.nix;
+      };
 
-        crab_tests_gcc_debug = pkgs.callPackage ./nix/crab.nix { 
-          doCheck = true;
+      checks = {
+        crab_tests_gcc_debug = pkgs.callPackage ./default.nix { 
           stdenv = pkgs.stdenv;
+          doCheck = true;
           doDebug = true;
         };
 
-        crab_tests_gcc_release = pkgs.callPackage ./nix/crab.nix { 
-          doCheck = true;
+        crab_tests_gcc_release = pkgs.callPackage ./default.nix { 
           stdenv = pkgs.stdenv;
+          doCheck = true;
           doDebug = false;
         };
 
-        crab_tests_clang_debug = pkgs.callPackage ./nix/crab.nix { 
-          doCheck = true;
+        crab_tests_clang_debug = pkgs.callPackage ./default.nix { 
           stdenv = llvm.stdenv;
+          doCheck = true;
           doDebug = true;
         };
 
-        crab_tests_clang_release = pkgs.callPackage ./nix/crab.nix { 
-          doCheck = true;
+        crab_tests_clang_release = pkgs.callPackage ./default.nix { 
           stdenv = llvm.stdenv;
+          doCheck = true;
           doDebug = false;
         };
       };

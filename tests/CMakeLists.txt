@@ -48,7 +48,3 @@ else()
 endif()
 
 target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")
-
-include(CTest)
-include(Catch)
-catch_discover_tests(crab-tests)

@@ -49,9 +49,19 @@
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
 
 #if CRAB_SUPPORTS_FMTLIB
+
+#if CRAB_CLANG_VERSION
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-literal-operator"
+#endif
+
 #include <fmt/core.h>
 #include <fmt/format.h>
-// #include <fmt/xchar.h>
+
+#if CRAB_CLANG_VERSION
+#pragma clang diagnostic pop
+#endif
+
 #else
 #error "CRAB_USE_FMT_LIB is true but fmtlib is not available."
 #endif

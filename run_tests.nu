@@ -1,8 +1,9 @@
 #!/usr/bin/env nu
 
-let generator = "Ninja"
+# let generator = "Unix Makefiles"
 
-const num_threads = 24;
+# const num_threads = 24;
+const num_threads = 4;
 
 let gcc = {
 	name: "GCC",
@@ -35,7 +36,7 @@ def "main windows" [] {
 	let compiler = get_msvc_compiler; 
 	let build_dir = "build/debug"
 
-	cmake "-Wno-dev" "-B" $build_dir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" $"-G($generator)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
+	cmake "-Wno-dev" "-B" $build_dir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 }
 
 def cmake_test [build_type: string, compiler: record, fmtstd: bool, fmtlib: bool] {
@@ -44,7 +45,8 @@ def cmake_test [build_type: string, compiler: record, fmtstd: bool, fmtlib: bool
 	let builddir = $"build/_($compiler.name)_($build_type)_fmtstd-($fmtstd)_fmtlib-($fmtlib)"
 
 	print "> Setting up cmake"
-	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" $"-G($generator)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" $"-DCRAB_USE_FMT=($fmtlib)" $"-DCRAB_USE_STD_FORMAT=($fmtstd)"
+	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" $"-DCRAB_USE_FMT=($fmtlib)" $"-DCRAB_USE_STD_FORMAT=($fmtstd)"
+	# $"-G($generator)" 
 
 	print "> Compiling"
 	cmake --build $builddir -j($num_threads)
@@ -73,20 +75,21 @@ def main [] {
 			for fmtstd in [false, true] {
 				for fmtlib in [false, true] {
 
-					if $fmtstd == $fmtlib { continue; };
+					if $fmtstd and $fmtlib { continue; };
 
 					let name = $"($compiler.name) on ($build_type), fmtstd=($fmtstd), fmtlib=($fmtlib)";
 
-					$tests = $tests | append {||
-						print $"Testing Compiler ($name)"
-						try {  
-							cmake_test $build_type $compiler $fmtstd $fmtlib
-						print $"Passed Compiler ($name)"
-						} catch { 
-							error make --unspanned {
-								msg: $"Failed tests for ($name)",
+					$tests = $tests | append {
+						name: $name,
+						test: {||
+							try {  
+								cmake_test $build_type $compiler $fmtstd $fmtlib
+							} catch { 
+								error make --unspanned {
+									msg: $"Failed tests for ($name)",
+								}
+								exit
 							}
-							exit
 						}
 					};
 
@@ -95,7 +98,21 @@ def main [] {
 		}
 	}
 
-	$tests | par-each { |x| do $x }
+
+	let run_test = { |x| 
+		print $"Testing Compiler ($x.name)"
+		do $x.test
+		print $"Passed Compiler ($x.name)"
+	};
+
+	$tests | par-each $run_test
+	# $tests | each $run_test
+
+	print "" "--" ""
+
+	$tests | each { |x| print $"Passed Compiler ($x.name)" }
+
+	return
 }
 
 #./build/debug/test/crab-tests -i

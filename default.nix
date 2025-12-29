@@ -5,7 +5,7 @@
   fmt,
   catch2_3,
   debugBuild ? false,
-  doCheck ? false,
+  doCheck ? true,
   useFmtLib ? true,
   useStdFormat ? !useFmtLib,
   ...

@@ -122,7 +122,7 @@ namespace crab {
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
   template<typename... Args>
   CRAB_PURE_INLINE_CONSTEXPR auto format(fmt::format_string<Args...> fmt, Args&&... args) -> decltype(auto) {
-    return fmt::format(fmt, std::forward<Args>(args)...);
+    return fmt::format<Args...>(std::move(fmt), std::forward<Args>(args)...);
   }
 #else
   namespace helper::fmt {}

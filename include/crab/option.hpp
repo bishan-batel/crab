@@ -18,11 +18,12 @@
 #include <type_traits>
 #include <utility>
 
-#include <crab/preamble.hpp>
-#include <crab/type_traits.hpp>
-#include <crab/debug.hpp>
-#include <crab/hash.hpp>
-#include "crab/core.hpp"
+#include "./preamble.hpp"
+#include "./type_traits.hpp"
+#include "./debug.hpp"
+#include "./hash.hpp"
+#include "./core.hpp"
+#include "./mem.hpp"
 
 namespace crab::option {
   /**
@@ -80,7 +81,7 @@ namespace crab::option {
 
     CRAB_CONSTEXPR GenericStorage(GenericStorage&& from) noexcept: in_use_flag{from.in_use_flag} {
       if (in_use()) {
-        std::construct_at<T, T&&>(address(), std::move(from.value()));
+        std::construct_at<T, T&&>(address(), mem::move(from.value()));
         std::destroy_at(from.address());
         from.in_use_flag = false;
       }
@@ -108,9 +109,9 @@ namespace crab::option {
       }
 
       if (in_use_flag) {
-        *address() = std::move(from.value());
+        *address() = mem::move(from.value());
       } else {
-        std::construct_at<T, T&&>(address(), std::move(from.value()));
+        std::construct_at<T, T&&>(address(), mem::move(from.value()));
         in_use_flag = true;
       }
 
@@ -181,7 +182,7 @@ namespace crab::option {
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
 #endif
-      T moved{std::move(reinterpret_cast<T&>(bytes))};
+      T moved{mem::move(reinterpret_cast<T&>(bytes))};
 
 #if CRAB_GCC_VERSION
 #pragma GCC diagnostic pop
@@ -206,7 +207,7 @@ namespace crab::option {
     }
 
     // union CRAB_MAY_ALIAS {
-    alignas(T) std::array<std::byte, sizeof(T)> bytes;
+    alignas(T) SizedArray<std::byte, mem::size_of<T>()> bytes;
     // };
 
     bool in_use_flag;
@@ -485,7 +486,7 @@ namespace crab::option {
         return T{};
       }
 
-      return std::move(*this).unwrap();
+      return mem::move(*this).unwrap();
     }
 
     /**
@@ -495,7 +496,7 @@ namespace crab::option {
      */
     CRAB_PURE_INLINE_CONSTEXPR auto take_or(T default_value) && -> T {
       if (is_some()) {
-        return std::move(*this).unwrap();
+        return mem::move(*this).unwrap();
       }
 
       return default_value;
@@ -509,7 +510,7 @@ namespace crab::option {
     template<ty::provider<T> F>
     CRAB_PURE_INLINE_CONSTEXPR auto take_or(F&& default_generator) && -> T {
       if (is_some()) {
-        return std::move(*this).unwrap();
+        return mem::move(*this).unwrap();
       }
 
       return std::invoke(default_generator);
@@ -553,7 +554,7 @@ namespace crab::option {
     CRAB_PURE_INLINE_CONSTEXPR auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
       debug_assert_transparent(is_some(), loc, "Cannot unwrap a none option");
 
-      return std::move(storage).value();
+      return mem::move(storage).value();
     }
 
     /**
@@ -620,7 +621,7 @@ namespace crab::option {
     template<typename E>
     CRAB_PURE_INLINE_CONSTEXPR auto take_ok_or(E error) && -> ::crab::result::Result<T, E> {
       if (is_some()) {
-        return ::crab::result::Result<T, E>{::crab::result::Ok<T>{std::move(*this).unwrap()}};
+        return ::crab::result::Result<T, E>{::crab::result::Ok<T>{mem::move(*this).unwrap()}};
       }
 
       return ::crab::result::Result<T, E>(::crab::result::Err<E>{std::forward<E>(error)});
@@ -636,7 +637,7 @@ namespace crab::option {
     CRAB_PURE_INLINE_CONSTEXPR auto take_ok_or(F&& error_generator) && -> ::crab::result::Result<T, E> {
       if (is_some()) {
         return ::crab::result::Result<T, E>{
-          ::crab::result::Ok<T>{std::move(*this).unwrap()},
+          ::crab::result::Ok<T>{mem::move(*this).unwrap()},
         };
       }
 
@@ -668,7 +669,7 @@ namespace crab::option {
     CRAB_PURE_INLINE_CONSTEXPR auto map(F&& mapper) && {
       using Returned = Option<ty::functor_result<F, T>>;
 
-      return is_some() ? Returned{std::invoke(mapper, std::move(*this).unwrap())} : Returned{};
+      return is_some() ? Returned{std::invoke(mapper, mem::move(*this).unwrap())} : Returned{};
     }
 
     /**
@@ -700,7 +701,7 @@ namespace crab::option {
     CRAB_PURE_INLINE_CONSTEXPR auto map() && -> Option<Into> {
       static_assert(ty::convertible<T, Into>, "'Option<T>::map<Into>()' can only be done if T is convertible to Into");
 
-      return std::move(*this).map([](T&& value) -> Into { return static_cast<Into>(std::forward<T>(value)); });
+      return mem::move(*this).map([](T&& value) -> Into { return static_cast<Into>(std::forward<T>(value)); });
     }
 
     template<typename Into>
@@ -718,7 +719,7 @@ namespace crab::option {
       static_assert(ty::option_type<Returned>, "The function passed to flat_map must return an Option");
 
       if (is_some()) {
-        return Returned{std::invoke(mapper, std::move(*this).unwrap())};
+        return Returned{std::invoke(mapper, mem::move(*this).unwrap())};
       }
 
       return Returned{None{}};
@@ -743,7 +744,7 @@ namespace crab::option {
       static_assert(ty::option_type<Returned>, "The function passed to or_else must return an Option");
 
       if (is_some()) {
-        return Returned{std::move(*this).unwrap()};
+        return Returned{mem::move(*this).unwrap()};
       }
 
       return Returned{std::invoke(mapper)};
@@ -768,7 +769,7 @@ namespace crab::option {
         return None{};
       }
 
-      return std::move(*this).unwrap();
+      return mem::move(*this).unwrap();
     }
 
     /**
@@ -806,7 +807,7 @@ namespace crab::option {
         return None{};
       }
 
-      T value{std::move(*this).unwrap()};
+      T value{mem::move(*this).unwrap()};
 
       const bool passed{
         static_cast<bool>(std::invoke(predicate, static_cast<const T&>(value))),
@@ -874,7 +875,7 @@ namespace crab::option {
         return None{};
       }
 
-      return Tuple<T, Vals...>{std::move(*this).unwrap(), std::move(other).unwrap()...};
+      return Tuple<T, Vals...>{mem::move(*this).unwrap(), mem::move(other).unwrap()...};
     }
 
     ///
@@ -903,7 +904,7 @@ namespace crab::option {
     template<typename S>
     CRAB_PURE_INLINE_CONSTEXPR auto operator and(Option<S> other) const& -> Option<S> requires ty::copy_constructible<T>
     {
-      return copied() and std::move(other);
+      return copied() and mem::move(other);
     }
 
     /**
@@ -915,7 +916,7 @@ namespace crab::option {
         return other;
       }
 
-      return std::move(*this);
+      return mem::move(*this);
     }
 
     /**
@@ -924,7 +925,7 @@ namespace crab::option {
      */
     CRAB_PURE_INLINE_CONSTEXPR auto operator or(Option other) const& -> Option requires ty::copy_constructible<T>
     {
-      return copied() or std::move(other);
+      return copied() or mem::move(other);
     }
 
     /**
@@ -939,7 +940,7 @@ namespace crab::option {
         return None{};
       }
 
-      return std::move(*this);
+      return mem::move(*this);
     }
 
     /**
@@ -947,7 +948,7 @@ namespace crab::option {
      */
     CRAB_PURE_INLINE_CONSTEXPR auto operator xor(Option other) const& -> Option requires crab::ty::copy_constructible<T>
     {
-      return copied() xor std::move(other);
+      return copied() xor mem::move(other);
     }
 
     ///
@@ -1162,7 +1163,7 @@ namespace crab {
      * Creates an Option<T> from some value T
      */
     CRAB_PURE_INLINE_CONSTEXPR auto some(auto from) {
-      return Option<std::remove_cvref_t<decltype(from)>>{std::move(from)};
+      return Option<std::remove_cvref_t<decltype(from)>>{mem::move(from)};
     }
 
     /**
@@ -1219,7 +1220,7 @@ namespace crab {
         ) const {
           return std::invoke(function).flat_map([&]<typename R>(R&& result) {
             return operator()(
-              std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),
+              std::tuple_cat(mem::move(tuple), Tuple<R>(std::forward<R>(result))),
               std::forward<Rest>(other_functions)...
             );
           });
@@ -1233,7 +1234,7 @@ namespace crab {
           Rest&&... other_functions
         ) const {
           return operator()(
-            std::tuple_cat(std::move(tuple), Tuple<ty::functor_result<F>>(std::invoke(function))),
+            std::tuple_cat(mem::move(tuple), Tuple<ty::functor_result<F>>(std::invoke(function))),
             std::forward<Rest>(other_functions)...
           );
         }
@@ -1246,7 +1247,7 @@ namespace crab {
           Rest&&... other_functions
         ) const {
           return operator()(
-            std::tuple_cat(std::move(tuple), Tuple<V>{std::forward<V>(value)}),
+            std::tuple_cat(mem::move(tuple), Tuple<V>{std::forward<V>(value)}),
             std::forward<Rest>(other_functions)...
           );
         }
@@ -1258,9 +1259,9 @@ namespace crab {
           Option<V> value,
           Rest&&... other_functions
         ) const {
-          return std::move(value).flat_map([&](V&& result) {
+          return mem::move(value).flat_map([&](V&& result) {
             return operator()(
-              std::tuple_cat(std::move(tuple), std::tuple<V>(std::forward<V>(result))),
+              std::tuple_cat(mem::move(tuple), std::tuple<V>(std::forward<V>(result))),
               std::forward<Rest>(other_functions)...
             );
           });

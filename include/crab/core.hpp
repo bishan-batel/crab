@@ -111,6 +111,18 @@
 #define CRAB_MAY_ALIAS
 #endif
 
+#if CRAB_HAS_ATTRIBUTE(likely)
+#define CRAB_LIKELY [[likely]]
+#else
+#define CRAB_LIKELY
+#endif
+
+#if CRAB_HAS_ATTRIBUTE(unlikely)
+#define CRAB_UNLIKELY [[unlikely]]
+#else
+#define CRAB_UNLIKELY
+#endif
+
 #define CRAB_CONSTEXPR constexpr
 
 #if ((CRAB_GCC_VERSION >= 1000 || CRAB_CLANG_VERSION >= 1101)                                                          \

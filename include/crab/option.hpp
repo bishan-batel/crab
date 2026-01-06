@@ -23,7 +23,7 @@
 #include "./debug.hpp"
 #include "./hash.hpp"
 #include "./core.hpp"
-#include "./mem.hpp"
+#include "./mem/mem.hpp"
 
 namespace crab::option {
   /**
@@ -88,7 +88,7 @@ namespace crab::option {
     }
 
     CRAB_CONSTEXPR GenericStorage& operator=(const GenericStorage& from) {
-      if (&from == this) {
+      if (mem::address_of(from) == this) {
         return *this;
       }
 
@@ -199,11 +199,11 @@ namespace crab::option {
   private:
 
     CRAB_PURE_INLINE_CONSTEXPR CRAB_RETURNS_NONNULL auto address() -> T* {
-      return reinterpret_cast<T*>(&bytes);
+      return reinterpret_cast<T*>(mem::address_of(bytes));
     }
 
     CRAB_PURE_INLINE_CONSTEXPR CRAB_RETURNS_NONNULL auto address() const -> const T* {
-      return reinterpret_cast<const T*>(&bytes);
+      return reinterpret_cast<const T*>(mem::address_of(bytes));
     }
 
     // union CRAB_MAY_ALIAS {
@@ -222,7 +222,7 @@ namespace crab::option {
     CRAB_INLINE_CONSTEXPR RefStorage(const RefStorage& from) = default;
 
     CRAB_INLINE_CONSTEXPR RefStorage(RefStorage&& from) noexcept {
-      inner = std::exchange(from.inner, nullptr);
+      inner = mem::replace(from.inner, nullptr);
     }
 
     CRAB_INLINE_CONSTEXPR RefStorage& operator=(const RefStorage& from) = default;
@@ -250,7 +250,7 @@ namespace crab::option {
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto value() && -> T& {
-      return *std::exchange(inner, nullptr);
+      return *mem::replace(inner, nullptr);
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto in_use() const -> bool {
@@ -383,8 +383,7 @@ namespace crab::option {
      * If this option previously contained Some(K), the previous value is
      * discarded and is replaced by Some(T)
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref)
-    {
+    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref) {
       storage = std::forward<T>(from);
       return *this;
     }

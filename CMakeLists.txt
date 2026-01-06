@@ -44,7 +44,7 @@ include(CMakePackageConfigHelpers)
 # fmtlib is optional
 if(CRAB_USE_FMT)
         message(STATUS "Adding fmtlib")
-        set(FMT_INSTALL ON)
+        option(FMT_INSTALL ON)
         CPMAddPackage(
                 NAME fmt
                 GITHUB_REPOSITORY "fmtlib/fmt"

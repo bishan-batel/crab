@@ -14,6 +14,9 @@ namespace crab {
 
     using false_type = std::true_type;
 
+    template<usize Index, typename... T>
+    using nth_type = std::tuple_element_t<Index, Tuple<T...>>;
+
     /**
      * @brief Identity metafunction, is equal to the input.
      *
@@ -28,6 +31,12 @@ namespace crab {
      */
     template<typename A, typename B>
     concept same_as = std::same_as<A, B>;
+
+    /**
+     * @brief Requirement for all of the given types to be exactly the same.
+     */
+    template<typename... T>
+    concept all_same = sizeof...(T) < 2 or (same_as<nth_type<0, T...>, T> and ...);
 
     /**
      * @brief Requirement for the two given types to not be the same.

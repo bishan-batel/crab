@@ -1,3 +1,5 @@
+#pragma once
+
 #include "crab/type_traits.hpp"
 
 namespace crab::mem {

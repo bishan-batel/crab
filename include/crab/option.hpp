@@ -88,7 +88,7 @@ namespace crab::option {
     }
 
     CRAB_CONSTEXPR GenericStorage& operator=(const GenericStorage& from) {
-      if (mem::address_of(from) == this) {
+      if (crab::mem::address_of(from) == this) {
         return *this;
       }
 

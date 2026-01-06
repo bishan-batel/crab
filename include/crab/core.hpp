@@ -149,6 +149,12 @@
 
 #define CRAB_PURE_CONSTEXPR        CRAB_NODISCARD CRAB_CONSTEXPR
 
+#if CRAB_HAS_ATTRIBUTE(pure)
+#define CRAB_PURE CRABCRAB_NODISCARD __attribute__((pure))
+#else
+#define CRAB_PURE CRAB_NODISCARD
+#endif
+
 /// ===================================================================================================================
 ///                                                 Optimisation Controls
 /// ===================================================================================================================
@@ -216,8 +222,8 @@ namespace crab {
 }
 
 #define CRAB_EVAL0(...) __VA_ARGS__
-#define CRAB_EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
-#define CRAB_EVAL2(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
-#define CRAB_EVAL3(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
-#define CRAB_EVAL4(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
-#define CRAB_EVAL(...)  EVAL4(EVAL4(EVAL4(__VA_ARGS__)))
+#define CRAB_EVAL1(...) CRAB_EVAL0(CRAB_EVAL0(CRAB_EVAL0(__VA_ARGS__)))
+#define CRAB_EVAL2(...) CRAB_EVAL1(CRAB_EVAL1(CRAB_EVAL1(__VA_ARGS__)))
+#define CRAB_EVAL3(...) CRAB_EVAL2(CRAB_EVAL2(CRAB_EVAL2(__VA_ARGS__)))
+#define CRAB_EVAL4(...) CRAB_EVAL3(CRAB_EVAL3(CRAB_EVAL3(__VA_ARGS__)))
+#define CRAB_EVAL(...)  CRAB_EVAL4(CRAB_EVAL4(CRAB_EVAL4(__VA_ARGS__)))

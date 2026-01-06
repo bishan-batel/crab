@@ -62,7 +62,7 @@ TEST_CASE("Box", "[box]") {
 
   SECTION("Releasing Single") {
     Box<u32> single = crab::make_box<u32>(420);
-    u32* raw_ptr = single.as_ptr();
+    u32* raw_ptr = single.as_ptr_mut();
     REQUIRE(raw_ptr != nullptr);
     REQUIRE(*raw_ptr == 420);
 

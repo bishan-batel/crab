@@ -2,6 +2,11 @@
 
 #include "crab/preamble.hpp"
 
+// required for std::addressof on MSVC, no public API like __builtin_addressof
+#if CRAB_MSVC_VERSION
+#include <memory>
+#endif
+
 namespace crab::mem {
   /**
    * Retrieves the address / pointer to the given value, bypassing any operator& overloads

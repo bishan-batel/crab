@@ -1,12 +1,10 @@
 #include <algorithm>
 #include <concepts>
 #include <memory>
-#include <type_traits>
 #include <utility>
-#include "./preamble.hpp"
-#include "crab/core.hpp"
+
+#include "crab/preamble.hpp"
 #include "crab/option.hpp"
-#include "crab/range.hpp"
 #include "crab/type_traits.hpp"
 
 namespace crab::choice {
@@ -15,6 +13,8 @@ namespace crab::choice {
 
     template<auto tag_value, typename T>
     struct Case {
+      static_assert(false, "This type is not usable yet.");
+
       inline static const Case instance{};
 
       static constexpr auto tag{tag_value};
@@ -30,7 +30,7 @@ namespace crab::choice {
         return reinterpret_cast<T*>(raw);
       }
 
-      CRAB_PURE_CONSTEXPR static auto as_ptr(const void* raw) -> const T* {
+      CRAB_PURE_CONSTEXPR static auto as_ptr_mut(const void* raw) -> const T* {
         return reinterpret_cast<const T*>(raw);
       }
 
@@ -39,20 +39,20 @@ namespace crab::choice {
         return *as_ptr(raw);
       }
 
-      CRAB_PURE_CONSTEXPR static auto as_ref(const void* raw) -> const T& {
+      CRAB_PURE_CONSTEXPR static auto as_mut(const void* raw) -> const T& {
         debug_assert(raw != nullptr, "Cannot create ref from nullptr");
         return *as_ptr(raw);
       }
 
       CRAB_PURE_CONSTEXPR static auto destruct(void* value) {
         debug_assert(value != nullptr, "Cannot destruct nullptr");
-        std::destroy_at(as_ptr(value));
+        std::destroy_at(as_ptr_mut(value));
       }
 
       template<std::constructible_from<T>... Args>
-      CRAB_PURE_CONSTEXPR auto construct(void* value, Args&&... args) {
+      CRAB_PURE_CONSTEXPR static auto construct(void* value, Args&&... args) {
         debug_assert(value != nullptr, "Cannot destruct nullptr");
-        std::construct_at(as_ptr(value), std::forward<Args>(args)...);
+        std::construct_at(as_ptr_mut(value), std::forward<Args>(args)...);
       }
     };
 
@@ -115,6 +115,9 @@ namespace crab::choice {
     template<Tag tag>
     using CaseType = ty::nth_type<index_of_tag(tag), impl::case_type_t<Cases>...>;
 
+    template<Tag tag>
+    using Case = impl::Case<tag, CaseType<tag>>;
+
     /**
      * List of all data sizes
      */
@@ -155,31 +158,34 @@ namespace crab::choice {
     // {}
 
     template<Tag requested>
-    CRAB_PURE_INLINE_CONSTEXPR auto as() const& {
-      using T = CaseType<requested>;
-
-      constexpr impl::Case<requested, T> case_impl{};
-
-      using Option = option::Option<const T&>;
-
+    CRAB_PURE_INLINE_CONSTEXPR auto as() const& -> Option<const CaseType<requested>&> {
       if (tag() != requested) {
-        return Option{};
+        return {};
       }
 
-      return Option{case_impl.as_ref(bytes.data())};
+      return {Case<requested>{}.as_ref(bytes.data())};
     }
 
     template<Tag requested>
-    CRAB_PURE_INLINE_CONSTEXPR auto as() & {
-      using T = CaseType<requested>;
-      using Case = impl::Case<requested, T>;
-      using Option = option::Option<const T&>;
-
+    CRAB_PURE_INLINE_CONSTEXPR auto as() & -> Option<CaseType<requested>&> {
       if (tag() != requested) {
-        return Option{};
+        return {};
       }
 
-      return Option{Case::as_ref(bytes.data())};
+      return {Case<requested>{}.as_mut(bytes.data())};
+    }
+
+    template<Tag requested>
+    CRAB_PURE_INLINE_CONSTEXPR auto as() && -> Option<CaseType<requested>> {
+      if (tag() != requested) {
+        return {};
+      }
+
+      auto&& a{std::forward(Case<requested>{}.as_mut(bytes.data()))};
+
+      destruct();
+
+      return {};
     }
 
     CRAB_PURE_INLINE_CONSTEXPR auto tag() const -> const Tag& {
@@ -193,13 +199,8 @@ namespace crab::choice {
     bool invalid{false};
   };
 
-  enum class EitherOr {
-    First,
-    Second
-  };
-
   template<typename T, typename U>
-  using Either = Choice<impl::Case<EitherOr::First, T>, impl::Case<EitherOr::Second, U>>;
+  using Either = Choice<impl::Case<0, T>, impl::Case<1, U>>;
 }
 
 #if CRAB_USE_PRELUDE

@@ -6,7 +6,9 @@
 
 #include "crab/config.hpp"
 
+#ifndef CRAB_USE_PRELUDE
 #define CRAB_USE_PRELUDE true
+#endif
 
 #if NDEBUG
 #define CRAB_DEBUG   0
@@ -212,3 +214,10 @@ namespace crab {
    */
   CRAB_INLINE_CONSTEXPR auto discard(CRAB_MAYBE_UNUSED auto&&...) -> void {}
 }
+
+#define CRAB_EVAL0(...) __VA_ARGS__
+#define CRAB_EVAL1(...) EVAL0(EVAL0(EVAL0(__VA_ARGS__)))
+#define CRAB_EVAL2(...) EVAL1(EVAL1(EVAL1(__VA_ARGS__)))
+#define CRAB_EVAL3(...) EVAL2(EVAL2(EVAL2(__VA_ARGS__)))
+#define CRAB_EVAL4(...) EVAL3(EVAL3(EVAL3(__VA_ARGS__)))
+#define CRAB_EVAL(...)  EVAL4(EVAL4(EVAL4(__VA_ARGS__)))

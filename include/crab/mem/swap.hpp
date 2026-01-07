@@ -12,7 +12,7 @@ namespace crab::mem {
   namespace impl {
     template<ty::non_const T>
     constexpr auto swap_non_trivial(T& lhs, T& rhs) -> void {
-      T temp{mem::move(lhs)};
+      T temp = mem::move(lhs);
       lhs = mem::move(rhs);
       rhs = mem::move(temp);
     }

@@ -41,6 +41,12 @@ TEST_CASE("mem::swap") {
     i32 a = 1;
     i32 b = 2;
 
+    mem::swap<i32>(a, a);
+    mem::swap<i32>(b, b);
+
+    CHECK(a == 1);
+    CHECK(b == 2);
+
     mem::swap(a, b);
 
     CHECK(a == 2);
@@ -50,6 +56,25 @@ TEST_CASE("mem::swap") {
 
     CHECK(a == 1);
     CHECK(b == 2);
+  }
+
+  SECTION("string") {
+    String s1{"one"}, s2{"two"};
+
+    mem::swap(s1, s1);
+
+    CHECK(s1 == "one");
+    CHECK(s2 == "two");
+
+    mem::swap(s1, s2);
+
+    CHECK(s1 == "two");
+    CHECK(s2 == "one");
+
+    mem::swap(s1, s2);
+
+    CHECK(s1 == "one");
+    CHECK(s2 == "two");
   }
 
   SECTION("move tracking") {
@@ -74,7 +99,7 @@ TEST_CASE("mem::swap") {
     CHECK(m1.inner().get_name() == "one");
     CHECK(m2.inner().get_name() == "two");
 
-    mem::swap(c1, c2);
+    mem::swap(m1, m2);
 
     CHECK(m1.inner().get_name() == "two");
     CHECK(m2.inner().get_name() == "one");
@@ -82,6 +107,15 @@ TEST_CASE("mem::swap") {
     e1.moves += 2;
     e2.moves += 1;
 
+    c1->valid(e1);
+    c2->valid(e2);
+
+    mem::swap(m1, m2);
+
+    CHECK(m1.inner().get_name() == "one");
+    CHECK(m2.inner().get_name() == "two");
+    e1.moves += 1;
+    e2.moves += 2;
     c1->valid(e1);
     c2->valid(e2);
   }

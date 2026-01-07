@@ -3,8 +3,8 @@
 #include <memory>
 #include <crab/preamble.hpp>
 #include <crab/box.hpp>
-#include <crab/error.hpp>
 #include <utility>
+#include "crab/type_traits.hpp"
 #include "test_types.hpp"
 
 struct SelfReferential;
@@ -12,51 +12,6 @@ struct SelfReferential;
 struct SelfReferential {
   Option<Box<SelfReferential>> test;
 };
-
-struct Type {};
-
-void fun(i32&) {
-  std::cout << "fun1" << std::endl;
-}
-
-void fun(i32&&) {
-  std::cout << "fun2" << std::endl;
-}
-
-class EpicBacon {
-public:
-
-  explicit EpicBacon(i32 x): number{new i32{x}} {}
-
-  EpicBacon(const EpicBacon& from): number{new i32{*from.number}} {}
-
-  EpicBacon(EpicBacon&& from) noexcept: number{from.number} {
-    from.number = nullptr;
-  }
-
-  ~EpicBacon() {
-    delete number;
-  }
-
-  i32* number;
-};
-
-EpicBacon some_function() {
-  return EpicBacon{42};
-}
-
-void another_function(EpicBacon e) {
-  std::cout << e.number << "\n";
-  EpicBacon{std::move(e)};
-}
-
-void epic() {
-  EpicBacon resource{some_function()};
-
-  // do something ...
-
-  another_function(std::move(resource));
-}
 
 void box() {
   Box<Derived> derived{crab::make_box<Derived>()};
@@ -130,7 +85,7 @@ TEST_CASE("Box", "[box]") {
 TEST_CASE("Box Option Niche Optimization") {
   Option<Box<i32>> opt{crab::make_box<i32>(10)};
 
-  static_assert(sizeof(Option<Box<i32>>) == sizeof(Box<i32>));
+  STATIC_CHECK(sizeof(Option<Box<i32>>) == sizeof(Box<i32>));
 
   REQUIRE(opt.is_some());
   REQUIRE_NOTHROW(opt.get_unchecked());

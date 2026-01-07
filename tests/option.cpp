@@ -13,10 +13,13 @@
 #include <crab/option.hpp>
 #include <utility>
 
+namespace ty = crab::ty;
+
 TEST_CASE("Option", "Tests for all option methods") {
   const auto life = crab::fn::constant(42);
 
-  STATIC_CHECK(sizeof(crab::None) == 1);
+  STATIC_CHECK(sizeof(crab::option::None) == 1);
+
 
   SECTION("Option<T>::GenericStorage Reference Optimisation") {
     assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
@@ -28,7 +31,7 @@ TEST_CASE("Option", "Tests for all option methods") {
   SECTION("Constructors & Move Semantics") {
     // general construction
     assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-      constexpr bool copyable = std::copyable<T>;
+      constexpr bool copyable{ty::copyable<T>};
 
       using Option = ::Option<MoveTracker<T>>;
 
@@ -64,8 +67,11 @@ TEST_CASE("Option", "Tests for all option methods") {
 
         // explicit constructor, std::move, and assignmnet
 
-        expected.moves += 3;
+        expected.moves += 2;
         CHECK_NOTHROW(opt = MoveTracker<T>(std::move(opt).unwrap()));
+
+        counter->valid(expected);
+
         //
         if constexpr (copyable) {
           // rvalue from made copy, then assignment
@@ -283,16 +289,11 @@ TEST_CASE("Option", "Tests for all option methods") {
       assert::for_types(assert::types<T, T&, const T&>, []<typename K>(assert::type<K>) {
         if constexpr (std::copy_constructible<T>) {
           STATIC_REQUIRE( //
-            std::same_as<
-              Option<T>,
-              decltype(crab::some(std::declval<K>()))> //
+            ty::same_as<Option<T>, decltype(crab::some(std::declval<K>()))>
           );
         }
 
-        STATIC_REQUIRE(std::same_as<
-                       Option<K>,
-                       decltype(crab::some<K>(std::declval<K>()))> //
-        );
+        STATIC_REQUIRE(ty::same_as<Option<K>, decltype(crab::some<K>(std::declval<K>()))>);
       });
     });
   }

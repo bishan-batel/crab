@@ -2,5 +2,8 @@
 /build/
 /Debug/
 /Release/
+/Testing
+/x64/
+**/*/CMakeFiles
 /.cache
 /compile_commands.json

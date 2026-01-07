@@ -1,4 +1,11 @@
-CPMAddPackage("gh:catchorg/Catch2@3.5.4")
+CPMAddPackage(
+        NAME Catch2
+        GITHUB_REPOSITORY "catchorg/Catch2"
+        GIT_TAG "v3.5.4"
+        VERSION_MIN "3.0.0"
+)
+
+list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
 
 option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." TRUE)
 if (${FORCE_COLORED_OUTPUT})
@@ -23,11 +30,21 @@ add_executable(crab-tests
 )
 
 target_link_libraries(crab-tests PRIVATE crab Catch2::Catch2WithMain)
-target_compile_options(crab-tests PUBLIC 
-    -Wall 
-    -Werror 
-    -Wpedantic 
-    -Wextra 
-    -O3
-    -fsanitize-trap=undefined
-)
+
+if (MSVC)
+    target_compile_options(crab-tests PUBLIC 
+        /W3 /WX
+    )
+else()
+    target_compile_options(crab-tests PUBLIC 
+        -Wall 
+        -Werror 
+        -Wpedantic 
+        -Wextra 
+        -pedantic
+        -O3
+        -fsanitize-trap=undefined
+    )
+endif()
+
+target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")

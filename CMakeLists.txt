@@ -1,86 +1,170 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5..3.10)
 
-project(crab VERSION 2.0 DESCRIPTION "crab description")
+# grab version from file
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/VERSION" CRAB_VERSION_STRINGS)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CPM_SOURCE_CACHE_DEFAULT ON)
+project(crab VERSION "${CRAB_VERSION_STRINGS}" LANGUAGES CXX)
 
-# CPM should find local packages before trying to download
+# Hack for fixing intellisense on nixos/apple
+if(${CMAKE_EXPORT_COMPILE_COMMANDS})
+        set(CMAKE_C_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES})
+        set(CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+endif()
 
-# CPM
+#===============================================================================
+#                                     Options
+#===============================================================================
+
+option(CRAB_USE_FMT "Should crab use fmtlib for formatting?" ON)
+option(CRAB_USE_STD_FORMAT "Should crab use std::format for formatting?" OFF)
+option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
+option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
+option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
+
+if (CRAB_USE_STD_FORMAT AND CRAB_USE_FMT)
+        message(FATAL_ERROR "CRAB_USE_STD_FORMAT and CRAB_USE_FMT are mutually exclusive, choose whether crab should use std::format vs fmt::format")
+endif()
+
+
+#===============================================================================
+#                                   Dependencies
+#===============================================================================
+
+# dependency management (goes unused if no tests are enable & fmtlib is disabled)
 include(cmake/CPM.cmake)
 
-option(CRAB_USE_FMT "Should crab use / require FMT to format" OFF)
+# cmake helpers for installation of the library 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-set(CPM_USE_LOCAL_PACKAGES ON)
-
+# fmtlib is optional
 if(CRAB_USE_FMT)
-        CPMAddPackage("gh:fmtlib/fmt#7.1.3")
+        message(STATUS "Adding fmtlib")
+        set(FMT_INSTALL ON)
+        CPMAddPackage(
+                NAME fmt
+                GITHUB_REPOSITORY "fmtlib/fmt"
+                GIT_TAG "7.1.3"
+                VERSION_MIN "7.0.0"
+        )
 endif()
 
-# Setting up library & install
-include(GNUInstallDirs)
+#===============================================================================
+#                                     Library
+#===============================================================================
+set(CRAB_CONFIG_HEADER "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/config.hpp")
 
-add_library(${PROJECT_NAME} STATIC
-        include/crab/type_traits.hpp
-        include/crab/debug.hpp
-        include/crab/option.hpp
-        include/crab/error.hpp
-        include/crab/result.hpp
-        include/crab/ref.hpp
-        include/crab/box.hpp
-        include/crab/rc.hpp
+# configuration file containing versioning & platform-specific information
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}/config.hpp.in"
+        "${CRAB_CONFIG_HEADER}"
+        @ONLY
 )
 
-# Platform Specific flags
-if (APPLE)
-        target_compile_definitions(crab PUBLIC "_OSX=1")
-elseif (LINUX)
-        target_compile_definitions(crab PUBLIC "_LINUX=1")
-elseif(BSD)
-        target_compile_definitions(crab PUBLIC "_BSD=1")
-elseif(WIN32)
-        target_compile_definitions(crab PUBLIC "_WIN32=1")
+# interface library
+set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
+add_library(${PROJECT_NAME} INTERFACE
+        "${CRAB_CONFIG_HEADER}"
+        "${CRAB_INCLUDE_DIR}/preamble.hpp"
+        "${CRAB_INCLUDE_DIR}/box.hpp"
+        "${CRAB_INCLUDE_DIR}/casts.hpp"
+        "${CRAB_INCLUDE_DIR}/core.hpp"
+        "${CRAB_INCLUDE_DIR}/debug.hpp"
+        "${CRAB_INCLUDE_DIR}/fmt.hpp"
+        "${CRAB_INCLUDE_DIR}/fn.hpp"
+        "${CRAB_INCLUDE_DIR}/hash.hpp"
+        "${CRAB_INCLUDE_DIR}/option.hpp"
+        "${CRAB_INCLUDE_DIR}/range.hpp"
+        "${CRAB_INCLUDE_DIR}/rc.hpp"
+        "${CRAB_INCLUDE_DIR}/ref.hpp"
+        "${CRAB_INCLUDE_DIR}/result.hpp"
+        "${CRAB_INCLUDE_DIR}/todo.hpp"
+        "${CRAB_INCLUDE_DIR}/type_traits.hpp"
+)
+
+# crab only supports C++20 and above
+# target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+
+if(CRAB_USE_STD_FORMAT)
+        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=0")
+elseif(CRAB_USE_FMT)
+        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=1")
+        target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
+else()
+        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=2")
 endif()
 
-if(UNIX)
-        target_compile_definitions(crab PUBLIC "_UNIX=1")
-endif()
+target_include_directories(${PROJECT_NAME} INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
-# Public API
-set_target_properties(crab PROPERTIES
+#===============================================================================
+#                           Public API / Installation
+#===============================================================================
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
-        PUBLIC_HEADER "include/preamble.hpp"
         LINKER_LANGUAGE CXX
 )
 
-target_include_directories(crab PUBLIC
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<INSTALL_INTERFACE:include>
+set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+
+# cmake target information (currently only one)
+install(TARGETS "${PROJECT_NAME}" EXPORT "${PROJECT_NAME}Targets")
+
+install(
+        EXPORT "${PROJECT_NAME}Targets"
+        FILE "${PROJECT_NAME}Targets.cmake"
+        NAMESPACE "${PROJECT_NAME}::"
+        DESTINATION "${conf_install_dir}"
 )
 
-target_compile_definitions(crab PUBLIC
-        "CRAB_DEBUG=$<IF:$<CONFIG:Debug>,1,0>"
-        "CRAB_RELEASE=$<IF:$<CONFIG:RELEASE>,1,0>")
+# install the library headers
+install(
+        DIRECTORY "${CRAB_INCLUDE_DIR}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        FILES_MATCHING PATTERN "*.hpp"
+        PATTERN "*.in" EXCLUDE # exclude the config.hpp.in template
+)
+
+# install the platform/version specific config.hpp
+install(
+        FILES "${CRAB_CONFIG_HEADER}"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
+)
 
 
-if(CRAB_USE_FMT)
-        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=1")
-        target_link_libraries(crab PUBLIC fmt)
-else()
-        target_compile_definitions(crab PUBLIC "CRAB_FMT_USAGE=0")
-endif()
+# Package Config files for use with find_package
 
+configure_package_config_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        INSTALL_DESTINATION "${conf_install_dir}"
+)
 
-install(TARGETS crab DESTINATION lib)
-install(DIRECTORY include/crab/ DESTINATION include/crab)
+write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+         VERSION ${PROJECT_VERSION}
+         COMPATIBILITY SameMajorVersion
+)
 
-option(CRAB_TESTS OFF "Whether to compile / include crab tests")
+install(
+        FILES   "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+        DESTINATION "${conf_install_dir}"
+)
+
+# Tests
 
 if(CRAB_TESTS)
-        add_subdirectory(test)
+        enable_testing()
+        add_subdirectory(tests)
 endif()

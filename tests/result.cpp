@@ -9,9 +9,13 @@
 class Error final : public crab::Error {
 public:
 
-  [[nodiscard]] auto operator==(const Error&) const -> bool { return true; }
+  [[nodiscard]] auto operator==(const Error&) const -> bool {
+    return true;
+  }
 
-  [[nodiscard]] String what() const override { return "huh"; }
+  [[nodiscard]] String what() const override {
+    return "huh";
+  }
 };
 
 TEST_CASE("Result", "[result]") {
@@ -29,7 +33,7 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_THROWS(std::move(result).unwrap());
     REQUIRE_THROWS(std::move(result).unwrap());
 
-    result = err(Error{});
+    result = Error{};
     REQUIRE(result.is_err());
     REQUIRE_FALSE(result.is_ok());
     REQUIRE_THROWS(result.get_unchecked());
@@ -43,7 +47,7 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_THROWS(crab::unwrap_err(std::move(result)));
     REQUIRE_THROWS(crab::unwrap(std::move(result)));
 
-    result = crab::ok<u32>(42);
+    result = 42_u32;
     REQUIRE_NOTHROW(result.ensure_valid());
 
     REQUIRE(Result<unit, Error>{unit{}}.is_ok());
@@ -62,9 +66,7 @@ TEST_CASE("Result", "[result]") {
     REQUIRE(huh.is_err());
 
     std::ignore = std::move(huh).unwrap_err();
-    REQUIRE_THROWS(std::ignore = std::move(huh).map([](const i32 a) {
-      return a * 2;
-    }));
+    REQUIRE_THROWS(std::ignore = std::move(huh).map([](const i32 a) { return a * 2; }));
   }
 
   SECTION("fold") {
@@ -108,16 +110,11 @@ TEST_CASE("Result", "[result]") {
 
   SECTION("and_then") {
     Result<f32, Error> transformed =
-      Result<i32, Error>{10}.and_then([](const i32) -> Result<f32, Error> {
-        return 10.f;
-      });
+      Result<i32, Error>{10}.and_then([](const i32) -> Result<f32, Error> { return 10.f; });
     REQUIRE(transformed.is_ok());
     REQUIRE(transformed.get_unchecked() == 10.f);
 
-    transformed =
-      Result<i32, Error>{20}.and_then([](const i32) -> Result<f32, Error> {
-        return Error{};
-      });
+    transformed = Result<i32, Error>{20}.and_then([](const i32) -> Result<f32, Error> { return Error{}; });
 
     REQUIRE(transformed.is_err());
     REQUIRE(transformed.get_err_unchecked() == Error{});
@@ -147,7 +144,7 @@ TEST_CASE("Result", "[result]") {
       CHECK(b.is_ok());
       CHECK(b.is_ok_and([](const String& str) { return str == "Hello"; }));
 
-      b = crab::err("what");
+      b = "what";
       CHECK(b.is_err());
       CHECK(b.is_err_and([](StringView err) { return err == "what"; }));
     }

@@ -5,7 +5,7 @@
 
 namespace crab::mem {
   template<ty::non_const T, ty::convertible<T> U>
-  CRAB_PURE_INLINE_CONSTEXPR auto replace(T& dest, U&& value) -> T {
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto replace(T& dest, U&& value) -> T {
     T original{move(dest)};
 
     T&& value_possibly_converted{value};

@@ -12,7 +12,7 @@ namespace crab::mem {
    * Retrieves the address / pointer to the given value, bypassing any operator& overloads
    */
   template<typename T>
-  CRAB_PURE_INLINE_CONSTEXPR auto address_of(T& value) -> T* {
+  CRAB_PURE_INLINE constexpr auto address_of(T& value) -> T* {
 #if CRAB_GCC_VERSION || CRAB_CLANG_VERSION
     return __builtin_addressof(value);
 #else
@@ -21,6 +21,5 @@ namespace crab::mem {
   }
 
   template<typename T>
-  CRAB_PURE_INLINE_CONSTEXPR auto address_of(T&& value) -> T* = delete;
-
+  CRAB_PURE_INLINE constexpr auto address_of(T&& value) -> T* = delete;
 }

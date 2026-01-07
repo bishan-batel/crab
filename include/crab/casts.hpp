@@ -13,9 +13,9 @@ namespace crab {
      * Converts a pointer into an optional reference
      */
     template<typename T>
-    CRAB_PURE_INLINE_CONSTEXPR auto from_ptr(T* from) -> Option<T&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(T* from) -> Option<T&> {
       if (from == nullptr) {
-        return crab::none;
+        return {};
       }
 
       return Option<T&>{*from};
@@ -25,7 +25,7 @@ namespace crab {
      * Converts a const T* to a optional reference
      */
     template<typename T>
-    CRAB_PURE_INLINE_CONSTEXPR auto from_ptr(const T* from) -> Option<const T&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(const T* from) -> Option<const T&> {
       return crab::then(from != nullptr, [from]() -> const T& { return *from; });
     }
 
@@ -33,7 +33,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, class Base>
-    CRAB_PURE_INLINE_CONSTEXPR auto cast(const Base& from) -> Option<const Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(const Base& from) -> Option<const Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<const Derived*>(std::addressof(from)));
     }
@@ -42,7 +42,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, class Base>
-    CRAB_PURE_INLINE_CONSTEXPR auto cast(Base& from) -> Option<Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Base& from) -> Option<Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<Derived*>(std::addressof(from)));
     }
@@ -51,7 +51,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_PURE_INLINE_CONSTEXPR auto cast(const Base* from) -> Option<const Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(const Base* from) -> Option<const Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<const Derived*>(from));
     }
@@ -60,7 +60,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_PURE_INLINE_CONSTEXPR auto cast(Base* from) -> Option<Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Base* from) -> Option<Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<Derived*>(from));
     }
@@ -69,7 +69,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_PURE_INLINE_CONSTEXPR auto cast(Ref<Base> from) -> Option<Ref<Derived>> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Ref<Base> from) -> Option<Ref<Derived>> {
       static_assert(std::derived_from<Derived, Base>);
       return cast<Derived, Base>(from.get_ref()).template map<Ref<Derived>>();
     }
@@ -78,7 +78,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_PURE_INLINE_CONSTEXPR Option<RefMut<Derived>> cast(RefMut<Base> from) {
+    CRAB_NODISCARD_INLINE_CONSTEXPR Option<RefMut<Derived>> cast(RefMut<Base> from) {
       return cast<Derived, Base>(from.get_ref()).template map<RefMut<Derived>>();
     }
 
@@ -89,7 +89,7 @@ namespace crab {
      * @param obj Object to check
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_PURE_INLINE_CONSTEXPR auto is(const Base& obj) noexcept -> bool {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto is(const Base& obj) noexcept -> bool {
       const auto* casted{dynamic_cast<const Derived*>(std::addressof(obj))};
       return casted != nullptr;
     }
@@ -126,7 +126,7 @@ namespace crab {
      * @return
      */
     template<typename T>
-    CRAB_PURE_INLINE_CONSTEXPR auto is_exact(const auto& obj) noexcept -> bool {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto is_exact(const auto& obj) noexcept -> bool {
       return typeid(obj) == typeid(T);
     }
   }
@@ -136,7 +136,7 @@ namespace crab {
    * using static_cast
    */
   template<typename T>
-  CRAB_PURE_INLINE_CONSTEXPR auto implicit_cast(ty::identity<T> type) //
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto implicit_cast(ty::identity<T> type) //
     noexcept(std::is_nothrow_move_constructible_v<T>) -> T {
     return type;
   }

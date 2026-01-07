@@ -9,7 +9,7 @@ namespace crab::mem {
    * bug
    */
   template<ty::non_reference T>
-  CRAB_PURE_INLINE_CONSTEXPR auto size_of() -> usize {
+  CRAB_NODISCARD CRAB_CONSTEVAL auto size_of() -> usize {
     static_assert(ty::non_reference<T>, "Cannot get the sizeof a reference.");
     return sizeof(T);
   }
@@ -18,7 +18,7 @@ namespace crab::mem {
    * Returns the size of a given value's type
    */
   template<typename T>
-  CRAB_PURE_INLINE_CONSTEXPR auto size_of_val(const T&) -> usize {
+  CRAB_NODISCARD CRAB_CONSTEVAL auto size_of_val(const T&) -> usize {
     return size_of<T>();
   }
 

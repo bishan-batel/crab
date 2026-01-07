@@ -23,7 +23,7 @@ namespace crab::mem {
    */
   template<ty::movable T>
   requires std::is_default_constructible_v<T>
-  CRAB_PURE_INLINE_CONSTEXPR auto take(T& value) noexcept(impl::take_noexcept<T>) -> T {
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto take(T& value) noexcept(impl::take_noexcept<T>) -> T {
     T temp{mem::move(value)};
     value = T();
     return temp;

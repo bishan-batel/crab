@@ -28,7 +28,7 @@ namespace crab::ref {
 
   public:
 
-    CRAB_PURE_INLINE_CONSTEXPR static Ref from_unchecked(const T* const pointer) {
+    CRAB_NODISCARD_INLINE_CONSTEXPR static Ref from_unchecked(const T* const pointer) {
       return Ref(pointer);
     }
 
@@ -44,33 +44,33 @@ namespace crab::ref {
      */
     Ref(const T&& ref) = delete;
 
-    CRAB_PURE_INLINE_CONSTEXPR operator const T&() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator const T&() const {
       return get_ref();
     };
 
-    CRAB_PURE_INLINE_CONSTEXPR operator const T*() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator const T*() const {
       return as_ptr();
     };
 
-    CRAB_PURE_INLINE_CONSTEXPR const T& operator*() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR const T& operator*() const {
       return get_ref();
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR const T* operator->() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR const T* operator->() const {
       return as_ptr();
     }
 
     /**
      * Gets underlying pointer, this pointer is always non null
      */
-    CRAB_PURE_INLINE_CONSTEXPR const T* as_ptr() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR const T* as_ptr() const {
       return pointer;
     }
 
     /**
      * Gets a C++ reference to underlying data
      */
-    CRAB_PURE_INLINE_CONSTEXPR const T& get_ref() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR const T& get_ref() const {
       return *pointer;
     }
 
@@ -102,27 +102,27 @@ namespace crab::ref {
 
     CRAB_INLINE_CONSTEXPR RefMut(T& ref): RefMut(&ref) {}
 
-    CRAB_PURE_INLINE_CONSTEXPR static RefMut from_unchecked(T* const pointer) {
+    CRAB_NODISCARD_INLINE_CONSTEXPR static RefMut from_unchecked(T* const pointer) {
       return RefMut(pointer);
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR operator T&() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator T&() const {
       return get_mut_ref();
     };
 
-    CRAB_PURE_INLINE_CONSTEXPR operator T*() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator T*() const {
       return as_ptr();
     };
 
-    CRAB_PURE_INLINE_CONSTEXPR operator Ref<T>() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator Ref<T>() const {
       return as_ref();
     };
 
-    CRAB_PURE_INLINE_CONSTEXPR T& operator*() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR T& operator*() const {
       return get_mut_ref();
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR T* operator->() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR T* operator->() const {
       return as_ptr();
     }
 
@@ -130,28 +130,28 @@ namespace crab::ref {
      * Gets underlying pointer, this pointer is always non null
      *
      */
-    CRAB_PURE_INLINE_CONSTEXPR T* as_ptr() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR T* as_ptr() const {
       return pointer;
     }
 
     /**
      * Gets a C++ reference to underlying data
      */
-    CRAB_PURE_INLINE_CONSTEXPR T& get_mut_ref() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR T& get_mut_ref() const {
       return *pointer;
     }
 
     /**
      * Gets a C++ reference to underlying data
      */
-    CRAB_PURE_INLINE_CONSTEXPR const T& get_ref() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR const T& get_ref() const {
       return *pointer;
     }
 
     /**
      * Converts RefMut into a immutable reference
      */
-    CRAB_PURE_INLINE_CONSTEXPR Ref<T> as_ref() const {
+    CRAB_NODISCARD_INLINE_CONSTEXPR Ref<T> as_ref() const {
       return Ref<T>(get_mut_ref());
     }
 
@@ -174,14 +174,14 @@ namespace crab::ref {
  */
 template<typename T>
 struct std::hash<::crab::ref::Ref<T>> {
-  CRAB_PURE_INLINE_CONSTEXPR auto operator()(const ::crab::ref::Ref<T>& mut) const -> usize {
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const ::crab::ref::Ref<T>& mut) const -> usize {
     return std::hash<const T*>{}(mut.as_ptr());
   };
 };
 
 template<typename T>
 struct std::hash<::crab::ref::RefMut<T>> {
-  CRAB_PURE_INLINE_CONSTEXPR auto operator()(const ::crab::ref::RefMut<T>& mut) const -> usize {
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const ::crab::ref::RefMut<T>& mut) const -> usize {
     return std::hash<const T*>{}(mut.as_ptr());
   };
 };

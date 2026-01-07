@@ -9,3 +9,4 @@ namespace crab::mem {}
 #include "./replace.hpp"
 #include "./size_of.hpp"
 #include "./swap.hpp"
+#include "./take.hpp"

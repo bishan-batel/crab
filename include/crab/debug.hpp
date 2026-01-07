@@ -15,7 +15,7 @@ namespace crab::debug {
 
   public:
 
-    explicit AssertionFailedError(SourceLocation source_location, StringView assertion_text, String msg):
+    explicit AssertionFailedError(SourceLocation source_location, StringView assertion_text, StringView msg):
         fmt{crab::format(
           "Failed Assertion in:\n {}:{}: in {} \n'{}'\n{}\n{}",
           source_location.file_name(),
@@ -71,7 +71,7 @@ namespace crab::debug {
  * print the given error.
  *
  * The first argument is the runtime expression that must evaluate to true, then second is the C++20
- * fmt::format format string for the error message. The following arguments are format args akin to passing in
+ * fmt::format_string for the error message. The following arguments are format args akin to passing in
  * fmt::format(fmt_string, a1, a2, ...)
  */
 #define debug_assert(condition, ...) debug_assert_transparent(condition, ::crab::SourceLocation::current(), __VA_ARGS__)

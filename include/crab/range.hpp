@@ -28,11 +28,11 @@ namespace crab {
 
       CRAB_INLINE_CONSTEXPR explicit Iterator(T pos): pos(pos) {}
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> reference {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() const -> reference {
         return pos;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator->() -> pointer {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() -> pointer {
         return pos;
       }
 
@@ -41,17 +41,17 @@ namespace crab {
         return *this;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator++(int) -> Iterator {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator++(int) -> Iterator {
         Iterator tmp = *this;
         ++*this;
         return tmp;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR friend auto operator==(const Iterator& a, const Iterator& b) -> bool {
+      CRAB_NODISCARD_INLINE_CONSTEXPR friend auto operator==(const Iterator& a, const Iterator& b) -> bool {
         return a.pos == b.pos;
       };
 
-      CRAB_PURE_INLINE_CONSTEXPR friend auto operator!=(const Iterator& a, const Iterator& b) -> bool {
+      CRAB_NODISCARD_INLINE_CONSTEXPR friend auto operator!=(const Iterator& a, const Iterator& b) -> bool {
         return a.pos != b.pos;
       };
 
@@ -71,42 +71,42 @@ namespace crab {
     /**
      * Returns the lower bound of this range
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto upper_bound() const -> T {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto upper_bound() const -> T {
       return max;
     }
 
     /**
      * Returns the lower bound of this range
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto lower_bound() const -> T {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto lower_bound() const -> T {
       return min;
     }
 
     /**
      * Begin iterator position.
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto begin() const -> Iterator {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto begin() const -> Iterator {
       return Iterator{min};
     }
 
     /**
      * End iterator position.
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto end() const -> Iterator {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto end() const -> Iterator {
       return Iterator{max};
     }
 
     /**
      * Returns the length of this range
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto size() const -> usize {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto size() const -> usize {
       return static_cast<usize>(max - min);
     }
 
     /**
      * @brief Checks if the given value is within this range
      */
-    CRAB_PURE_INLINE_CONSTEXPR auto contains(const T value) const -> bool {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto contains(const T value) const -> bool {
       return min <= value and value < max;
     }
   };
@@ -123,7 +123,7 @@ namespace crab {
    * for (usize i = 5; i < 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_PURE_INLINE_CONSTEXPR auto range(
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto range(
     ty::identity<T> min,
     ty::identity<T> max,
     const SourceLocation loc = SourceLocation::current()
@@ -143,7 +143,7 @@ namespace crab {
    * for (usize i = 0; i < 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_PURE_INLINE_CONSTEXPR auto range(
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto range(
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
@@ -162,7 +162,7 @@ namespace crab {
    * for (usize i = 5; i <= 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_PURE_INLINE_CONSTEXPR auto range_inclusive(
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto range_inclusive(
     std::type_identity_t<T> min,
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
@@ -182,7 +182,7 @@ namespace crab {
    * for (usize i = 0; i <= 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_PURE_INLINE_CONSTEXPR auto range_inclusive(
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto range_inclusive(
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {

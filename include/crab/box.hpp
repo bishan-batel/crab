@@ -45,7 +45,7 @@ namespace crab {
 
     template<crab::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
-    CRAB_PURE_INLINE_CONSTEXPR static auto make_box(Args&&... args) -> Box<T>;
+    CRAB_NODISCARD_INLINE_CONSTEXPR static auto make_box(Args&&... args) -> Box<T>;
   }
 
   namespace option {
@@ -112,7 +112,7 @@ namespace crab {
        * the heap or if something else has ownership, therefor 'unchecked' and it is
        * the responsibility of the caller to make sure.
        */
-      CRAB_PURE_INLINE_CONSTEXPR static auto wrap_unchecked(T* const ref) -> Box {
+      CRAB_NODISCARD_INLINE_CONSTEXPR static auto wrap_unchecked(T* const ref) -> Box {
         return Box(ref);
       };
 
@@ -120,7 +120,7 @@ namespace crab {
        * Gives up ownership & opts out of RAII, giving you the raw
        * pointer to manage yourself. (equivalent of std::unique_ptr<T>::release
        */
-      CRAB_PURE_INLINE_CONSTEXPR static auto unwrap(Box box, const SourceLocation loc = SourceLocation::current())
+      CRAB_NODISCARD_INLINE_CONSTEXPR static auto unwrap(Box box, const SourceLocation loc = SourceLocation::current())
         -> T* {
         return mem::replace(box.raw_ptr(loc), nullptr);
       }
@@ -211,19 +211,19 @@ namespace crab {
         return *this;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator->() -> T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() -> T* {
         return as_ptr_mut();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator->() const -> const T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() const -> const T* {
         return as_ptr();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator*() -> T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() -> T& {
         return as_mut();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> const T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() const -> const T& {
         return as_ref();
       }
 
@@ -231,25 +231,25 @@ namespace crab {
         return os << *rhs;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto as_ptr_mut(const SourceLocation loc = SourceLocation::current()) -> T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto as_ptr_mut(const SourceLocation loc = SourceLocation::current()) -> T* {
         debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto as_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto as_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
         debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto as_mut(const SourceLocation loc = SourceLocation::current()) -> T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto as_mut(const SourceLocation loc = SourceLocation::current()) -> T& {
         return *as_ptr_mut(loc);
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto as_ref(const SourceLocation loc = SourceLocation::current()) const -> const T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto as_ref(const SourceLocation loc = SourceLocation::current()) const -> const T& {
         return *as_ptr(loc);
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto clone() const& -> Box requires ty::copy_constructible<T>
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto clone() const& -> Box requires ty::copy_constructible<T>
       {
         return box::make_box<T, const T&>(as_ref());
       }
@@ -274,7 +274,7 @@ namespace crab {
        * @brief Attempts to downcast the pointer
        */
       template<std::derived_from<T> Derived>
-      CRAB_PURE_INLINE_CONSTEXPR auto downcast(const SourceLocation loc = SourceLocation::current()) const
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto downcast(const SourceLocation loc = SourceLocation::current()) const
         -> Option<const Derived&> {
         return ref::from_ptr(dynamic_cast<const Derived*>(as_ptr(loc)));
       }
@@ -283,7 +283,7 @@ namespace crab {
        * @brief Attempts to downcast the pointer
        */
       template<std::derived_from<T> Derived>
-      CRAB_PURE_INLINE_CONSTEXPR auto downcast(const SourceLocation loc = SourceLocation::current())
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto downcast(const SourceLocation loc = SourceLocation::current())
         -> Option<Derived&> {
         return ref::from_ptr(dynamic_cast<Derived*>(as_ptr_mut(loc)));
       }
@@ -293,7 +293,7 @@ namespace crab {
        */
       template<typename Base>
       requires std::derived_from<T, Base>
-      CRAB_PURE_INLINE_CONSTEXPR auto upcast() const -> const Base& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto upcast() const -> const Base& {
         return as_ref();
       }
 
@@ -302,7 +302,7 @@ namespace crab {
        */
       template<typename Base>
       requires std::derived_from<T, Base>
-      CRAB_PURE_INLINE_CONSTEXPR auto upcast() -> Base& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto upcast() -> Base& {
         return as_mut();
       }
 
@@ -313,7 +313,7 @@ namespace crab {
        * crab::none
        */
       template<std::derived_from<T> Derived>
-      CRAB_PURE_INLINE_CONSTEXPR auto downcast_lossy() && -> Option<Box<Derived>> {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto downcast_lossy() && -> Option<Box<Derived>> {
         auto* ptr{dynamic_cast<Derived*>(as_ptr_mut())};
 
         if (ptr == nullptr) {
@@ -327,7 +327,7 @@ namespace crab {
 
     private:
 
-      CRAB_PURE_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) -> T*& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) -> T*& {
         debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
@@ -338,7 +338,7 @@ namespace crab {
      */
     template<crab::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
-    CRAB_PURE_INLINE_CONSTEXPR static auto make_box(Args&&... args) -> Box<T> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR static auto make_box(Args&&... args) -> Box<T> {
       return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});
     }
 
@@ -347,7 +347,7 @@ namespace crab {
      */
     template<typename T, typename V>
     requires std::convertible_to<T, V> and (std::integral<T> or std::floating_point<T>)
-    CRAB_PURE_INLINE_CONSTEXPR static auto make_box(V&& from) -> Box<T> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR static auto make_box(V&& from) -> Box<T> {
       return Box<T>::wrap_unchecked(new T{static_cast<T>(from)});
     }
   }
@@ -375,19 +375,19 @@ namespace crab {
         return *this;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto value() const& -> const Box& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto value() const& -> const Box& {
         return inner;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto value() & -> Box& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto value() & -> Box& {
         return inner;
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto value() && -> Box {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto value() && -> Box {
         return std::move(inner);
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto in_use() const -> bool {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto in_use() const -> bool {
         return inner.obj != nullptr;
       }
 

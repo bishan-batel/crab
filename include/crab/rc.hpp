@@ -7,6 +7,7 @@
 #include <crab/box.hpp>
 #include <crab/ref.hpp>
 #include "crab/core.hpp"
+#include "crab/mem/take.hpp"
 
 namespace crab {
   namespace rc {
@@ -57,7 +58,7 @@ namespace crab {
             loc,
             "Corrupted Rc<T>: ref_count being increased after reaching zero"
           );
-          ref_count++;
+          ++ref_count;
         }
 
         CRAB_INLINE_CONSTEXPR auto decrement_ref_count(const SourceLocation loc = SourceLocation::current()) -> void {
@@ -66,41 +67,42 @@ namespace crab {
             loc,
             "Corrupted Rc<T>: ref_count being decreased after reaching zero"
           );
-          ref_count--;
+          --ref_count;
         }
 
-        CRAB_PURE_INLINE_CONSTEXPR auto is_unique() const -> bool {
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto is_unique() const -> bool {
           return ref_count == 1;
         }
 
-        CRAB_PURE_INLINE_CONSTEXPR auto get_ref_count() const -> usize {
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto get_ref_count() const -> usize {
           return ref_count;
         }
 
-        CRAB_PURE_INLINE_CONSTEXPR auto is_data_valid() const -> bool {
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto is_data_valid() const -> bool {
           return data != nullptr;
         }
 
-        CRAB_PURE_INLINE_CONSTEXPR auto should_free_data() const -> bool {
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto should_free_data() const -> bool {
           return ref_count == 0 and is_data_valid();
         }
 
-        CRAB_PURE_INLINE_CONSTEXPR auto should_free_self() const -> bool {
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto should_free_self() const -> bool {
           return ref_count == 0 and weak_ref_count == 0;
         }
 
-        CRAB_CONSTEXPR auto free_data(const SourceLocation loc = SourceLocation::current()) -> void {
+        constexpr auto free_data(const SourceLocation loc = SourceLocation::current()) -> void {
           debug_assert_transparent(
             should_free_data(),
             loc,
             "Invalid use of Rc<T>: Data cannot be freed when there are existing "
             "references."
           );
-          delete std::exchange(data, nullptr);
+
+          delete mem::take(data);
         }
 
         template<std::derived_from<T> Derived = T>
-        CRAB_PURE_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const
           -> Derived* {
           debug_assert_transparent(is_data_valid(), loc, "Invalid access of Rc<T> or RcMut<T>, data is nullptr");
           return static_cast<Derived*>(data);
@@ -108,12 +110,12 @@ namespace crab {
 
         template<typename Base>
         requires std::derived_from<T, Base>
-        CRAB_PURE_INLINE_CONSTEXPR auto upcast() const -> RcInterior<Base>* {
+        CRAB_NODISCARD_INLINE_CONSTEXPR auto upcast() const -> RcInterior<Base>* {
           return std::bit_cast<RcInterior<Base>*>(this);
         }
 
         template<std::derived_from<T> Derived>
-        CRAB_PURE_CONSTEXPR auto downcast() const -> Option<RcInterior<Derived>*> {
+        CRAB_NODISCARD_CONSTEXPR auto downcast() const -> Option<RcInterior<Derived>*> {
           if (dynamic_cast<Derived*>(data)) {
             return some(std::bit_cast<RcInterior<Derived>*>(this));
           }
@@ -336,36 +338,36 @@ namespace crab {
       /**
        * Implicitly coerce into a reference to the contained
        */
-      CRAB_PURE_INLINE_CONSTEXPR operator const T&() const { // NOLINT(*-explicit-constructor)
+      CRAB_NODISCARD_INLINE_CONSTEXPR operator const T&() const { // NOLINT(*-explicit-constructor)
         return *raw_ptr();
       }
 
       /**
        * Implicitly coerce into a reference to a pointer to the contained value
        */
-      CRAB_PURE_INLINE_CONSTEXPR operator const T*() const { // NOLINT(*-explicit-constructor)
+      CRAB_NODISCARD_INLINE_CONSTEXPR operator const T*() const { // NOLINT(*-explicit-constructor)
         return raw_ptr();
       }
 
       /**
        * Implicitly coerce into a reference to the contained
        */
-      CRAB_PURE_INLINE_CONSTEXPR operator Ref<T>() const { // NOLINT(*-explicit-constructor)
+      CRAB_NODISCARD_INLINE_CONSTEXPR operator Ref<T>() const { // NOLINT(*-explicit-constructor)
         return as_ref();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator->() const -> const T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() const -> const T* {
         return raw_ptr();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> const T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() const -> const T& {
         return *raw_ptr();
       }
 
       /**
        * @brief Gets a const reference object to the value inside.
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto as_ref() const -> const T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto as_ref() const -> const T& {
         return *raw_ptr();
       }
 
@@ -373,35 +375,35 @@ namespace crab {
        * @brief Queries if this is the only instance of RcMut<T> (or Rc<T>) that
        * remains. This will also consider Weak references.
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto is_unique() const -> bool {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto is_unique() const -> bool {
         return is_valid() and get_interior()->is_unique();
       }
 
       /**
        * @brief How many references exist to the given resource
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto get_ref_count() const -> usize {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_ref_count() const -> usize {
         return not is_valid() ? 0 : get_interior()->get_ref_count();
       }
 
       /**
        * @brief Queries if this instance has been
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto is_valid() const -> bool {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto is_valid() const -> bool {
         return interior != nullptr;
       }
 
       /**
        * @brief Returns a reference to the underlying data
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto get(const SourceLocation loc = SourceLocation::current()) const -> const T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto get(const SourceLocation loc = SourceLocation::current()) const -> const T& {
         return *raw_ptr(loc);
       }
 
       /**
        * @brief Returns a raw pointer to the underlying data
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
         return get_interior(loc)->raw_ptr();
       }
 
@@ -409,7 +411,7 @@ namespace crab {
        * @brief Gets raw pointer to the RcInterior, do not use this unless you have
        * a very good reason for messing with the invariants of Rc
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) const
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) const
         -> Interior* {
         debug_assert_transparent(
           is_valid(),
@@ -424,7 +426,7 @@ namespace crab {
        * @brief UNSAFE: Gets raw pointer to the RcInterior, do not use this unless
        * you have a reason to mess with Rc directly
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) -> Interior*& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) -> Interior*& {
         debug_assert_transparent(
           is_valid(),
           loc,
@@ -438,7 +440,7 @@ namespace crab {
        * @brief  Attempts to take ownership of the shared value, this will only
        * suceed if this is the only reference to the instance.
        */
-      CRAB_PURE_CONSTEXPR auto try_release(const SourceLocation loc = SourceLocation::current()) && -> Option<Box<T>> {
+      CRAB_NODISCARD_CONSTEXPR auto try_release(const SourceLocation loc = SourceLocation::current()) && -> Option<Box<T>> {
         return std::exchange(interior, nullptr)->release(loc);
       }
     };
@@ -669,44 +671,44 @@ namespace crab {
       /**
        * Implicitly coerce into a reference to the contained
        */
-      CRAB_PURE_INLINE_CONSTEXPR operator T&() const { // NOLINT(*-explicit-constructor)
+      CRAB_NODISCARD_INLINE_CONSTEXPR operator T&() const { // NOLINT(*-explicit-constructor)
         return *raw_ptr();
       }
 
       /**
        * Implicitly coerce into a reference to a pointer to the contained value
        */
-      CRAB_PURE_INLINE_CONSTEXPR operator T*() const { // NOLINT(*-explicit-constructor)
+      CRAB_NODISCARD_INLINE_CONSTEXPR operator T*() const { // NOLINT(*-explicit-constructor)
         return raw_ptr();
       }
 
       /**
        * Implicitly coerce into a reference to the contained
        */
-      CRAB_PURE_INLINE_CONSTEXPR operator RefMut<T>() const { // NOLINT(*-explicit-constructor)
+      CRAB_NODISCARD_INLINE_CONSTEXPR operator RefMut<T>() const { // NOLINT(*-explicit-constructor)
         return as_ref();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator->() const -> T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() const -> T* {
         return raw_ptr();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator*() const -> T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() const -> T& {
         return *raw_ptr();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator->() -> T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() -> T* {
         return raw_ptr();
       }
 
-      CRAB_PURE_INLINE_CONSTEXPR auto operator*() -> T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() -> T& {
         return *raw_ptr();
       }
 
       /**
        * @brief Gets a const reference to the value inside.
        */
-      CRAB_PURE_INLINE_CONSTEXPR auto as_ref(const SourceLocation loc = SourceLocation::current()) const -> T& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto as_ref(const SourceLocation loc = SourceLocation::current()) const -> T& {
         return *raw_ptr(loc);
       }
 
@@ -836,19 +838,19 @@ namespace crab::option {
       return *this;
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto value() const& -> const RefCounted& {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto value() const& -> const RefCounted& {
       return inner;
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto value() & -> RefCounted& {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto value() & -> RefCounted& {
       return inner;
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto value() && -> RefCounted {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto value() && -> RefCounted {
       return std::move(inner);
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto in_use() const -> bool {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto in_use() const -> bool {
       return inner.is_valid();
     }
 

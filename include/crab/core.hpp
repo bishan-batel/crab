@@ -125,14 +125,12 @@
 #define CRAB_UNLIKELY
 #endif
 
-#define CRAB_CONSTEXPR constexpr
-
 #if ((CRAB_GCC_VERSION >= 1000 || CRAB_CLANG_VERSION >= 1101)                                                          \
      && (!defined(__apple_build_version__) || __apple_build_version__ >= 14000029L) && CRAB_CPLUSPLUS >= 202002L)      \
   || (defined(__cpp_consteval) && (!CRAB_MSVC_VERSION || CRAB_MSVC_VERSION >= 1929))
 #define CRAB_CONSTEVAL consteval
 #else
-#define CRAB_CONSTEVAL CRAB_CONSTEXPR
+#define CRAB_CONSTEVAL constexpr
 #endif
 
 #if CRAB_GCC_VERSION || CRAB_CLANG_VERSION
@@ -141,13 +139,15 @@
 #define CRAB_RETURNS_NONNULL
 #endif
 
-#define CRAB_INLINE_CONSTEXPR      CRAB_INLINE CRAB_CONSTEXPR
+#define CRAB_INLINE_CONSTEXPR      CRAB_INLINE constexpr
 
-#define CRAB_PURE_INLINE_CONSTEXPR CRAB_NODISCARD CRAB_INLINE CRAB_CONSTEXPR
+#define CRAB_NODISCARD_INLINE_CONSTEXPR CRAB_NODISCARD CRAB_INLINE constexpr
 
-#define CRAB_PURE_CONSTEVAL        CRAB_NODISCARD CRAB_CONSTEVAL
+#define CRAB_NODISCARD_CONSTEVAL        CRAB_NODISCARD CRAB_CONSTEVAL
 
-#define CRAB_PURE_CONSTEXPR        CRAB_NODISCARD CRAB_CONSTEXPR
+#define CRAB_NODISCARD_CONSTEXPR        CRAB_NODISCARD constexpr
+
+#define CRAB_PURE_INLINE CRAB_PURE CRAB_INLINE
 
 #if CRAB_HAS_ATTRIBUTE(pure)
 #define CRAB_PURE CRABCRAB_NODISCARD __attribute__((pure))

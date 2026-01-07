@@ -5,10 +5,9 @@
 #pragma once
 
 #include "./preamble.hpp"
+#include "./fmt.hpp"
 
 #if !NDEBUG
-
-#include "./fmt.hpp"
 
 namespace crab::debug {
   class AssertionFailedError final : public std::exception {

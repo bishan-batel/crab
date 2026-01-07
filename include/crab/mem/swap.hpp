@@ -2,6 +2,8 @@
 
 #include <type_traits>
 #include "crab/type_traits.hpp"
+#include "./move.hpp"
+#include "./address_of.hpp"
 
 namespace crab::mem {
   template<typename T>
@@ -10,9 +12,9 @@ namespace crab::mem {
   namespace impl {
     template<ty::non_const T>
     CRAB_CONSTEXPR auto swap_non_trivial(T& lhs, T& rhs) -> void {
-      T&& temp{move(lhs)};
-      lhs = move(rhs);
-      rhs = move(temp);
+      T temp{mem::move(lhs)};
+      lhs = mem::move(rhs);
+      rhs = mem::move(temp);
     }
 
     template<ty::non_const T>
@@ -49,12 +51,12 @@ namespace crab::mem {
 
     if (std::is_constant_evaluated()) {
       impl::swap_non_trivial(lhs, rhs);
-    } else {
-      if (address_of(lhs) == address_of(rhs)) {
-        CRAB_LIKELY {
-          impl::swap_trivial_relocatable(lhs, rhs);
-        }
-      }
+      return;
+    }
+
+    if (address_of(lhs) != address_of(rhs)) [[likely]] {
+      impl::swap_trivial_relocatable(lhs, rhs);
+      return;
     }
   }
 }

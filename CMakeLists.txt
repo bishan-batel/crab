@@ -49,7 +49,7 @@ if(CRAB_USE_FMT)
                 NAME fmt
                 GITHUB_REPOSITORY "fmtlib/fmt"
                 GIT_TAG "7.1.3"
-                VERSION_MIN "7.0.0"
+                VERSION_MIN "7.1.3"
         )
 endif()
 

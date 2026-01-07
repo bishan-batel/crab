@@ -45,7 +45,7 @@ def cmake_test [build_type: string, compiler: record, fmtstd: bool, fmtlib: bool
 	let builddir = $"build/_($compiler.name)_($build_type)_fmtstd-($fmtstd)_fmtlib-($fmtlib)"
 
 	print "> Setting up cmake"
-	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" $"-DCRAB_USE_FMT=($fmtlib)" $"-DCRAB_USE_STD_FORMAT=($fmtstd)"
+	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" $"-DCRAB_USE_FMT=($fmtlib)" $"-DCRAB_USE_STD_FORMAT=($fmtstd)" -GNinja
 	# $"-G($generator)" 
 
 	print "> Compiling"

@@ -27,6 +27,7 @@ add_executable(crab-tests
         fn.cpp
         ref.cpp
         fallible.cpp
+        mem.cpp
 )
 
 target_link_libraries(crab-tests PRIVATE crab Catch2::Catch2WithMain)

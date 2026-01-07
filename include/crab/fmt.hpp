@@ -55,7 +55,6 @@
 #pragma clang diagnostic ignored "-Wdeprecated-literal-operator"
 #endif
 
-#include <fmt/core.h>
 #include <fmt/format.h>
 
 #if CRAB_CLANG_VERSION
@@ -121,8 +120,8 @@ namespace crab {
   }
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
   template<typename... Args>
-  CRAB_PURE_INLINE_CONSTEXPR auto format(auto&& fstr, Args&&... args) -> decltype(auto) {
-    return fmt::format(std::forward<decltype(fstr)>(fstr), std::forward<Args>(args)...);
+  CRAB_PURE_INLINE_CONSTEXPR auto format(const auto& fstr, Args&&... args) -> decltype(auto) {
+    return fmt::format(fstr, std::forward<Args>(args)...);
   }
 #else
   namespace helper::fmt {}

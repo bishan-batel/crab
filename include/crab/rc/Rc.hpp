@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include "crab/casts.hpp"
 #include "crab/mem/address_of.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/preamble.hpp"
@@ -303,16 +304,29 @@ namespace crab::experimental::rc {
     template<typename, bool>
     friend class RcMut;
 
+    CRAB_INLINE Rc(RcMut<T, is_thread_safe>&& from): Rc{reinterpret_cast<Rc&&>(from)} {}
+
+    CRAB_INLINE Rc(const RcMut<T, is_thread_safe>& from): Rc{reinterpret_cast<const Rc&>(from)} {}
+
+    constexpr auto operator=(RcMut<T, is_thread_safe>&& from) -> Rc& {
+      operator=(reinterpret_cast<Rc&&>(from));
+      return *this;
+    }
+
+    constexpr auto operator=(const RcMut<T, is_thread_safe>& from) -> Rc& {
+      operator=(reinterpret_cast<const Rc&>(from));
+      return *this;
+    }
+
     [[nodiscard]]
-    static constexpr auto from_owned_unchecked(T* raw_owned_ptr, Base::Counter* raw_counter_ptr = new Base::Counter)
-      -> Rc {
-      return Rc{raw_owned_ptr, raw_counter_ptr};
+    static constexpr auto from_owned_unchecked(T* owned_ptr, Base::Counter* counter_ptr = new Base::Counter) -> Rc {
+      return Rc{owned_ptr, counter_ptr};
     }
   };
 
-  template<typename T, typename... Args>
+  template<ty::non_const T, typename... Args>
   requires std::constructible_from<T, Args...>
-  [[nodiscard]] auto make_rc(Args&&... args) -> Rc<T> {
+  [[nodiscard]] constexpr auto make_rc(Args&&... args) -> Rc<T> {
     return Rc<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 
@@ -322,9 +336,9 @@ namespace crab::experimental::rc {
    * @tparam Args Argument types to be passed to T's constructor
    * @param args Arguments to be passed to T's constructor
    */
-  template<typename T, typename... Args>
+  template<ty::non_const T, typename... Args>
   requires std::constructible_from<T, Args...>
-  [[nodiscard]] auto make_rc_mut(Args&&... args) -> RcMut<T> {
+  [[nodiscard]] constexpr auto make_rc_mut(Args&&... args) -> RcMut<T> {
     return RcMut<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 

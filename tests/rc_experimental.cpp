@@ -48,6 +48,10 @@ namespace {
 
         REQUIRE(rc.get_ref_count() == 0);
         REQUIRE(not rc.is_valid());
+
+        Rc<String> a{other};
+
+        a = other;
       }
     }
 

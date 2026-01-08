@@ -114,15 +114,13 @@ namespace crab {
 #endif
 
 #if CRAB_FMT_USAGE == CRAB_FMT_USAGE_STD
-  template<typename... Args>
-  CRAB_PURE_INLINE_CONSTEXPR auto format(std::format_string<Args...> fmt, Args&&... args) -> decltype(auto) {
-    return std::format(std::move(fmt), std::forward<Args>(args)...);
-  }
+
+  using std::format;
+
 #elif CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
-  template<typename... Args>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto format(const auto& fstr, Args&&... args) -> decltype(auto) {
-    return fmt::format(fstr, std::forward<Args>(args)...);
-  }
+
+  using fmt::format;
+
 #else
   namespace helper::fmt {}
 

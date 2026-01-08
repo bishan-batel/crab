@@ -22,35 +22,35 @@ namespace crab::choice {
       using tag_type = decltype(tag_value);
       using type = T;
 
-      CRAB_PURE_CONSTEXPR static auto is_tag(const tag_type& tag) -> bool {
+      CRAB_NODISCARD_CONSTEXPR static auto is_tag(const tag_type& tag) -> bool {
         return tag == tag_value;
       }
 
-      CRAB_PURE_CONSTEXPR static auto as_ptr(void* raw) -> T* {
+      CRAB_NODISCARD_CONSTEXPR static auto as_ptr(void* raw) -> T* {
         return reinterpret_cast<T*>(raw);
       }
 
-      CRAB_PURE_CONSTEXPR static auto as_ptr_mut(const void* raw) -> const T* {
+      CRAB_NODISCARD_CONSTEXPR static auto as_ptr_mut(const void* raw) -> const T* {
         return reinterpret_cast<const T*>(raw);
       }
 
-      CRAB_PURE_CONSTEXPR static auto as_ref(void* raw) -> T& {
+      CRAB_NODISCARD_CONSTEXPR static auto as_ref(void* raw) -> T& {
         debug_assert(raw != nullptr, "Cannot create ref from nullptr");
         return *as_ptr(raw);
       }
 
-      CRAB_PURE_CONSTEXPR static auto as_mut(const void* raw) -> const T& {
+      CRAB_NODISCARD_CONSTEXPR static auto as_mut(const void* raw) -> const T& {
         debug_assert(raw != nullptr, "Cannot create ref from nullptr");
         return *as_ptr(raw);
       }
 
-      CRAB_PURE_CONSTEXPR static auto destruct(void* value) {
+      CRAB_NODISCARD_CONSTEXPR static auto destruct(void* value) {
         debug_assert(value != nullptr, "Cannot destruct nullptr");
         std::destroy_at(as_ptr_mut(value));
       }
 
       template<std::constructible_from<T>... Args>
-      CRAB_PURE_CONSTEXPR static auto construct(void* value, Args&&... args) {
+      CRAB_NODISCARD_CONSTEXPR static auto construct(void* value, Args&&... args) {
         debug_assert(value != nullptr, "Cannot destruct nullptr");
         std::construct_at(as_ptr_mut(value), std::forward<Args>(args)...);
       }
@@ -130,7 +130,7 @@ namespace crab::choice {
      */
     static constexpr usize DATA_SIZE{std::ranges::max(DATA_SIZES)};
 
-    CRAB_PURE_CONSTEXPR auto destruct() {
+    CRAB_NODISCARD_CONSTEXPR auto destruct() {
       // clang-format off
       if (invalid) CRAB_UNLIKELY return;
       // clang-format on
@@ -158,7 +158,7 @@ namespace crab::choice {
     // {}
 
     template<Tag requested>
-    CRAB_PURE_INLINE_CONSTEXPR auto as() const& -> Option<const CaseType<requested>&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto as() const& -> Option<const CaseType<requested>&> {
       if (tag() != requested) {
         return {};
       }
@@ -167,7 +167,7 @@ namespace crab::choice {
     }
 
     template<Tag requested>
-    CRAB_PURE_INLINE_CONSTEXPR auto as() & -> Option<CaseType<requested>&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto as() & -> Option<CaseType<requested>&> {
       if (tag() != requested) {
         return {};
       }
@@ -176,7 +176,7 @@ namespace crab::choice {
     }
 
     template<Tag requested>
-    CRAB_PURE_INLINE_CONSTEXPR auto as() && -> Option<CaseType<requested>> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto as() && -> Option<CaseType<requested>> {
       if (tag() != requested) {
         return {};
       }
@@ -188,7 +188,7 @@ namespace crab::choice {
       return {};
     }
 
-    CRAB_PURE_INLINE_CONSTEXPR auto tag() const -> const Tag& {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto tag() const -> const Tag& {
       return tag_value;
     }
 

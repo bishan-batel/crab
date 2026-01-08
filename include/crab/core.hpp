@@ -49,7 +49,7 @@
 #ifdef __has_feature
 #define CRAB_HAS_FEATURE(x) __has_feature(x)
 #else
-#define CRABCRAB_HAS_FEATURE(x) false
+#define CRAB_HAS_FEATURE(x) false
 #endif
 
 #ifdef __has_include
@@ -150,7 +150,7 @@
 #define CRAB_PURE_INLINE CRAB_PURE CRAB_INLINE
 
 #if CRAB_HAS_ATTRIBUTE(pure)
-#define CRAB_PURE CRABCRAB_NODISCARD __attribute__((pure))
+#define CRAB_PURE CRAB_NODISCARD __attribute__((pure))
 #else
 #define CRAB_PURE CRAB_NODISCARD
 #endif

@@ -71,12 +71,11 @@ namespace crab::experimental::rc {
 
     template<typename T, bool is_thread_safe = false>
     class RcBase {
-    public:
-
       static_assert(ty::non_reference<T>, "Cannot allocate data for a reference type (T& / const T&)");
 
-      using Counter = Counter<is_thread_safe>;
+    public:
 
+      using Counter = impl::Counter<is_thread_safe>;
       using TMut = std::remove_const_t<T>;
       using TConst = std::add_const_t<TMut>;
 
@@ -250,9 +249,11 @@ namespace crab::experimental::rc {
     static_assert(ty::non_const<T>);
 
     using Base = impl::RcBase<T>;
-    using Counter = impl::RcBase<T>::Counter;
 
-    explicit CRAB_INLINE RcMut(T* raw_owned_ptr, Counter* raw_counter_ptr): Base{raw_owned_ptr, raw_counter_ptr} {}
+    // using Counter = impl::RcBase<T>::Counter;
+
+    explicit CRAB_INLINE RcMut(T* raw_owned_ptr, Base::Counter* raw_counter_ptr):
+        Base{raw_owned_ptr, raw_counter_ptr} {}
 
   public:
 
@@ -281,8 +282,8 @@ namespace crab::experimental::rc {
     }
 
     [[nodiscard]]
-    static constexpr auto from_owned_unchecked(T* raw_owned_ptr, Counter* raw_counter_ptr = new Counter) -> RcMut {
-      return RcMut{raw_owned_ptr, raw_counter_ptr};
+    static constexpr auto from_owned_unchecked(T* data_ptr, Base::Counter* counter_ptr = new Base::Counter) -> RcMut {
+      return RcMut{data_ptr, counter_ptr};
     }
   };
 
@@ -291,9 +292,8 @@ namespace crab::experimental::rc {
     static_assert(ty::non_const<T>);
 
     using Base = impl::RcBase<const T>;
-    using Counter = impl::RcBase<const T>::Counter;
 
-    explicit CRAB_INLINE Rc(T* raw_owned_ptr, Counter* raw_counter_ptr): Base{raw_owned_ptr, raw_counter_ptr} {}
+    explicit CRAB_INLINE Rc(T* data_ptr, Base::Counter* counter_ptr): Base{data_ptr, counter_ptr} {}
 
   public:
 
@@ -304,7 +304,8 @@ namespace crab::experimental::rc {
     friend class RcMut;
 
     [[nodiscard]]
-    static constexpr auto from_owned_unchecked(T* raw_owned_ptr, Counter* raw_counter_ptr = new Counter) -> Rc {
+    static constexpr auto from_owned_unchecked(T* raw_owned_ptr, Base::Counter* raw_counter_ptr = new Base::Counter)
+      -> Rc {
       return Rc{raw_owned_ptr, raw_counter_ptr};
     }
   };

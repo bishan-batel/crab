@@ -99,7 +99,7 @@ namespace crab {
 #if CRAB_FMT_USAGE == CRAB_FMT_USAGE_FMTLIB
 
   template<typename T>
-  CRAB_NODISCARD_CONSTEXPR auto to_string(T&& obj) -> String {
+  [[nodiscard]] constexpr auto to_string(T&& obj) -> String {
     if constexpr (requires(const T& obj) { fmt::to_string(std::forward<T>(obj)); }) {
       return fmt::to_string(std::forward<T>(obj));
     } else {
@@ -108,7 +108,7 @@ namespace crab {
   }
 #else
   template<typename T>
-  CRAB_PURE_CONSTEXPR auto to_string(T&& obj) -> String {
+  [[nodiscard]] constexpr auto to_string(T&& obj) -> String {
     return builtin_to_string(std::forward<T>(obj));
   }
 #endif

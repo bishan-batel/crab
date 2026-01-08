@@ -2,9 +2,9 @@
 
 #include <crab/preamble.hpp>
 #include <crab/ref.hpp>
-#include <crab/option.hpp>
 #include <type_traits>
 #include "crab/core.hpp"
+#include "crab/option/option.hpp"
 
 namespace crab {
 
@@ -26,7 +26,11 @@ namespace crab {
      */
     template<typename T>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(const T* from) -> Option<const T&> {
-      return crab::then(from != nullptr, [from]() -> const T& { return *from; });
+      if (from != nullptr) {
+        return Option<const T&>{*from};
+      }
+
+      return {};
     }
 
     /**

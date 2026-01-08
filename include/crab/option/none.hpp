@@ -2,7 +2,7 @@
 
 #include "crab/core.hpp"
 
-namespace crab::option {
+namespace crab::opt {
   /**
    * 0-sized* struct to give into Option<T> to create an empty Option
    */
@@ -24,5 +24,5 @@ namespace crab::option {
 }
 
 namespace crab {
-  using crab::option::none;
+  using crab::opt::none;
 }

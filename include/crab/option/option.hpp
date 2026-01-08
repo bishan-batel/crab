@@ -23,7 +23,7 @@
 
 #include "./none.hpp"
 
-namespace crab::option {
+namespace crab::opt {
 
   /**
    * Storage selector for Option<T>, this type's public alias 'type' determines the structure
@@ -69,7 +69,7 @@ namespace crab::option {
     /**
      * Storage type for this data
      */
-    using Storage = ::crab::option::Storage<T>::type;
+    using Storage = ::crab::opt::Storage<T>::type;
 
     /**
      * Is the contained type T a reference type (immutable or mutable)
@@ -378,7 +378,7 @@ namespace crab::option {
     /**
      * Converts this Result<T, E> from this given option, where "None" is
      * expanded to some error given. This will invalidate the Option<T> after
-     * call, just like every other Option::take_* function.
+     * call, just like every other opt::take_* function.
      * @tparam E Error Type
      * @param error Error to replace an instance of None
      */
@@ -885,7 +885,7 @@ namespace crab::option {
 
 // TODO: change this into usage for std::formatter or fmt::formatter
 template<typename T>
-CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const ::crab::option::Option<T>& opt) -> std::ostream& {
+CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const ::crab::opt::Option<T>& opt) -> std::ostream& {
   if (opt.is_none()) {
     return os << "None";
   }
@@ -903,8 +903,8 @@ CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const ::crab::option::Op
 }
 
 template<typename T>
-struct std::hash<::crab::option::Option<T>> /*NOLINT*/ {
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const ::crab::option::Option<T>& opt) const -> crab::hash_code {
+struct std::hash<::crab::opt::Option<T>> /*NOLINT*/ {
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const ::crab::opt::Option<T>& opt) const -> crab::hash_code {
     if (opt.is_none()) {
       return 0;
     }
@@ -913,144 +913,10 @@ struct std::hash<::crab::option::Option<T>> /*NOLINT*/ {
   }
 };
 
-namespace crab {
-
-  namespace option {
-
-    /**
-     * Creates an Option<T> from some value T
-     */
-    template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto some(std::type_identity_t<T>&& from) {
-      return Option<T>{mem::forward<T>(from)};
-    }
-
-    /**
-     * Creates an Option<T> from some value T
-     */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto some(auto from) {
-      return Option<std::remove_cvref_t<decltype(from)>>{mem::move(from)};
-    }
-
-    /**
-     * Maps a boolean to an option if it is true
-     */
-    template<crab::ty::provider F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto then(const bool cond, F&& func) {
-      using Return = Option<crab::ty::functor_result<F>>;
-
-      if (not cond) {
-        return Return{};
-      }
-
-      return Return{std::invoke(func)};
-    }
-
-    /**
-     * Maps a boolean to an option if it is false
-     */
-    template<crab::ty::provider F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto unless(const bool cond, F&& func) {
-      using Return = Option<crab::ty::functor_result<F>>;
-
-      if (cond) {
-        return Return{};
-      }
-
-      return Return{std::invoke(func)};
-    }
-
-    /**
-     * Consumes given option and returns the contained value, will throw
-     * if none found
-     * @param from Option to consume
-     */
-    template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto unwrap(Option<T>&& from) -> T {
-      return mem::forward<T>(from).unwrap();
-    }
-
-    namespace impl {
-      struct fallible final {
-        template<typename... T>
-        CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(Tuple<T...> tuple) const {
-          return Option<Tuple<T...>>{mem::forward<Tuple<T...>>(tuple)};
-        }
-
-        template<typename PrevResults, ty::provider F, typename... Rest>
-        requires ty::option_type<ty::functor_result<F>>
-        CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(
-          PrevResults tuple /* Tuple<T...>*/,
-          F&& function,
-          Rest&&... other_functions
-        ) const {
-          return std::invoke(function).flat_map([&]<typename R>(R&& result) {
-            return operator()(
-              std::tuple_cat(mem::move(tuple), Tuple<R>(mem::forward<R>(result))),
-              mem::forward<Rest>(other_functions)...
-            );
-          });
-        }
-
-        template<typename PrevResults, ty::provider F, typename... Rest>
-        requires(not ty::option_type<ty::functor_result<F>>)
-        CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(
-          PrevResults tuple /* Tuple<T...>*/,
-          F&& function,
-          Rest&&... other_functions
-        ) const {
-          return operator()(
-            std::tuple_cat(mem::move(tuple), Tuple<ty::functor_result<F>>(std::invoke(function))),
-            mem::forward<Rest>(other_functions)...
-          );
-        }
-
-        template<typename PrevResults, typename V, typename... Rest>
-        requires(not ty::provider<V> and not ty::option_type<V>)
-        CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(
-          PrevResults tuple /* Tuple<T...>*/,
-          V&& value,
-          Rest&&... other_functions
-        ) const {
-          return operator()(
-            std::tuple_cat(mem::move(tuple), Tuple<V>{mem::forward<V>(value)}),
-            mem::forward<Rest>(other_functions)...
-          );
-        }
-
-        template<typename PrevResults, typename V, typename... Rest>
-        requires(not ty::provider<V>)
-        CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(
-          PrevResults tuple, /* Tuple<T...>*/
-          Option<V> value,
-          Rest&&... other_functions
-        ) const {
-          return mem::move(value).flat_map([&](V&& result) {
-            return operator()(
-              std::tuple_cat(mem::move(tuple), std::tuple<V>(mem::forward<V>(result))),
-              mem::forward<Rest>(other_functions)...
-            );
-          });
-        }
-      };
-    }
-
-    template<typename... F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto fallible(F&&... fallible) {
-      return ::crab::option::impl::fallible{}(std::tuple<>{}, mem::forward<F>(fallible)...);
-    }
-  }
-
-  using option::some;
-  using option::then;
-  using option::unless;
-  using option::fallible;
-  using option::none;
-
-} // namespace crab
-
 namespace crab::prelude {
-  using crab::option::Option;
+  using ::crab::opt::Option;
 }
+
+CRAB_PRELUDE_GUARD;
 
 // NOLINTEND(*explicit*)

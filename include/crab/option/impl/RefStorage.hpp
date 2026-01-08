@@ -4,7 +4,7 @@
 #include "crab/mem/take.hpp"
 #include "crab/option/none.hpp"
 
-namespace crab::option::impl {
+namespace crab::opt::impl {
   /**
    * @brief Specialized storage for Option<T&> to not require an in_use flag
    */

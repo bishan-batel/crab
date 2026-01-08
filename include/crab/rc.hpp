@@ -18,7 +18,7 @@ namespace crab {
     class RcMut;
   }
 
-  namespace option {
+  namespace opt {
     template<typename T, template<typename Inner> typename Container>
     struct RcStorage;
 
@@ -136,7 +136,7 @@ namespace crab {
      */
     template<typename T>
     class Rc final {
-      friend struct ::crab::option::RcStorage<T, ::crab::rc::Rc>;
+      friend struct ::crab::opt::RcStorage<T, ::crab::rc::Rc>;
 
       using Interior = impl::RcInterior<T>;
 
@@ -403,7 +403,8 @@ namespace crab {
       /**
        * @brief Returns a raw pointer to the underlying data
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const -> const T* {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto raw_ptr(const SourceLocation loc = SourceLocation::current()) const
+        -> const T* {
         return get_interior(loc)->raw_ptr();
       }
 
@@ -426,7 +427,8 @@ namespace crab {
        * @brief UNSAFE: Gets raw pointer to the RcInterior, do not use this unless
        * you have a reason to mess with Rc directly
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current()) -> Interior*& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_interior(const SourceLocation loc = SourceLocation::current())
+        -> Interior*& {
         debug_assert_transparent(
           is_valid(),
           loc,
@@ -440,14 +442,16 @@ namespace crab {
        * @brief  Attempts to take ownership of the shared value, this will only
        * suceed if this is the only reference to the instance.
        */
-      CRAB_NODISCARD_CONSTEXPR auto try_release(const SourceLocation loc = SourceLocation::current()) && -> Option<Box<T>> {
+      CRAB_NODISCARD_CONSTEXPR auto try_release(
+        const SourceLocation loc = SourceLocation::current()
+      ) && -> Option<Box<T>> {
         return std::exchange(interior, nullptr)->release(loc);
       }
     };
 
     template<typename T>
     class RcMut final {
-      friend struct crab::option::RcStorage<T, ::crab::rc::RcMut>;
+      friend struct crab::opt::RcStorage<T, ::crab::rc::RcMut>;
       using Interior = impl::RcInterior<T>;
 
       Interior* interior;
@@ -815,23 +819,21 @@ namespace crab {
   using rc::make_rc_mut;
 } // namespace crab
 
-#include "./option.hpp"
-
-namespace crab::option {
+namespace crab::opt {
   template<typename T, template<typename Inner> typename Container>
   struct RcStorage final {
     using RefCounted = Container<T>;
 
     CRAB_INLINE_CONSTEXPR explicit RcStorage(RefCounted value): inner{std::move(value)} {}
 
-    CRAB_INLINE_CONSTEXPR explicit RcStorage(const None& = crab::none): inner{nullptr} {}
+    CRAB_INLINE_CONSTEXPR explicit RcStorage(const opt::None& = crab::none): inner{nullptr} {}
 
     CRAB_INLINE_CONSTEXPR auto operator=(RefCounted&& value) -> RcStorage& {
       inner = std::move(value);
       return *this;
     }
 
-    CRAB_INLINE_CONSTEXPR auto operator=(const None&) -> RcStorage& {
+    CRAB_INLINE_CONSTEXPR auto operator=(const opt::None&) -> RcStorage& {
       if (in_use()) {
         crab::discard(RefCounted{std::move(inner)});
       }
@@ -860,9 +862,9 @@ namespace crab::option {
   };
 }
 
-#if CRAB_USE_PRELUDE
+namespace crab::prelude {
+  using ::crab::rc::Rc;
+  using ::crab::rc::RcMut;
+}
 
-using ::crab::rc::Rc;
-using ::crab::rc::RcMut;
-
-#endif
+CRAB_PRELUDE_GUARD;

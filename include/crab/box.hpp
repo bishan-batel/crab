@@ -8,6 +8,8 @@
 
 #include "crab/casts.hpp"
 #include "crab/debug.hpp"
+#include "crab/mem/take.hpp"
+#include "crab/option/none.hpp"
 #include "crab/preamble.hpp"
 #include "crab/ref.hpp"
 #include "crab/type_traits.hpp"
@@ -45,7 +47,7 @@ namespace crab {
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T>;
   }
 
-  namespace option {
+  namespace opt {
 
     template<typename T>
     struct BoxStorage;
@@ -100,7 +102,7 @@ namespace crab {
 
     public:
 
-      friend struct option::BoxStorage<T>;
+      friend struct opt::BoxStorage<T>;
 
       /**
        * @brief Wraps pointer with RAII
@@ -276,7 +278,7 @@ namespace crab {
        */
       template<std::derived_from<T> Derived>
       [[nodiscard]] CRAB_INLINE constexpr auto downcast(const SourceLocation loc = SourceLocation::current()) const
-        -> Option<const Derived&> {
+        -> opt::Option<const Derived&> {
         return ref::from_ptr(dynamic_cast<const Derived*>(as_ptr(loc)));
       }
 
@@ -285,7 +287,7 @@ namespace crab {
        */
       template<std::derived_from<T> Derived>
       [[nodiscard]] CRAB_INLINE constexpr auto downcast(const SourceLocation loc = SourceLocation::current())
-        -> Option<Derived&> {
+        -> opt::Option<Derived&> {
         return ref::from_ptr(dynamic_cast<Derived*>(as_ptr_mut(loc)));
       }
 
@@ -314,7 +316,7 @@ namespace crab {
        * crab::none
        */
       template<std::derived_from<T> Derived>
-      [[nodiscard]] CRAB_INLINE constexpr auto downcast_lossy() && -> Option<Box<Derived>> {
+      [[nodiscard]] CRAB_INLINE constexpr auto downcast_lossy() && -> opt::Option<Box<Derived>> {
         auto* ptr{dynamic_cast<Derived*>(as_ptr_mut())};
 
         if (ptr == nullptr) {
@@ -355,7 +357,7 @@ namespace crab {
 
   using box::make_box;
 
-  namespace option {
+  namespace opt {
 
     template<typename T>
     struct BoxStorage final {
@@ -363,7 +365,7 @@ namespace crab {
 
       CRAB_INLINE constexpr explicit BoxStorage(Box value): inner{std::move(value)} {}
 
-      CRAB_INLINE constexpr explicit BoxStorage(const None& = {}): inner{nullptr} {}
+      CRAB_INLINE constexpr explicit BoxStorage(const opt::None& = {}): inner{nullptr} {}
 
       CRAB_INLINE constexpr auto operator=(Box&& value) -> BoxStorage& {
         debug_assert(value.obj != nullptr, "Option<Box<T>>, BoxStorage::operator= called with an invalid box");
@@ -371,7 +373,7 @@ namespace crab {
         return *this;
       }
 
-      CRAB_INLINE constexpr auto operator=(const None&) -> BoxStorage& {
+      CRAB_INLINE constexpr auto operator=(const opt::None&) -> BoxStorage& {
         crab::discard(Box{std::move(inner)});
         return *this;
       }

@@ -268,7 +268,7 @@ namespace crab {
 
   }
 
-  namespace option {
+  namespace opt {
     struct None;
 
     template<typename T>
@@ -315,7 +315,7 @@ namespace crab {
        * only if the given type is of the form Option<T> for some T
        */
       template<typename T>
-      struct is_option_type<::crab::option::Option<T>> final : ty::true_type {};
+      struct is_option_type<opt::Option<T>> final : ty::true_type {};
 
       template<typename>
       struct is_result_type final : std::false_type {};

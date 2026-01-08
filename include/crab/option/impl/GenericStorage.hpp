@@ -8,7 +8,7 @@
 #include "crab/option/none.hpp"
 #include "crab/type_traits.hpp"
 
-namespace crab::option::impl {
+namespace crab::opt::impl {
   /**
    * Generic tagged union storage for Option<T>
    */

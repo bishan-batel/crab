@@ -396,52 +396,56 @@ inline auto operator<<(T&& os, ::crab::unit) -> T&& {
   return os;
 }
 
-#if CRAB_USE_PRELUDE
+namespace crab::prelude {
 
-using ::crab::widechar;
-using ::crab::String;
-using ::crab::WideString;
-using ::crab::StringView;
-using ::crab::StringStream;
-using ::crab::OutStringStream;
-using ::crab::InStringStream;
-using ::crab::WideStringStream;
-using ::crab::Func;
-using ::crab::Tuple;
-using ::crab::Pair;
+  using ::crab::widechar;
+  using ::crab::String;
+  using ::crab::WideString;
+  using ::crab::StringView;
+  using ::crab::StringStream;
+  using ::crab::OutStringStream;
+  using ::crab::InStringStream;
+  using ::crab::WideStringStream;
+  using ::crab::Func;
+  using ::crab::Tuple;
+  using ::crab::Pair;
 
 #if !CRAB_NO_TYPEDEF_ARRAY
-using ::crab::SizedArray;
+  using ::crab::SizedArray;
 #endif
 
 #if !CRAB_NO_TYPEDEF_SPAN
-using ::crab::Span;
+  using ::crab::Span;
 #endif
 
 #if !CRAB_NO_TYPEDEF_VEC
-using ::crab::Vec;
+  using ::crab::Vec;
 #endif
 
 #if !CRAB_NO_TYPEDEF_SET
-using ::crab::Set;
+  using ::crab::Set;
 #endif
 
 #if !CRAB_NO_TYPEDEF_DICTIONARY
-using ::crab::Dictionary;
+  using ::crab::Dictionary;
 #endif
 
-using namespace ::crab::numeric_suffixes;
-using namespace ::crab::num;
+  using namespace ::crab::numeric_suffixes;
+  using namespace ::crab::num;
 
-/**
- * std::ranges
- */
-namespace ranges = ::std::ranges;
+  /**
+   * std::ranges
+   */
+  namespace ranges = ::std::ranges;
 
-/**
- * std::ranges::views
- */
-namespace views = ::std::ranges::views;
+  /**
+   * std::ranges::views
+   */
+  namespace views = ::std::ranges::views;
 
-using ::crab::unit;
+  using ::crab::unit;
+}
+
+#if CRAB_USE_PRELUDE
+using namespace crab::prelude;
 #endif

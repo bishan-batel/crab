@@ -13,8 +13,8 @@
 #include <iostream>
 #include <type_traits>
 
-#include "crab/option/impl/GenericStorage.hpp"
-#include "crab/option/impl/RefStorage.hpp"
+#include "crab/opt/impl/GenericStorage.hpp"
+#include "crab/opt/impl/RefStorage.hpp"
 #include "crab/preamble.hpp"
 #include "crab/type_traits.hpp"
 #include "crab/debug.hpp"

@@ -3,6 +3,7 @@
 #include <tuple>
 #include <optional>
 #include "test_types.hpp"
+#include <crab/opt/opt.hpp>
 
 TEST_CASE("fn") {
 

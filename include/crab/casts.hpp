@@ -3,8 +3,7 @@
 #include <crab/preamble.hpp>
 #include <crab/ref.hpp>
 #include <type_traits>
-#include "crab/core.hpp"
-#include "crab/option/option.hpp"
+#include "crab/opt/Option.hpp"
 
 namespace crab {
 

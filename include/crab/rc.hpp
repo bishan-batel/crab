@@ -8,6 +8,7 @@
 #include <crab/ref.hpp>
 #include "crab/core.hpp"
 #include "crab/mem/take.hpp"
+#include "crab/opt/some.hpp"
 
 namespace crab {
   namespace rc {
@@ -117,7 +118,7 @@ namespace crab {
         template<std::derived_from<T> Derived>
         CRAB_NODISCARD_CONSTEXPR auto downcast() const -> Option<RcInterior<Derived>*> {
           if (dynamic_cast<Derived*>(data)) {
-            return some(std::bit_cast<RcInterior<Derived>*>(this));
+            return opt::some(std::bit_cast<RcInterior<Derived>*>(this));
           }
 
           return crab::none;

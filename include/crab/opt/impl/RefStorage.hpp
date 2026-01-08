@@ -2,7 +2,7 @@
 
 #include "crab/core.hpp"
 #include "crab/mem/take.hpp"
-#include "crab/option/none.hpp"
+#include "crab/opt/none.hpp"
 
 namespace crab::opt::impl {
   /**

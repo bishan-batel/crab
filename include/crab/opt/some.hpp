@@ -1,6 +1,7 @@
+#pragma once
+
 #include <type_traits>
-#include "crab/core.hpp"
-#include "crab/option/option.hpp"
+#include "crab/opt/Option.hpp"
 
 namespace crab::opt {
 

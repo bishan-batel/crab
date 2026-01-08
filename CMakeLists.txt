@@ -68,22 +68,51 @@ configure_file(
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 add_library(${PROJECT_NAME} INTERFACE
-        "${CRAB_CONFIG_HEADER}"
-        "${CRAB_INCLUDE_DIR}/preamble.hpp"
-        "${CRAB_INCLUDE_DIR}/box.hpp"
-        "${CRAB_INCLUDE_DIR}/casts.hpp"
-        "${CRAB_INCLUDE_DIR}/core.hpp"
-        "${CRAB_INCLUDE_DIR}/debug.hpp"
-        "${CRAB_INCLUDE_DIR}/fmt.hpp"
-        "${CRAB_INCLUDE_DIR}/fn.hpp"
-        "${CRAB_INCLUDE_DIR}/hash.hpp"
-        "${CRAB_INCLUDE_DIR}/option.hpp"
-        "${CRAB_INCLUDE_DIR}/range.hpp"
-        "${CRAB_INCLUDE_DIR}/rc.hpp"
-        "${CRAB_INCLUDE_DIR}/ref.hpp"
-        "${CRAB_INCLUDE_DIR}/result.hpp"
-        "${CRAB_INCLUDE_DIR}/todo.hpp"
-        "${CRAB_INCLUDE_DIR}/type_traits.hpp"
+        ./include/crab/box.hpp 
+        ./include/crab/casts.hpp 
+
+        ./include/crab/choice/choice.hpp 
+
+        ./include/crab/cmp/max.hpp 
+        ./include/crab/cmp/min.hpp 
+
+        ./include/crab/core.hpp 
+        ./include/crab/debug.hpp 
+        ./include/crab/fmt.hpp 
+        ./include/crab/fn.hpp 
+        ./include/crab/hash.hpp 
+
+        ./include/crab/mem/address_of.hpp 
+        ./include/crab/mem/copy.hpp 
+        ./include/crab/mem/forward.hpp 
+        ./include/crab/mem/mem.hpp 
+        ./include/crab/mem/move.hpp 
+        ./include/crab/mem/replace.hpp 
+        ./include/crab/mem/size_of.hpp 
+        ./include/crab/mem/swap.hpp 
+        ./include/crab/mem/take.hpp 
+
+        ./include/crab/opt/Option.hpp 
+        ./include/crab/opt/boolean_constructs.hpp 
+        ./include/crab/opt/fallible.hpp 
+        ./include/crab/opt/impl/GenericStorage.hpp 
+        ./include/crab/opt/impl/RefStorage.hpp 
+        ./include/crab/opt/impl/fallible.hpp 
+        ./include/crab/opt/none.hpp 
+        ./include/crab/opt/opt.hpp 
+        ./include/crab/opt/some.hpp 
+
+        ./include/crab/preamble.hpp 
+
+        ./include/crab/range.hpp 
+
+        ./include/crab/rc/Rc.hpp 
+
+        ./include/crab/rc.hpp 
+        ./include/crab/ref.hpp 
+        ./include/crab/result.hpp 
+        ./include/crab/todo.hpp 
+        ./include/crab/type_traits.hpp
 )
 
 # crab only supports C++20 and above

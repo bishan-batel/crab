@@ -10,7 +10,7 @@
 #include <crab/fn.hpp>
 #include <crab/range.hpp>
 #include <crab/result.hpp>
-#include <crab/option.hpp>
+#include <crab/opt/Option.hpp>
 #include <utility>
 
 namespace ty = crab::ty;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "crab/option/option.hpp"
+#include "crab/opt/Option.hpp"
 
 namespace crab::opt::impl {
   struct fallible final {

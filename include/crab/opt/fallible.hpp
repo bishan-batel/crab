@@ -1,8 +1,8 @@
 #pragma once
 
 #include "crab/core.hpp"
-#include "crab/option/option.hpp"
-#include "crab/option/impl/fallible.hpp"
+#include "crab/opt/Option.hpp"
+#include "crab/opt/impl/fallible.hpp"
 
 namespace crab::opt {
   template<typename... F>

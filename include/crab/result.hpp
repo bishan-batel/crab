@@ -11,11 +11,11 @@
 #include <type_traits>
 #include <variant>
 
-#include "./preamble.hpp"
-#include "./fmt.hpp"
-#include "./debug.hpp"
-#include "./type_traits.hpp"
-#include "./option.hpp"
+#include "crab/preamble.hpp"
+#include "crab/fmt.hpp"
+#include "crab/debug.hpp"
+#include "crab/type_traits.hpp"
+#include "crab/opt/opt.hpp"
 
 namespace crab {
   /**
@@ -315,7 +315,8 @@ namespace crab {
        * @brief Gets a reference to the contained Error value, if there is no Error
        * value this will panic and crash.
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_err_unchecked(const SourceLocation loc = SourceLocation::current()) -> E& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto get_err_unchecked(const SourceLocation loc = SourceLocation::current())
+        -> E& {
         ensure_valid(loc);
 
         debug_assert_transparent(is_err(), loc, "Called unwrap with Ok value");
@@ -391,7 +392,8 @@ namespace crab {
         return os << "Ok(" << result.get_unchecked() << ")";
       }
 
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto copied(const SourceLocation loc = SourceLocation::current()) const -> Result {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto copied(const SourceLocation loc = SourceLocation::current()) const
+        -> Result {
         static_assert(is_copyable, "Cannot copy a result whose Ok and Err types are not both copyable");
 
         ensure_valid(loc);
@@ -461,7 +463,10 @@ namespace crab {
        * @return
        */
       template<crab::ty::mapper<E> F>
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto map_err(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto map_err(
+        F&& functor,
+        const SourceLocation loc = SourceLocation::current()
+      ) && {
         using R = ty::functor_result<F, E>;
 
         ensure_valid(loc);
@@ -481,7 +486,10 @@ namespace crab {
        * @return
        */
       template<crab::ty::mapper<T> F>
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto map(F&& functor, const SourceLocation loc = SourceLocation::current()) const& {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto map(
+        F&& functor,
+        const SourceLocation loc = SourceLocation::current()
+      ) const& {
         static_assert(
           is_trivially_copyable,
           "Only results with trivial Ok & Err types may be implicitly copied when "
@@ -518,7 +526,10 @@ namespace crab {
        * If the mapped function is Ok(type M), it returns Result<M, Error>
        */
       template<crab::ty::mapper<T> F>
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto and_then(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto and_then(
+        F&& functor,
+        const SourceLocation loc = SourceLocation::current()
+      ) && {
         using R = ty::functor_result<F, T>;
 
         static_assert(ty::result_type<R>, "and_then functor parameter must return a Result<T,E> type");
@@ -565,10 +576,12 @@ namespace crab {
        * This function is for use when wanting to abstract away any specific error
        * type to simply 'none'.
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto ok(const SourceLocation loc = SourceLocation::current()) && -> Option<T> {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto ok(
+        const SourceLocation loc = SourceLocation::current()
+      ) && -> opt::Option<T> {
         ensure_valid(loc);
 
-        return is_ok() ? Option<T>{std::move(*this).unwrap(loc)} : Option<T>{};
+        return is_ok() ? opt::Option<T>{std::move(*this).unwrap(loc)} : opt::Option<T>{};
       }
 
       /**
@@ -578,10 +591,12 @@ namespace crab {
        * This function is for use when wanting to abstract away any specific Ok type
        * to simply 'none'.
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto err(const SourceLocation loc = SourceLocation::current()) && -> Option<E> {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto err(
+        const SourceLocation loc = SourceLocation::current()
+      ) && -> opt::Option<E> {
         ensure_valid(loc);
 
-        return is_err() ? Option<E>{std::move(*this).unwrap_err(loc)} : Option<E>{};
+        return is_err() ? opt::Option<E>{std::move(*this).unwrap_err(loc)} : opt::Option<E>{};
       }
 
       /**
@@ -591,7 +606,9 @@ namespace crab {
        * This function is for use when wanting to abstract away any specific error
        * type to simply 'none'.
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto ok(const SourceLocation loc = SourceLocation::current()) const& -> Option<T> {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto ok(
+        const SourceLocation loc = SourceLocation::current()
+      ) const& -> opt::Option<T> {
         static_assert(
           std::is_trivially_copyable_v<T>,
           "Only results with trivial Ok types may be implicitly copied when "
@@ -609,7 +626,9 @@ namespace crab {
        * This function is for use when wanting to abstract away any specific Ok type
        * to simply 'none'.
        */
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto err(const SourceLocation loc = SourceLocation::current()) const& -> Option<E> {
+      CRAB_NODISCARD_INLINE_CONSTEXPR auto err(
+        const SourceLocation loc = SourceLocation::current()
+      ) const& -> opt::Option<E> {
         static_assert(
           std::is_trivially_copyable_v<E>,
           "Only results with trivial Ok types may be implicitly copied when "
@@ -741,8 +760,10 @@ namespace crab {
     }
 
     template<typename T, typename E>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto unwrap(Result<T, E>&& result, const SourceLocation loc = SourceLocation::current())
-      -> T {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto unwrap(
+      Result<T, E>&& result,
+      const SourceLocation loc = SourceLocation::current()
+    ) -> T {
       return std::forward<Result<T, E>>(result).unwrap(loc);
     }
 

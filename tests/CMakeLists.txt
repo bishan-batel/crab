@@ -22,7 +22,6 @@ add_executable(crab-tests
         result.cpp
         option.cpp
         rc.cpp
-        ./rc_experimental.cpp
         pattern.cpp
         monadic.cpp
         fn.cpp

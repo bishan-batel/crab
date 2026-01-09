@@ -106,9 +106,11 @@ add_library(${PROJECT_NAME} INTERFACE
 
         ./include/crab/range.hpp 
 
+        ./include/crab/rc/impl/Counter.hpp 
+        ./include/crab/rc/impl/RcBase.hpp
+        ./include/crab/rc/impl/RcStorage.hpp
         ./include/crab/rc/Rc.hpp 
 
-        ./include/crab/rc.hpp 
         ./include/crab/ref.hpp 
         ./include/crab/result.hpp 
         ./include/crab/todo.hpp 

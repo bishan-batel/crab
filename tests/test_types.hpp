@@ -2,8 +2,8 @@
 
 #include <utility>
 #include <crab/preamble.hpp>
-#include <crab/rc.hpp>
 #include <crab/ref.hpp>
+#include "crab/rc/Rc.hpp"
 #include "test_static_asserts.hpp"
 
 struct MoveCount {
@@ -46,7 +46,6 @@ struct MoveCount {
       }
       catchAssertionHandler.complete();
     } while ((void)0, (false) && static_cast<const bool&>(!!(copies == expected.copies)));
-
   }
 };
 

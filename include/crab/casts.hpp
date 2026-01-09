@@ -140,7 +140,7 @@ namespace crab {
    */
   template<typename T>
   CRAB_NODISCARD_INLINE_CONSTEXPR auto implicit_cast(ty::identity<T> type) //
-    noexcept(std::is_nothrow_move_constructible_v<T>) -> T {
+    noexcept(std::is_nothrow_move_constructible_v<T>) -> decltype(auto) {
     return type;
   }
 

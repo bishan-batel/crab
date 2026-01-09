@@ -34,7 +34,7 @@
 #define CRAB_GCC_VERSION 0
 #endif
 
-#ifdef _MSVC_VER
+#ifdef _MSC_VER
 #define CRAB_MSVC_VERSION _MSC_VER
 #else
 #define CRAB_MSVC_VERSION 0
@@ -202,6 +202,7 @@ namespace crab {
    * This should be used for optimisation purposes only.
    */
   CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
+
 #if CRAB_HAS_UNREACHABLE
     std::unreachable();
 #elif CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
@@ -211,7 +212,6 @@ namespace crab {
 #else
     CRAB_ASSUME(false);
     while (true);
-  }
 #endif
   }
 

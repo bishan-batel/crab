@@ -48,8 +48,8 @@ if(CRAB_USE_FMT)
         CPMAddPackage(
                 NAME fmt
                 GITHUB_REPOSITORY "fmtlib/fmt"
-                GIT_TAG "7.1.3"
-                VERSION_MIN "7.1.3"
+                GIT_TAG "10.1.0"
+                VERSION_MIN "10.1.0"
         )
 endif()
 

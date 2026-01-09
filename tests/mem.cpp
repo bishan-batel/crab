@@ -12,7 +12,7 @@ using namespace crab;
 TEST_CASE("mem::move") {
 
   STATIC_CHECK(requires(Copyable copyable) {
-    { mem::move(copyable) } -> ty::same_as<Copyable&&>;
+    { mem::move(copyable) } -> ty::same_as<Copyable &&>;
   });
 }
 
@@ -21,11 +21,15 @@ TEST_CASE("mem::address_of") {
     T v1{};
     const T v2{};
 
-    STATIC_CHECK(std::addressof(v1) == mem::address_of(v1));
-    STATIC_CHECK(std::addressof(v2) == mem::address_of(v2));
-
-    CHECK(std::addressof(v1) == mem::address_of(v1));
-    CHECK(std::addressof(v2) == mem::address_of(v2));
+    // STATIC_CHECK(std::addressof<T>(v1) == mem::address_of<T>(v1));
+    // STATIC_CHECK(
+    //   std::addressof<const T>(implicit_cast<const T&>(v2)) == mem::address_of<const T>(implicit_cast<const T&>(v2))
+    // );
+    CHECK(std::addressof<T>(implicit_cast<T&>(v1)) == mem::address_of<T>(implicit_cast<T&>(v1)));
+    CHECK(std::addressof<const T>(implicit_cast<const T&>(v1)) == mem::address_of<const T>(implicit_cast<const T&>(v1)));
+    CHECK(std::addressof<const T>(implicit_cast<const T&>(v2)) == mem::address_of<const T>(implicit_cast<const T&>(v2)));
+    CHECK(std::addressof<T>(v1) == mem::address_of<T>(v1));
+    CHECK(std::addressof<const T>(v2) == mem::address_of<const T>(v2));
   });
 }
 

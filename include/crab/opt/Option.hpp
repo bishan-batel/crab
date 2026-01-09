@@ -31,13 +31,12 @@ namespace crab::opt {
    */
   template<typename T>
   struct Storage final {
-    using type = impl::GenericStorage<T>;
+    using type =
+      ty::conditional<ty::is_reference<T>, impl::RefStorage<ty::remove_reference<T>>, impl::GenericStorage<T>>;
   };
 
-  template<ty::is_reference T>
-  struct Storage<T> final {
-    using type = impl::RefStorage<ty::remove_reference<T>>;
-  };
+  template<typename T>
+  using TStorage = typename Storage<T>::type;
 
   /**
    * Tagged union type between T and unit, alternative to std::optional<T>
@@ -69,7 +68,7 @@ namespace crab::opt {
     /**
      * Storage type for this data
      */
-    using Storage = ::crab::opt::Storage<T>::type;
+    using Storage = typename ::crab::opt::Storage<T>::type;
 
     /**
      * Is the contained type T a reference type (immutable or mutable)
@@ -920,3 +919,4 @@ namespace crab::prelude {
 CRAB_PRELUDE_GUARD;
 
 // NOLINTEND(*explicit*)
+

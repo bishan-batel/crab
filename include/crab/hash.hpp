@@ -46,14 +46,9 @@ namespace crab {
     return code;
   }
 
-  template<into_hash_code T, into_hash_code... Rest>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto hash_code_mix(const T& first, const Rest&... rest) -> hash_code {
-    return crab::hash_code_mix(std::initializer_list<hash_code>{crab::hash(first), crab::hash(rest)...});
-  }
-
-  template<ty::hashable FirstItem>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto hash_together(const FirstItem& first) -> hash_code {
-    return crab::hash<FirstItem>(first);
+  template<into_hash_code... Ts>
+  CRAB_NODISCARD_INLINE_CONSTEXPR auto hash_code_mix(const Ts&... values) -> hash_code {
+    return crab::hash_code_mix(std::initializer_list<hash_code>{crab::hash(values)...});
   }
 
   template<ty::hashable... T>

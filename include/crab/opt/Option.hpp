@@ -906,10 +906,10 @@ template<typename T>
 struct std::hash<::crab::opt::Option<T>> /*NOLINT*/ {
   CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const ::crab::opt::Option<T>& opt) const -> crab::hash_code {
     if (opt.is_none()) {
-      return 0;
+      return crab::hash(false);
     }
 
-    return crab::hash_together<usize, T>(1, opt.get_unchecked());
+    return crab::hash_together(true, opt.get_unchecked());
   }
 };
 

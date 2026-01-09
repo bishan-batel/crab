@@ -1,7 +1,7 @@
 #pragma once
 
+#include "crab/preamble.hpp"
 #include <concepts>
-#include "preamble.hpp"
 #include <string>
 
 // Enum for what format library crab will use

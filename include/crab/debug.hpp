@@ -50,7 +50,8 @@ namespace crab::debug {
  * fmt::format(fmt_string, a1, a2, ...)
  */
 #define debug_assert_transparent(condition, source_location, ...)                                                      \
-  if (not static_cast<bool>(condition)) [[unlikely]] do {                                                                           \
+  if (not static_cast<bool>(condition)) [[unlikely]]                                                                   \
+    do {                                                                                                               \
       ::crab::debug::dbg_assert(source_location, #condition, ::crab::format(__VA_ARGS__));                             \
   } while (false)
 

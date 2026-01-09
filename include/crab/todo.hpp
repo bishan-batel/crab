@@ -3,6 +3,7 @@
 #include "./preamble.hpp"
 #include "./fmt.hpp"
 #include "execinfo.h"
+#include <iterator>
 #include <stdexcept>
 
 namespace crab {

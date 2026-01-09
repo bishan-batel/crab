@@ -446,6 +446,4 @@ namespace crab::prelude {
   using ::crab::unit;
 }
 
-#if CRAB_USE_PRELUDE
-using namespace crab::prelude;
-#endif
+CRAB_PRELUDE_GUARD;

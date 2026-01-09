@@ -79,6 +79,10 @@ namespace crab::rc {
       return *this->data;
     }
 
+    [[nodiscard]] auto clone() const -> RcMut {
+      return *this;
+    }
+
     [[nodiscard]]
     static constexpr auto from_owned_unchecked(T* data_ptr, Base::Counter* counter_ptr = new Base::Counter) -> RcMut {
       return RcMut{data_ptr, counter_ptr};
@@ -172,6 +176,10 @@ namespace crab::rc {
       return *this;
     }
 
+    [[nodiscard]] auto clone() const -> Rc {
+      return *this;
+    }
+
     [[nodiscard]] static constexpr auto from_owned_unchecked(
       const T* owned_ptr,
       Base::Counter* counter_ptr = new Base::Counter
@@ -186,12 +194,6 @@ namespace crab::rc {
     return Rc<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
   }
 
-  /**
-   * Creates a new mutable reference counted instance of 'const T'
-   * @tparam T The type to be heap allocated & reference counted
-   * @tparam Args Argument types to be passed to T's constructor
-   * @param args Arguments to be passed to T's constructor
-   */
   template<ty::non_const T, typename... Args>
   requires std::constructible_from<T, Args...>
   [[nodiscard]] constexpr auto make_rc_mut(Args&&... args) -> RcMut<T> {

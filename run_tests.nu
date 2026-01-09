@@ -105,8 +105,8 @@ def main [] {
 		print $"Passed Compiler ($x.name)"
 	};
 
-	$tests | par-each $run_test
-	# $tests | each $run_test
+	# $tests | par-each $run_test
+	$tests | each $run_test
 
 	print "" "--" ""
 

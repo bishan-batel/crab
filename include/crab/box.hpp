@@ -47,20 +47,19 @@ namespace crab {
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T>;
   }
 
-  namespace opt {
-
+  namespace box::impl {
     template<typename T>
     struct BoxStorage;
+  }
 
-    template<typename T>
-    struct Storage;
+  namespace opt {
 
     /**
      * @brief Storage type
      */
     template<typename T>
     struct Storage<::crab::box::Box<T>> final {
-      using type = BoxStorage<T>;
+      using type = box::impl::BoxStorage<T>;
     };
   }
 
@@ -102,7 +101,7 @@ namespace crab {
 
     public:
 
-      friend struct opt::BoxStorage<T>;
+      friend struct impl::BoxStorage<T>;
 
       /**
        * @brief Wraps pointer with RAII
@@ -258,7 +257,7 @@ namespace crab {
       }
 
       CRAB_INLINE constexpr auto clone_from(const Box& from) const& -> void
-        requires(ty::copy_assignable<T> or ty::copy_constructible<T>)
+        requires(complete_type<T> and (ty::copy_assignable<T> or ty::copy_constructible<T>))
       {
         if constexpr (ty::copy_assignable<T>) {
           as_mut() = from;
@@ -268,8 +267,6 @@ namespace crab {
 
           // construct in place
           std::construct_at(as_ptr(), from.as_ref());
-        } else {
-          static_assert(false, "Type must be copy assignable or copy constructable");
         }
       }
 
@@ -357,11 +354,11 @@ namespace crab {
 
   using box::make_box;
 
-  namespace opt {
+  namespace box::impl {
 
     template<typename T>
     struct BoxStorage final {
-      using Box = box::Box<T>;
+      using Box = crab::box::Box<T>;
 
       CRAB_INLINE constexpr explicit BoxStorage(Box value): inner{std::move(value)} {}
 

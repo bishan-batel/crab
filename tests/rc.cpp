@@ -6,10 +6,6 @@
 #include <utility>
 #include "test_types.hpp"
 
-#if CATCH2_TESTS
-int a
-#endif
-
 TEST_CASE("Rc/RcMut") {
   SECTION("move") {
     SECTION("Rc") {

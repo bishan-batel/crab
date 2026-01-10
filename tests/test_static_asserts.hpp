@@ -4,7 +4,7 @@
 #include <concepts>
 #include <crab/preamble.hpp>
 
-namespace assert {
+namespace asserts {
 
   template<typename... T>
   struct typelist_t {};

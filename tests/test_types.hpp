@@ -194,14 +194,14 @@ constexpr auto test_values = []<typename... T>(const auto& test, T&&... types) {
   (std::ignore = ... = test_wrapped(std::forward<T>(types)));
 };
 
-namespace assert {
+namespace asserts {
   constexpr auto common_types =
-    assert::types<i8, i32, i64, u8, u32, u64, usize, String, StringView, MoveOnly, Copyable>;
+    asserts::types<i8, i32, i64, u8, u32, u64, usize, String, StringView, MoveOnly, Copyable>;
 
   template<typename T>
-  constexpr auto cvref_supertypes = assert::
+  constexpr auto cvref_supertypes = asserts::
     types<T, T*, const T*, T&, const T&, volatile T, volatile T*, volatile const T*, volatile T&, volatile const T&>;
 
   template<typename T>
-  constexpr auto ref_types = assert::types<Ref<T>, RefMut<T>, T&, const T&>;
+  constexpr auto ref_types = asserts::types<Ref<T>, RefMut<T>, T&, const T&>;
 }

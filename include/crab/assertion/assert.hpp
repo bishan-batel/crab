@@ -1,25 +1,25 @@
 #pragma once
 
-#include <cassert>
-
-namespace crab::assert::impl {
-
-}
+#include "./panic.hpp"
+#include "crab/fmt.hpp"
 
 #if !NDEBUG
 
-#define crab_assert_transparent(condition, source_location, ...)                                                       \
+#define debug_assert_transparent(condition, source_location, ...)                                                      \
   if (not static_cast<bool>(condition)) [[unlikely]]                                                                   \
     do {                                                                                                               \
-      ::crab::debug::dbg_assert(source_location, #condition, ::crab::format(__VA_ARGS__));                             \
+      ::crab::assertion::panic(                                                                                        \
+        ::crab::format("{} (Assertion \"" #condition "\" Failed)", ::crab::format(__VA_ARGS__)),                       \
+        source_location                                                                                                \
+      );                                                                                                               \
   } while (false)
 
 #else
 
-#define dbg_assert_transparent(condition, source_location, ...)                                                        \
+#define debug_assert_transparent(condition, ...)                                                                       \
   do {                                                                                                                 \
     if (not static_cast<bool>(condition)) {                                                                            \
-      crab::discard(source_location, __VA_ARGS__);                                                                     \
+      crab::discard(__VA_ARGS__);                                                                                      \
       ::crab::unreachable();                                                                                           \
     }                                                                                                                  \
   } while (false)

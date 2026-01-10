@@ -1,3 +1,2 @@
 CompileFlags:
-  # CompilationDatabase: build/debug
-  CompilationDatabase: ./build/_MSVC_Debug_fmtstd-OFF_fmtlib-OFF/
+  CompilationDatabase: build/debug

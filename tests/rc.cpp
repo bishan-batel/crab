@@ -71,7 +71,7 @@ TEST_CASE("Rc/RcMut") {
 
   SECTION("Option Niche Optimisation") {
 
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(RcMut<T>));
       STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(Option<Rc<T>>));
       STATIC_REQUIRE(sizeof(RcMut<T>) == sizeof(Option<RcMut<T>>));

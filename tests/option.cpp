@@ -20,9 +20,8 @@ TEST_CASE("Option", "Tests for all option methods") {
 
   STATIC_CHECK(sizeof(crab::opt::None) == 1);
 
-
   SECTION("Option<T>::GenericStorage Reference Optimisation") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       STATIC_CHECK(sizeof(T*) == sizeof(Option<T&>));
       STATIC_CHECK(sizeof(T*) == sizeof(Option<const T&>));
     });
@@ -30,7 +29,7 @@ TEST_CASE("Option", "Tests for all option methods") {
 
   SECTION("Constructors & Move Semantics") {
     // general construction
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       constexpr bool copyable{ty::copyable<T>};
 
       using Option = ::Option<MoveTracker<T>>;
@@ -227,7 +226,7 @@ TEST_CASE("Option", "Tests for all option methods") {
 
     SECTION("reference types") {
 
-      assert::for_types<i32&, const i32&>([]<typename T>(assert::type<T>) {
+      asserts::for_types<i32&, const i32&>([]<typename T>(asserts::type<T>) {
         Option<T> a;
 
         REQUIRE(a.is_none());
@@ -278,15 +277,15 @@ TEST_CASE("Option", "Tests for all option methods") {
   }
 
   SECTION("flatten") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       STATIC_REQUIRE(not requires(Option<T> opt) { opt.flatten(); });
       STATIC_REQUIRE(requires(Option<Option<T>> opt) { Option<T>{std::move(opt).flatten()}; });
     });
   }
 
   SECTION("crab::some implicit vs explicit template") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-      assert::for_types(assert::types<T, T&, const T&>, []<typename K>(assert::type<K>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
+      asserts::for_types(asserts::types<T, T&, const T&>, []<typename K>(asserts::type<K>) {
         if constexpr (std::copy_constructible<T>) {
           STATIC_REQUIRE( //
             ty::same_as<Option<T>, decltype(crab::some(std::declval<K>()))>

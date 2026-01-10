@@ -10,7 +10,8 @@ TEST_CASE("Type Traits") {
 
   STATIC_REQUIRE(not crab::complete_type<IncompleteType>);
 
-  assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+
+  asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
     STATIC_REQUIRE(crab::complete_type<String>);
   });
 }

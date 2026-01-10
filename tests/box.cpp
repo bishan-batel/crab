@@ -4,7 +4,7 @@
 #include <crab/preamble.hpp>
 #include <crab/box.hpp>
 #include <utility>
-#include "crab/assert/panic.hpp"
+#include "crab/assertion/panic.hpp"
 #include "crab/opt/opt.hpp"
 #include "crab/type_traits.hpp"
 #include "test_types.hpp"
@@ -60,8 +60,6 @@ TEST_CASE("Box", "[box]") {
     const u32* ptr = var.as_ptr();
     REQUIRE(*var == 42);
     REQUIRE(*ptr == 42);
-
-    crab::panic("bruh");
   }
 
   SECTION("Releasing Single") {

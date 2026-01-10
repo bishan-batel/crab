@@ -384,7 +384,12 @@ namespace crab {
   struct cases final : Functions... {
     using Functions::operator()...;
   };
-} // namespace crab
+
+  namespace assert {
+    CRAB_NORETURN inline auto panic(StringView msg, const SourceLocation& loc = SourceLocation::current()) -> void;
+  }
+
+}
 
 inline auto operator<<(std::ostream& os, ::crab::unit) -> decltype(auto) {
   return os << "unit";

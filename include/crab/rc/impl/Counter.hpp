@@ -1,6 +1,6 @@
 #pragma once
 
-#include "crab/preamble.hpp"
+#include "crab/core/SourceLocation.hpp"
 #include "crab/type_traits.hpp"
 
 #include <atomic>

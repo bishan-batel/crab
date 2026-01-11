@@ -3,7 +3,6 @@
 #include <concepts>
 #include <utility>
 
-#include <crab/preamble.hpp>
 #include <crab/boxed/Box.hpp>
 #include <crab/ref.hpp>
 #include "crab/rc/Rc.hpp"

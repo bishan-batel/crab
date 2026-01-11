@@ -11,7 +11,6 @@
 #include <type_traits>
 #include <variant>
 
-#include "crab/preamble.hpp"
 #include "crab/fmt.hpp"
 #include "crab/debug.hpp"
 #include "crab/type_traits.hpp"

@@ -7,7 +7,6 @@
 #include <utility>
 
 #include "crab/core.hpp"
-#include "crab/preamble.hpp"
 #include "crab/casts.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/ref.hpp"

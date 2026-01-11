@@ -1,13 +1,11 @@
 #pragma once
 
 #include <cassert>
-#include <cstddef>
 #include <iterator>
-#include <type_traits>
 
-#include <crab/preamble.hpp>
-#include <crab/debug.hpp>
+#include "crab/num/integer.hpp"
 #include "crab/type_traits.hpp"
+#include "crab/assertion/assert.hpp"
 
 namespace crab {
   template<std::integral T = usize>

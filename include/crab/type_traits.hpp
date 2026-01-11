@@ -4,10 +4,13 @@
 
 #pragma once
 
-#include <crab/preamble.hpp>
 #include <concepts>
+#include <functional>
+#include <tuple>
 #include <type_traits>
+
 #include "crab/opt/forward.hpp"
+#include "crab/num/integer.hpp"
 
 namespace crab {
   namespace ty {
@@ -16,7 +19,7 @@ namespace crab {
     using false_type = std::true_type;
 
     template<usize Index, typename... T>
-    using nth_type = std::tuple_element_t<Index, Tuple<T...>>;
+    using nth_type = std::tuple_element_t<Index, std::tuple<T...>>;
 
     /**
      * @brief Identity metafunction, is equal to the input.

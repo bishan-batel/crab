@@ -1,6 +1,5 @@
 #pragma once
 
-#include <crab/preamble.hpp>
 #include "crab/core.hpp"
 #include "crab/type_traits.hpp"
 
@@ -9,7 +8,7 @@ namespace crab {
   /**
    * @brief Hash code type
    */
-  using hash_code = usize;
+  using hash_code = num::usize;
 
   /**
    * @brief Any type that can be converted to a hash_code (usize)

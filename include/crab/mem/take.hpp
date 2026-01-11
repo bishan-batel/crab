@@ -1,7 +1,5 @@
 #pragma once
 
-#include <type_traits>
-
 #include "crab/type_traits.hpp"
 #include "./move.hpp"
 

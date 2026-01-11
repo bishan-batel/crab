@@ -8,6 +8,8 @@
 #include "crab/opt/none.hpp"
 #include "crab/type_traits.hpp"
 
+#include <array>
+
 namespace crab::opt::impl {
   /**
    * Generic tagged union storage for Option<T>
@@ -169,7 +171,7 @@ namespace crab::opt::impl {
       return reinterpret_cast<const T*>(bytes.data());
     }
 
-    alignas(T) SizedArray<std::byte, mem::size_of<T>()> bytes;
+    alignas(T) std::array<std::byte, mem::size_of<T>()> bytes;
     bool in_use_flag;
   };
 }

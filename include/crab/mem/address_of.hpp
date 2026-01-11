@@ -1,7 +1,6 @@
 #pragma once
 
-#include "crab/preamble.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/core.hpp"
 
 #include <memory>
 

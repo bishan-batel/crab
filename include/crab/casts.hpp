@@ -1,6 +1,5 @@
 #pragma once
 
-#include <crab/preamble.hpp>
 #include <crab/ref.hpp>
 #include <type_traits>
 #include "crab/opt/Option.hpp"

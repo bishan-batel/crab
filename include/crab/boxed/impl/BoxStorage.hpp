@@ -2,6 +2,7 @@
 #pragma once
 
 #include "crab/boxed/forward.hpp"
+#include "crab/core/discard.hpp"
 #include "crab/mem/move.hpp"
 #include "crab/opt/none.hpp"
 

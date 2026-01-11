@@ -3,7 +3,7 @@
 #include <string>
 #include "crab/core.hpp"
 
-namespace crab::str::alias {
+namespace crab {
 
   /**
    * @brief std::string, fat pointer to a heap allocated string
@@ -54,12 +54,16 @@ namespace crab::str::alias {
 
 }
 
-namespace crab {
-  using namespace str::alias;
-}
-
 namespace crab::prelude {
-  using namespace crab::str::alias;
+  using crab::String;
+  using crab::widechar;
+  using crab::WideString;
+  using crab::StringView;
+  using crab::WideStringView;
+  using crab::StringStream;
+  using crab::OutStringStream;
+  using crab::InStringStream;
+  using crab::WideStringStream;
 }
 
 CRAB_PRELUDE_GUARD;

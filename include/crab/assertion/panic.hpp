@@ -3,9 +3,10 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "crab/preamble.hpp"
-
+#include "crab/core/SourceLocation.hpp"
+#include "crab/fn/Func.hpp"
 #include "crab/mem/move.hpp"
+#include "crab/str/str.hpp"
 #include "crab/term/ansi.hpp"
 
 namespace crab::assertion {
@@ -13,7 +14,7 @@ namespace crab::assertion {
   static constexpr usize MAX_BACKTRACE_STACKFRAMES{512};
 
   struct PanicInfo final {
-    String message;
+    std::string message;
     SourceLocation location;
   };
 
@@ -137,7 +138,7 @@ namespace crab::assertion {
   };
 
   CRAB_NORETURN inline auto panic(PanicInfo info) -> void {
-    std::invoke(panic_handler::get(), info);
+    std::invoke(panic_handler::get(), mem::move(info));
     unreachable();
   }
 

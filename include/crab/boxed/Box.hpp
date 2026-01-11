@@ -358,7 +358,7 @@ namespace crab {
 } // namespace crab
 
 namespace crab::prelude {
-  using crab::boxed::Box;
+  using boxed::Box;
 }
 
 CRAB_PRELUDE_GUARD;

@@ -9,29 +9,4 @@
 
 #define CRAB_VERSION CRAB_VERSION_PATCH + 100 * CRAB_VERSION_MINOR + 100'00 * CRAB_VERSION_MAJOR
 
-#ifdef __APPLE__ 
-#define CRAB_OSX __APPLE__
-#else
-#define CRAB_OSX 0
-#endif
-
-#ifdef _WIN32
-#define CRAB_WIN32 _WIN32
-#else
-#define CRAB_WIN32 0
-#endif
-
-#ifdef __linux__
-#define CRAB_LINUX __linux__
-#else
-#define CRAB_LINUX 0
-#endif
-
-#if CRAB_LINUX || CRAB_WIN32
-#define CRAB_UNIX 1
-#else
-#define CRAB_UNIX 0
-#endif
-
-
 #endif // CRAB_CONFIG_H

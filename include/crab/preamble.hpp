@@ -96,32 +96,6 @@ namespace crab {
   using Pair = std::pair<A, B>;
 
   /**
-   * @brief Monostate type, all instances of 'unit' are indistinguishable,
-   * note that this type will never be '0' sized, unless being used as a field
-   * with [[no_unique_address]]
-   */
-  struct unit {
-    /**
-     * Instance of unit, equivalent to constructing a new one, more of a stylistic
-     * choice whether you want to type unit{} or unit::val, I personally use
-     * unit::val to imply that there is a single value of unit
-     */
-    static const unit val;
-
-    constexpr unit() = default;
-
-    /**
-     * Unit has not state, all instances of until are equal
-     * (this will always return true)
-     */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator==(const unit&) const -> bool {
-      return true;
-    }
-  };
-
-  inline const unit unit::val{};
-
-  /**
    * @brief Alias for std::array
    *
    * Statically Sized list of packed objects
@@ -164,16 +138,6 @@ namespace crab {
     using Functions::operator()...;
   };
 
-}
-
-inline auto operator<<(std::ostream& os, ::crab::unit) -> decltype(auto) {
-  return os << "unit";
-}
-
-template<std::derived_from<std::ostream> T>
-inline auto operator<<(T&& os, ::crab::unit) -> T&& {
-  os << ::crab::unit::val;
-  return os;
 }
 
 namespace crab::assertion {
@@ -226,8 +190,6 @@ namespace crab::prelude {
    * std::ranges::views
    */
   namespace views = ::std::ranges::views;
-
-  using ::crab::unit;
 }
 
 CRAB_PRELUDE_GUARD;

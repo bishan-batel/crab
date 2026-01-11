@@ -11,7 +11,8 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_C_COMPILER": "clang",
         "CMAKE_CXX_COMPILER": "clang++",
-        "CRAB_TESTS": "ON"
+        "CRAB_TESTS": "ON",
+        "CRAB_USE_FMT": "ON"
       }
     },
     {

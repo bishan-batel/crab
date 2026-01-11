@@ -1,10 +1,14 @@
 #pragma once
 
 #include "crab/fmt.hpp"
+
+#include "crab/core/discard.hpp"
+#include "crab/core/unreachable.hpp"
+
 #include "./forward.hpp"
 #include "./panic.hpp"
 
-#if !NDEBUG
+#if CRAB_DEBUG
 
 #define debug_assert_transparent(condition, source_location, ...)                                                      \
   if (not static_cast<bool>(condition)) [[unlikely]]                                                                   \

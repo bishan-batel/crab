@@ -75,7 +75,7 @@ def main [] {
 			for fmtstd in [false, true] {
 				for fmtlib in [false, true] {
 
-					if $fmtstd and $fmtlib { continue; };
+					if $fmtstd == $fmtlib { continue; };
 
 					let name = $"($compiler.name) on ($build_type), fmtstd=($fmtstd), fmtlib=($fmtlib)";
 
@@ -105,8 +105,8 @@ def main [] {
 		print $"Passed Compiler ($x.name)"
 	};
 
-	# $tests | par-each $run_test
-	$tests | each $run_test
+	$tests | par-each $run_test
+	# $tests | each $run_test
 
 	print "" "--" ""
 

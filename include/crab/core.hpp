@@ -18,6 +18,31 @@
 #define CRAB_RELEASE 0
 #endif
 
+#ifdef __APPLE__ 
+#define CRAB_OSX __APPLE__
+#else
+#define CRAB_OSX 0
+#endif
+
+#ifdef _WIN32
+#define CRAB_WIN32 _WIN32
+#else
+#define CRAB_WIN32 0
+#endif
+
+#ifdef __linux__
+#define CRAB_LINUX __linux__
+#else
+#define CRAB_LINUX 0
+#endif
+
+#if CRAB_LINUX || CRAB_OSX
+#define CRAB_UNIX 1
+#else
+#define CRAB_UNIX 0
+#endif
+
+
 /// ===================================================================================================================
 ///                                                 Preproc & Compile-Time Helpers
 /// ===================================================================================================================
@@ -194,32 +219,6 @@
   } while (false)
 
 #endif
-
-namespace crab {
-
-  /**
-   * @brief Denotes unreachable paths
-   * This should be used for optimisation purposes only.
-   */
-  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
-
-#if CRAB_HAS_UNREACHABLE
-    std::unreachable();
-#elif CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
-    CRAB_ASSUME(false);
-#elif CRAB_CLANG_VERSION || CRAB_GCC_VERSION
-    __builtin_unreachable();
-#else
-    CRAB_ASSUME(false);
-    while (true);
-#endif
-  }
-
-  /**
-   * Used to discard / explicitly ignore certain outputs
-   */
-  CRAB_INLINE constexpr auto discard(CRAB_MAYBE_UNUSED auto&&...) -> void {}
-}
 
 #define CRAB_EVAL0(...) __VA_ARGS__
 #define CRAB_EVAL1(...) CRAB_EVAL0(CRAB_EVAL0(CRAB_EVAL0(__VA_ARGS__)))

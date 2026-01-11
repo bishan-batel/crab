@@ -87,19 +87,19 @@ namespace crab::opt {
     /**
      * Create an option that wraps Some(T)
      */
-    CRAB_INLINE_CONSTEXPR Option(const T& from) noexcept(std::is_nothrow_copy_constructible_v<T>) requires(not is_ref)
+     CRAB_INLINE constexpr Option(const T& from) noexcept(std::is_nothrow_copy_constructible_v<T>) requires(not is_ref)
         : storage{from} {}
 
     /**
      * Create an option that wraps Some(T)
      */
-    CRAB_INLINE_CONSTEXPR Option(T&& from) noexcept(std::is_nothrow_move_constructible_v<T>):
+     CRAB_INLINE constexpr Option(T&& from) noexcept(std::is_nothrow_move_constructible_v<T>):
         storage{mem::forward<T>(from)} {}
 
     /**
      * Create an empty option
      */
-    CRAB_INLINE_CONSTEXPR Option(None = {}) noexcept: storage{none} {}
+     CRAB_INLINE constexpr Option(None = {}) noexcept: storage{none} {}
 
     /**
      * Conversion constructor for options of the form Option<T&> to be able to
@@ -146,7 +146,7 @@ namespace crab::opt {
      * If this option previously contained Some(K), the previous value is
      * discarded and is replaced by Some(T)
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref)
+     CRAB_INLINE constexpr auto operator=(T&& from) -> Option& requires(not is_ref)
     {
       storage = mem::forward<T>(from);
       return *this;
@@ -157,7 +157,7 @@ namespace crab::opt {
      * If this option previously contained Some(K), the previous value is
      * discarded and is replaced by Some(T)
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(None) -> Option& {
+     CRAB_INLINE constexpr auto operator=(None) -> Option& {
       storage = none;
       return *this;
     }
@@ -165,27 +165,27 @@ namespace crab::opt {
     /**
      * Move constructor
      */
-    CRAB_INLINE_CONSTEXPR Option(Option&& from) = default;
+     CRAB_INLINE constexpr Option(Option&& from) = default;
 
     /**
      * Implicit move assignment
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(Option&& opt) noexcept -> Option& = default;
+     CRAB_INLINE constexpr auto operator=(Option&& opt) noexcept -> Option& = default;
 
     /**
      * Implicit copy constructor
      */
-    CRAB_INLINE_CONSTEXPR Option(const Option&) = default;
+     CRAB_INLINE constexpr Option(const Option&) = default;
 
     /**
      * Implicit copy assignment
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(const Option&) -> Option& = default;
+     CRAB_INLINE constexpr auto operator=(const Option&) -> Option& = default;
 
     /**
      * Implicit destructor
      */
-    CRAB_INLINE_CONSTEXPR ~Option() = default;
+     CRAB_INLINE constexpr ~Option() = default;
 
     /**
      * Whether this option has a contained value or not (None)
@@ -885,7 +885,7 @@ namespace crab::opt {
 
 // TODO: change this into usage for std::formatter or fmt::formatter
 template<typename T>
-CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const ::crab::opt::Option<T>& opt) -> std::ostream& {
+ CRAB_INLINE constexpr auto operator<<(std::ostream& os, const ::crab::opt::Option<T>& opt) -> std::ostream& {
   if (opt.is_none()) {
     return os << "None";
   }
@@ -904,7 +904,7 @@ CRAB_INLINE_CONSTEXPR auto operator<<(std::ostream& os, const ::crab::opt::Optio
 
 template<typename T>
 struct std::hash<::crab::opt::Option<T>> /*NOLINT*/ {
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const ::crab::opt::Option<T>& opt) const -> crab::hash_code {
+ CRAB_NODISCARD CRAB_INLINE constexpr auto operator()(const ::crab::opt::Option<T>& opt) const -> crab::hash_code {
     if (opt.is_none()) {
       return crab::hash(false);
     }

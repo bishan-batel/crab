@@ -39,13 +39,11 @@ def "main windows" [] {
 	cmake "-Wno-dev" "-B" $build_dir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 }
 
-def cmake_test [build_type: string, compiler: record, fmtstd: bool, fmtlib: bool] {
-	let fmtstd = if $fmtstd { "ON" } else { "OFF" };
-	let fmtlib = if $fmtlib { "ON" } else { "OFF" };
-	let builddir = $"build/_($compiler.name)_($build_type)_fmtstd-($fmtstd)_fmtlib-($fmtlib)"
+def cmake_test [build_type: string, compiler: record] {
+	let builddir = $"build/_($compiler.name)_($build_type)"
 
 	print "> Setting up cmake"
-	cmake -Wno-dev "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" $"-DCRAB_USE_FMT=($fmtlib)" $"-DCRAB_USE_STD_FORMAT=($fmtstd)" -GNinja
+	cmake "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_C_COMPILER=($compiler.c)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" -GNinja
 	# $"-G($generator)" 
 
 	print "> Compiling"
@@ -72,29 +70,22 @@ def main [] {
 		for debug in [true, false] {
 			let build_type = if $debug { "Debug" } else { "Release" };
 
-			for fmtstd in [false, true] {
-				for fmtlib in [false, true] {
+			let name = $"($compiler.name) on ($build_type)";
 
-					if $fmtstd == $fmtlib { continue; };
-
-					let name = $"($compiler.name) on ($build_type), fmtstd=($fmtstd), fmtlib=($fmtlib)";
-
-					$tests = $tests | append {
-						name: $name,
-						test: {||
-							try {  
-								cmake_test $build_type $compiler $fmtstd $fmtlib
-							} catch { 
-								error make --unspanned {
-									msg: $"Failed tests for ($name)",
-								}
-								exit
-							}
+			$tests = $tests | append {
+				name: $name,
+				test: {||
+					try {  
+						cmake_test $build_type $compiler
+					} catch { 
+						error make --unspanned {
+							msg: $"Failed tests for ($name)",
 						}
-					};
-
+						exit
+					}
 				}
-			}
+			};
+
 		}
 	}
 
@@ -105,8 +96,8 @@ def main [] {
 		print $"Passed Compiler ($x.name)"
 	};
 
-	$tests | par-each $run_test
-	# $tests | each $run_test
+	# $tests | par-each $run_test
+	$tests | each $run_test
 
 	print "" "--" ""
 

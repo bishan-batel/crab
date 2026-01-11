@@ -1,7 +1,8 @@
 #pragma once
 
 #include "crab/fmt.hpp"
-#include "crab/assertion/forward.hpp"
+#include "./forward.hpp"
+#include "./panic.hpp"
 
 #if !NDEBUG
 
@@ -19,7 +20,7 @@
 #define debug_assert_transparent(condition, ...)                                                                       \
   do {                                                                                                                 \
     if (not static_cast<bool>(condition)) {                                                                            \
-      crab::discard(__VA_ARGS__);                                                                                      \
+      ::crab::discard(__VA_ARGS__);                                                                                    \
       ::crab::unreachable();                                                                                           \
     }                                                                                                                  \
   } while (false)

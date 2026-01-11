@@ -124,11 +124,11 @@ namespace crab::assertion {
 #if CRAB_THROW_ON_DEFAULT_PANIC
       throw std::runtime_error{mem::move(info.message)};
 #else
-      log_panic_to_stream(//
-          std::cerr, //
-          term::try_enable_ansi(term::Handle::Error), 
-          info
-          );
+      log_panic_to_stream( //
+        std::cerr,         //
+        term::try_enable_ansi(term::Handle::Error),
+        info
+      );
       std::abort();
 #endif
     }
@@ -147,9 +147,6 @@ namespace crab::assertion {
       loc,
     });
   }
-
 }
 
-namespace crab {
-  using crab::assertion::panic;
-}
+namespace crab {}

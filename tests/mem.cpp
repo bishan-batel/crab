@@ -3,6 +3,7 @@
 #include <tuple>
 #include <optional>
 #include "crab/mem/move.hpp"
+#include "crab/mem/size_of.hpp"
 #include "crab/mem/swap.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"

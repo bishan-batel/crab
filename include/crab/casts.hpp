@@ -12,21 +12,21 @@ namespace crab {
      * Converts a pointer into an optional reference
      */
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(T* from) -> Option<T&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(T* from) -> opt::Option<T&> {
       if (from == nullptr) {
         return {};
       }
 
-      return Option<T&>{*from};
+      return opt::Option<T&>{*from};
     }
 
     /**
      * Converts a const T* to a optional reference
      */
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(const T* from) -> Option<const T&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto from_ptr(const T* from) -> opt::Option<const T&> {
       if (from != nullptr) {
-        return Option<const T&>{*from};
+        return opt::Option<const T&>{*from};
       }
 
       return {};
@@ -36,7 +36,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, class Base>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(const Base& from) -> Option<const Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(const Base& from) -> opt::Option<const Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<const Derived*>(std::addressof(from)));
     }
@@ -45,7 +45,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, class Base>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Base& from) -> Option<Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Base& from) -> opt::Option<Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<Derived*>(std::addressof(from)));
     }
@@ -54,7 +54,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(const Base* from) -> Option<const Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(const Base* from) -> opt::Option<const Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<const Derived*>(from));
     }
@@ -63,7 +63,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Base* from) -> Option<Derived&> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Base* from) -> opt::Option<Derived&> {
       static_assert(std::derived_from<Derived, Base>);
       return from_ptr(dynamic_cast<Derived*>(from));
     }
@@ -72,7 +72,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Ref<Base> from) -> Option<Ref<Derived>> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto cast(Ref<Base> from) -> opt::Option<Ref<Derived>> {
       static_assert(std::derived_from<Derived, Base>);
       return cast<Derived, Base>(from.get_ref()).template map<Ref<Derived>>();
     }
@@ -81,7 +81,7 @@ namespace crab {
      * @brief Attempts to cast input of type Base into a Derived instances
      */
     template<class Derived, std::derived_from<Derived> Base>
-    CRAB_NODISCARD_INLINE_CONSTEXPR Option<RefMut<Derived>> cast(RefMut<Base> from) {
+    CRAB_NODISCARD_INLINE_CONSTEXPR opt::Option<RefMut<Derived>> cast(RefMut<Base> from) {
       return cast<Derived, Base>(from.get_ref()).template map<RefMut<Derived>>();
     }
 

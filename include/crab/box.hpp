@@ -55,6 +55,9 @@ namespace crab {
 
   namespace opt {
 
+    template<typename T>
+    struct Storage;
+
     /**
      * @brief Storage type
      */
@@ -405,7 +408,5 @@ namespace crab::prelude {
 }
 
 CRAB_PRELUDE_GUARD;
-
-#include "crab/assertion/panic.hpp"
 
 // NOLINTEND(*explicit*)

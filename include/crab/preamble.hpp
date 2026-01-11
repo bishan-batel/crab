@@ -164,10 +164,6 @@ namespace crab {
     using Functions::operator()...;
   };
 
-  namespace assertion {
-    CRAB_NORETURN auto panic(StringView msg, SourceLocation loc = SourceLocation::current()) -> void;
-  }
-
 }
 
 inline auto operator<<(std::ostream& os, ::crab::unit) -> decltype(auto) {
@@ -178,6 +174,10 @@ template<std::derived_from<std::ostream> T>
 inline auto operator<<(T&& os, ::crab::unit) -> T&& {
   os << ::crab::unit::val;
   return os;
+}
+
+namespace crab::assertion {
+  CRAB_NORETURN auto panic(StringView msg, SourceLocation loc) -> void;
 }
 
 namespace crab::prelude {

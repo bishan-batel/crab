@@ -1,6 +1,5 @@
 #include <crab/preamble.hpp>
 
-#include <crab/assertion/panic.hpp>
 #include <crab/opt/opt.hpp>
 
 #include <crab/fn.hpp>

@@ -15,12 +15,12 @@
 #include <type_traits>
 
 #include "crab/preamble.hpp"
-#include "crab/assertion/assert.hpp"
 #include "crab/type_traits.hpp"
 #include "crab/hash.hpp"
 #include "./none.hpp"
 #include "./impl/GenericStorage.hpp"
 #include "./impl/RefStorage.hpp"
+#include "crab/assertion/assert.hpp"
 
 namespace crab::opt {
 
@@ -144,8 +144,7 @@ namespace crab::opt {
      * If this option previously contained Some(K), the previous value is
      * discarded and is replaced by Some(T)
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref)
-    {
+    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref) {
       storage = mem::forward<T>(from);
       return *this;
     }
@@ -919,6 +918,8 @@ CRAB_PRELUDE_GUARD;
 
 #endif
 
+#ifndef CRAB_ASSERTION_PANIC_HPP
 #include "crab/assertion/panic.hpp"
+#endif
 
 // NOLINTEND(*explicit*)

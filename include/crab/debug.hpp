@@ -4,6 +4,4 @@
 
 #pragma once
 
-#include "./preamble.hpp"
-
 #include "./assertion/assert.hpp"

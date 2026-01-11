@@ -193,6 +193,4 @@ namespace crab::prelude {
 
 CRAB_PRELUDE_GUARD;
 
-#include "crab/assertion/panic.hpp"
-
 // NOLINTEND(*explicit*)

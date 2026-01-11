@@ -18,4 +18,11 @@ namespace crab::env {
 
     return {StringView{variable}};
   }
+
+  /**
+   * Attempts to pull an environment variable
+   */
+  [[nodiscard]] inline auto check_flag(const StringView name) -> bool {
+    return get_as_string(name).is_some_and([](StringView value) { return value == "1"; });
+  }
 }

@@ -4,7 +4,6 @@
 #include <crab/preamble.hpp>
 #include <crab/box.hpp>
 #include <utility>
-#include "crab/assertion/panic.hpp"
 #include "crab/opt/opt.hpp"
 #include "crab/type_traits.hpp"
 #include "test_types.hpp"

@@ -71,13 +71,10 @@ add_library(${PROJECT_NAME} INTERFACE
         ./include/crab/boxed/Box.hpp 
         ./include/crab/casts.hpp 
 
-        ./include/crab/choice/choice.hpp 
-
         ./include/crab/cmp/max.hpp 
         ./include/crab/cmp/min.hpp 
 
         ./include/crab/core.hpp 
-        ./include/crab/debug.hpp 
         ./include/crab/fmt.hpp 
         ./include/crab/fn.hpp 
         ./include/crab/hash.hpp 

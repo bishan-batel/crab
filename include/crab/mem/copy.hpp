@@ -1,7 +1,7 @@
 #pragma once
 
+#include "crab/assertion/assert.hpp"
 #include "size_of.hpp"
-#include "crab/debug.hpp"
 #include "crab/type_traits.hpp"
 
 #include <cstring>

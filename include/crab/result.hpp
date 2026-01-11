@@ -12,7 +12,6 @@
 #include <variant>
 
 #include "crab/fmt.hpp"
-#include "crab/debug.hpp"
 #include "crab/type_traits.hpp"
 #include "crab/opt/opt.hpp"
 #include "crab/mem/replace.hpp"

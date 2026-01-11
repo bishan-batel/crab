@@ -4,7 +4,6 @@
 #include "crab/casts.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/type_traits.hpp"
-#include "crab/debug.hpp"
 
 #include "crab/rc/impl/Counter.hpp"
 #include "crab/rc/impl/RcBase.hpp"

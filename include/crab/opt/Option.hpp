@@ -5,7 +5,8 @@
 // ReSharper disable CppNonExplicitConversionOperator
 // NOLINTBEGIN(*explicit*)
 
-#pragma once
+#ifndef CRAB_OPT_OPTION_HPP
+#define CRAB_OPT_OPTION_HPP
 
 #include <concepts>
 #include <cstddef>
@@ -13,15 +14,13 @@
 #include <iostream>
 #include <type_traits>
 
-#include "crab/opt/impl/GenericStorage.hpp"
-#include "crab/opt/impl/RefStorage.hpp"
 #include "crab/preamble.hpp"
+#include "crab/assertion/assert.hpp"
 #include "crab/type_traits.hpp"
-#include "crab/debug.hpp"
 #include "crab/hash.hpp"
-#include "crab/core.hpp"
-
 #include "./none.hpp"
+#include "./impl/GenericStorage.hpp"
+#include "./impl/RefStorage.hpp"
 
 namespace crab::opt {
 
@@ -68,7 +67,7 @@ namespace crab::opt {
     /**
      * Storage type for this data
      */
-    using Storage = typename ::crab::opt::Storage<T>::type;
+    using Storage = typename opt::Storage<T>::type;
 
     /**
      * Is the contained type T a reference type (immutable or mutable)
@@ -107,9 +106,9 @@ namespace crab::opt {
      * convert implicitly to Option<RefMut<T>> (mainly for backwards
      * compatability)
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<::crab::ref::RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<ref::RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
     {
-      return map<::crab::ref::RefMut<std::remove_cvref_t<T>>>();
+      return map<ref::RefMut<std::remove_cvref_t<T>>>();
     }
 
     /**
@@ -117,9 +116,9 @@ namespace crab::opt {
      * to be able to convert implicitly to Option<Ref<T>> (mainly for backwards
      * compatability)
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<::crab::ref::Ref<std::remove_cvref_t<T>>>() requires(is_ref)
+    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<ref::Ref<std::remove_cvref_t<T>>>() requires(is_ref)
     {
-      return map<::crab::ref::Ref<std::remove_cvref_t<T>>>();
+      return map<ref::Ref<std::remove_cvref_t<T>>>();
     }
 
     /**
@@ -348,13 +347,13 @@ namespace crab::opt {
      */
     template<typename E>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto ok_or(E&& error) const
-      -> ::crab::result::Result<T, E> requires ty::copy_constructible<T>
+      -> result::Result<T, E> requires ty::copy_constructible<T>
     {
       if (is_some()) {
-        return ::crab::result::Ok<T>{get_unchecked()};
+        return result::Ok<T>{get_unchecked()};
       }
 
-      return ::crab::result::Err<E>{mem::forward<E>(error)};
+      return result::Err<E>{mem::forward<E>(error)};
     }
 
     /**
@@ -365,13 +364,13 @@ namespace crab::opt {
      */
     template<typename E, ty::provider<E> F>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto ok_or(F&& error_generator) const
-      -> ::crab::result::Result<T, E> requires ty::copy_constructible<T>
+      -> result::Result<T, E> requires ty::copy_constructible<T>
     {
       if (is_some()) {
-        return ::crab::result::Ok<T>{get_unchecked()};
+        return result::Ok<T>{get_unchecked()};
       }
 
-      return ::crab::result::Err<E>{std::invoke(error_generator)};
+      return result::Err<E>{std::invoke(error_generator)};
     }
 
     /**
@@ -382,12 +381,12 @@ namespace crab::opt {
      * @param error Error to replace an instance of None
      */
     template<typename E>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_ok_or(E error) && -> ::crab::result::Result<T, E> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_ok_or(E error) && -> result::Result<T, E> {
       if (is_some()) {
-        return ::crab::result::Result<T, E>{::crab::result::Ok<T>{mem::move(*this).unwrap()}};
+        return result::Result<T, E>{result::Ok<T>{mem::move(*this).unwrap()}};
       }
 
-      return ::crab::result::Result<T, E>(::crab::result::Err<E>{mem::forward<E>(error)});
+      return result::Result<T, E>(result::Err<E>{mem::forward<E>(error)});
     }
 
     /**
@@ -397,15 +396,15 @@ namespace crab::opt {
      * @param error_generator Function to generate an error to replace "None".
      */
     template<typename E, ty::provider<E> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_ok_or(F&& error_generator) && -> ::crab::result::Result<T, E> {
+    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_ok_or(F&& error_generator) && -> result::Result<T, E> {
       if (is_some()) {
-        return ::crab::result::Result<T, E>{
-          ::crab::result::Ok<T>{mem::move(*this).unwrap()},
+        return result::Result<T, E>{
+          result::Ok<T>{mem::move(*this).unwrap()},
         };
       }
 
-      return ::crab::result::Result<T, E>{
-        ::crab::result::Err<E>{std::invoke(error_generator)},
+      return result::Result<T, E>{
+        result::Err<E>{std::invoke(error_generator)},
       };
     }
 
@@ -913,10 +912,13 @@ struct std::hash<::crab::opt::Option<T>> /*NOLINT*/ {
 };
 
 namespace crab::prelude {
-  using ::crab::opt::Option;
+  using opt::Option;
 }
 
 CRAB_PRELUDE_GUARD;
 
-// NOLINTEND(*explicit*)
+#endif
 
+#include "crab/assertion/panic.hpp"
+
+// NOLINTEND(*explicit*)

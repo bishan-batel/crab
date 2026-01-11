@@ -2,10 +2,10 @@
 
 #include <functional>
 
-#include <crab/debug.hpp>
 #include <crab/type_traits.hpp>
 #include <source_location>
 #include "crab/core.hpp"
+#include <crab/debug.hpp>
 
 // NOLINTBEGIN(*explicit*)
 
@@ -186,12 +186,13 @@ struct std::hash<::crab::ref::RefMut<T>> {
   };
 };
 
-#if CRAB_USE_PRELUDE
+namespace crab::prelude {
+  using crab::ref::Ref;
+  using crab::ref::RefMut;
+}
 
-using crab::ref::Ref;
+CRAB_PRELUDE_GUARD;
 
-using crab::ref::RefMut;
-
-#endif
+#include "crab/assertion/panic.hpp"
 
 // NOLINTEND(*explicit*)

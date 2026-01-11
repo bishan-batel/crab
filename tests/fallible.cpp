@@ -1,5 +1,8 @@
 #include <crab/preamble.hpp>
+
+#include <crab/assertion/panic.hpp>
 #include <crab/opt/opt.hpp>
+
 #include <crab/fn.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include "test_static_asserts.hpp"

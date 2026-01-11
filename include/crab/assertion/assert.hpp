@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./panic.hpp"
 #include "crab/fmt.hpp"
+#include "crab/assertion/forward.hpp"
 
 #if !NDEBUG
 

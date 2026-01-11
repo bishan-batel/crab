@@ -22,11 +22,11 @@ namespace crab::assertion {
   struct panic_handler final {
     panic_handler() = delete;
 
-    static auto reset() -> void {
+    inline static auto reset() -> void {
       handler = trivial_handler;
     }
 
-    static auto set(PanicHook new_handler) -> void {
+    inline static auto set(PanicHook new_handler) -> void {
       handler = mem::move(new_handler);
 
       if (not handler) {
@@ -34,13 +34,13 @@ namespace crab::assertion {
       }
     }
 
-    [[nodiscard]] static auto get() -> const PanicHook& {
+    [[nodiscard]] inline static auto get() -> const PanicHook& {
       return handler;
     }
 
   private:
 
-    static auto log_panic_to_stream(std::ostream& stream, bool should_color, const PanicInfo& msg) {
+    inline static auto log_panic_to_stream(std::ostream& stream, bool should_color, const PanicInfo& msg) {
       [[maybe_unused]] static constexpr StringView ansii_red_bold{"\033[1;31m"};
       [[maybe_unused]] static constexpr StringView ansii_blue{"\033[0;34m"};
       [[maybe_unused]] static constexpr StringView ansii_green{"\033[0;32m"};
@@ -120,7 +120,7 @@ namespace crab::assertion {
       stream << '\n';
     }
 
-    static auto trivial_handler(PanicInfo info) -> void {
+    inline static auto trivial_handler(PanicInfo info) -> void {
 #if CRAB_THROW_ON_DEFAULT_PANIC
       throw std::runtime_error{mem::move(info.message)};
 #else
@@ -141,13 +141,11 @@ namespace crab::assertion {
     unreachable();
   }
 
-  CRAB_NORETURN inline auto panic(String msg, const SourceLocation& loc) -> void {
-    panic(
-      PanicInfo{
-        mem::move(msg),
-        loc,
-      }
-    );
+  CRAB_NORETURN inline auto panic(String msg, SourceLocation loc) -> void {
+    panic(PanicInfo{
+      mem::move(msg),
+      loc,
+    });
   }
 
 }

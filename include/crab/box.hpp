@@ -6,11 +6,12 @@
 
 #include <utility>
 
+#include "crab/core.hpp"
+#include "crab/preamble.hpp"
 #include "crab/casts.hpp"
 #include "crab/debug.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/opt/none.hpp"
-#include "crab/preamble.hpp"
 #include "crab/ref.hpp"
 #include "crab/type_traits.hpp"
 
@@ -399,10 +400,12 @@ namespace crab {
 
 } // namespace crab
 
-#if CRAB_USE_PRELUDE
+namespace crab::prelude {
+  using crab::box::Box;
+}
 
-using crab::box::Box;
+CRAB_PRELUDE_GUARD;
 
-#endif
+#include "crab/assertion/panic.hpp"
 
 // NOLINTEND(*explicit*)

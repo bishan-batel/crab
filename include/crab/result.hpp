@@ -16,6 +16,7 @@
 #include "crab/debug.hpp"
 #include "crab/type_traits.hpp"
 #include "crab/opt/opt.hpp"
+#include "crab/mem/replace.hpp"
 
 namespace crab {
   /**
@@ -24,17 +25,17 @@ namespace crab {
   class Error {
   public:
 
-    constexpr Error() = default;
+    Error() = default;
 
-    constexpr Error(const Error&) = default;
+    Error(const Error&) = default;
 
-    constexpr Error(Error&&) = default;
+    Error(Error&&) noexcept = default;
 
-    constexpr Error& operator=(const Error&) = default;
+    Error& operator=(const Error&) = default;
 
-    constexpr Error& operator=(Error&&) = default;
+    Error& operator=(Error&&) noexcept = default;
 
-    constexpr virtual ~Error() = default;
+    virtual ~Error() = default;
 
     /**
      * @brief Converts this crab Error into a runtime exception that can be
@@ -71,14 +72,8 @@ namespace crab {
         return err->what();
       }
 
-      else if constexpr (requires { OutStringStream{} << err; }) {
-        return (OutStringStream{} << err).str();
-      }
-
-      else if constexpr (std::is_enum_v<E>) {
-        return crab::format("{}[{}]", typeid(E).name(), static_cast<std::underlying_type_t<E>>(err));
-      } else {
-        return typeid(E).name();
+      else {
+        return crab::to_string(err);
       }
     }
 
@@ -93,7 +88,7 @@ namespace crab {
       using Inner = T;
       T value;
 
-      CRAB_INLINE_CONSTEXPR explicit Ok(T value): value(std::move(value)) {}
+      CRAB_INLINE_CONSTEXPR explicit Ok(T value): value(mem::move(value)) {}
     };
 
     template<typename T>
@@ -113,7 +108,7 @@ namespace crab {
 
       E value;
 
-      CRAB_INLINE_CONSTEXPR explicit Err(E value): value(std::move(value)) {}
+      CRAB_INLINE_CONSTEXPR explicit Err(E value): value(mem::move(value)) {}
     };
 
     template<typename T>
@@ -204,16 +199,16 @@ namespace crab {
           : Result{E{from}} {}
 
       CRAB_INLINE_CONSTEXPR Result(T&& from) requires(not is_same)
-          : Result{Ok{std::forward<T>(from)}} {}
+          : Result{Ok{mem::forward<T>(from)}} {}
 
       CRAB_INLINE_CONSTEXPR Result(E&& from) requires(not is_same)
-          : Result{Err{std::forward<E>(from)}} {}
+          : Result{Err{mem::forward<E>(from)}} {}
 
-      CRAB_INLINE_CONSTEXPR Result(Ok&& from): inner{std::forward<Ok>(from)} {}
+      CRAB_INLINE_CONSTEXPR Result(Ok&& from): inner{mem::forward<Ok>(from)} {}
 
-      CRAB_INLINE_CONSTEXPR Result(Err&& from): inner{std::forward<Err>(from)} {}
+      CRAB_INLINE_CONSTEXPR Result(Err&& from): inner{mem::forward<Err>(from)} {}
 
-      CRAB_INLINE_CONSTEXPR Result(Result&& from) noexcept: inner{std::exchange(from.inner, invalidated{})} {}
+      CRAB_INLINE_CONSTEXPR Result(Result&& from) noexcept: inner{mem::replace(from.inner, invalidated{})} {}
 
       CRAB_INLINE_CONSTEXPR Result(const Result& res): inner{res.inner} {
         static_assert(is_copyable, "Cannot copy a result with a non-copyable Err or Ok type");
@@ -231,28 +226,28 @@ namespace crab {
       }
 
       CRAB_INLINE_CONSTEXPR auto operator=(Result&& res) noexcept -> Result& {
-        inner = std::exchange(res.inner, invalidated{});
+        inner = mem::replace(res.inner, invalidated{});
         return *this;
       }
 
       CRAB_INLINE_CONSTEXPR auto operator=(Ok&& from) -> Result& {
-        inner = std::forward<Ok>(from);
+        inner = mem::forward<Ok>(from);
         return *this;
       }
 
       CRAB_INLINE_CONSTEXPR auto operator=(Err&& from) -> Result& {
-        inner = std::forward<Err>(from);
+        inner = mem::forward<Err>(from);
         return *this;
       }
 
       CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Result& requires(not is_same)
       {
-        return *this = Ok{std::forward<T>(from)}; /* NOLINT(*operator*)*/
+        return *this = Ok{mem::forward<T>(from)}; /* NOLINT(*operator*)*/
       }
 
       CRAB_INLINE_CONSTEXPR auto operator=(E&& from) -> Result& requires(not is_same)
       {
-        return *this = Err{std::forward<E>(from)}; /* NOLINT(*operator*)*/
+        return *this = Err{mem::forward<E>(from)}; /* NOLINT(*operator*)*/
       }
 
       CRAB_NODISCARD_INLINE_CONSTEXPR explicit operator bool() const {
@@ -365,7 +360,7 @@ namespace crab {
           ::crab::result::error_to_string(get_err_unchecked())
         );
 
-        return std::get<Ok>(std::exchange(inner, invalidated{})).value;
+        return std::get<Ok>(mem::replace(inner, invalidated{})).value;
       }
 
       CRAB_NODISCARD_INLINE_CONSTEXPR auto unwrap_err(const SourceLocation loc = SourceLocation::current()) && -> E {
@@ -373,7 +368,7 @@ namespace crab {
 
         debug_assert_transparent(is_err(), loc, "Called unwrap_err on result with Ok value");
 
-        return std::get<Err>(std::exchange(inner, invalidated{})).value;
+        return std::get<Err>(mem::replace(inner, invalidated{})).value;
       }
 
       /**
@@ -414,7 +409,7 @@ namespace crab {
           "'Result<T, E>::map<Into>()' can only be done if T is convertible to Into"
         );
 
-        return std::move(*this).map([](T&& value) -> Into { return static_cast<Into>(std::forward<T>(value)); });
+        return mem::move(*this).map([](T&& value) -> Into { return static_cast<Into>(mem::forward<T>(value)); });
       }
 
       template<typename Into>
@@ -430,7 +425,7 @@ namespace crab {
           "'Result<T, E>::map<Into>()' can only be done if E is convertible to Into"
         );
 
-        return std::move(*this).map_err([](E&& value) -> Into { return static_cast<Into>(std::forward<E>(value)); });
+        return mem::move(*this).map_err([](E&& value) -> Into { return static_cast<Into>(mem::forward<E>(value)); });
       }
 
       template<typename Into>
@@ -451,10 +446,10 @@ namespace crab {
         ensure_valid(loc);
 
         if (is_ok()) {
-          return Result<R, E>{result::Ok<R>{std::invoke(functor, std::move(*this).unwrap(loc))}};
+          return Result<R, E>{result::Ok<R>{std::invoke(functor, mem::move(*this).unwrap(loc))}};
         }
 
-        return Result<R, E>{result::Err<E>{std::move(*this).unwrap_err(loc)}};
+        return Result<R, E>{result::Err<E>{mem::move(*this).unwrap_err(loc)}};
       }
 
       /**
@@ -473,11 +468,11 @@ namespace crab {
 
         if (is_err()) {
           return Result<T, R>{
-            result::Err<R>{std::invoke(functor, std::move(*this).unwrap_err(loc))},
+            result::Err<R>{std::invoke(functor, mem::move(*this).unwrap_err(loc))},
           };
         }
 
-        return Result<T, R>{result::Ok<T>{std::move(*this).unwrap(loc)}};
+        return Result<T, R>{result::Ok<T>{mem::move(*this).unwrap(loc)}};
       }
 
       /**
@@ -496,7 +491,7 @@ namespace crab {
           "using monadic operations, you must call Result::copied() yourself."
         );
 
-        return copied(loc).map(std::forward<F>(functor), loc);
+        return copied(loc).map(mem::forward<F>(functor), loc);
       }
 
       /**
@@ -515,7 +510,7 @@ namespace crab {
           "using monadic operations, you must call Result::copied() yourself."
         );
 
-        return copied(loc).map_err(std::forward<F>(functor), loc);
+        return copied(loc).map_err(mem::forward<F>(functor), loc);
       }
 
       // ========================= flat map functions ==============================
@@ -543,10 +538,10 @@ namespace crab {
         ensure_valid(loc);
 
         if (is_err()) {
-          return R{Err{std::move(*this).unwrap_err(loc)}};
+          return R{Err{mem::move(*this).unwrap_err(loc)}};
         }
 
-        return std::invoke(functor, std::move(*this).unwrap(loc));
+        return std::invoke(functor, mem::move(*this).unwrap(loc));
       }
 
       /**
@@ -566,7 +561,7 @@ namespace crab {
           "using monadic operations, you must call Result::copied() yourself."
         );
 
-        return copied(loc).and_then(std::forward<F>(functor));
+        return copied(loc).and_then(mem::forward<F>(functor));
       }
 
       /**
@@ -581,7 +576,7 @@ namespace crab {
       ) && -> opt::Option<T> {
         ensure_valid(loc);
 
-        return is_ok() ? opt::Option<T>{std::move(*this).unwrap(loc)} : opt::Option<T>{};
+        return is_ok() ? opt::Option<T>{mem::move(*this).unwrap(loc)} : opt::Option<T>{};
       }
 
       /**
@@ -596,7 +591,7 @@ namespace crab {
       ) && -> opt::Option<E> {
         ensure_valid(loc);
 
-        return is_err() ? opt::Option<E>{std::move(*this).unwrap_err(loc)} : opt::Option<E>{};
+        return is_err() ? opt::Option<E>{mem::move(*this).unwrap_err(loc)} : opt::Option<E>{};
       }
 
       /**
@@ -651,7 +646,7 @@ namespace crab {
 
         template<typename... T>
         CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(Tuple<T...> tuple) const {
-          return Result<Tuple<T...>, Error>{std::forward<Tuple<T...>>(tuple)};
+          return Result<Tuple<T...>, Error>{mem::forward<Tuple<T...>>(tuple)};
         }
 
         template<typename PrevResults, ty::provider F, ty::provider... Rest>
@@ -663,8 +658,8 @@ namespace crab {
         ) const {
           return std::invoke(function).and_then([&]<typename R>(R&& result) {
             return operator()(
-              std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),
-              std::forward<Rest>(other_functions)...
+              std::tuple_cat(mem::move(tuple), Tuple<R>(mem::forward<R>(result))),
+              mem::forward<Rest>(other_functions)...
             );
           });
         }
@@ -680,8 +675,8 @@ namespace crab {
                                         []() -> Error { return Error{}; }
           ).flat_map([&]<typename R>(R&& result) {
             return operator()(
-              std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),
-              std::forward<Rest>(other_functions)...
+              std::tuple_cat(mem::move(tuple), Tuple<R>(mem::forward<R>(result))),
+              mem::forward<Rest>(other_functions)...
             );
           });
         }
@@ -694,8 +689,8 @@ namespace crab {
           Rest&&... other_functions
         ) const {
           return operator()(
-            std::tuple_cat(std::move(tuple), Tuple<std::invoke_result_t<F>>(std::invoke(function))),
-            std::forward<Rest>(other_functions)...
+            std::tuple_cat(mem::move(tuple), Tuple<std::invoke_result_t<F>>(std::invoke(function))),
+            mem::forward<Rest>(other_functions)...
           );
         }
 
@@ -707,8 +702,8 @@ namespace crab {
           Rest&&... other_functions
         ) const {
           return operator()(
-            std::tuple_cat(std::move(tuple), Tuple<V>{std::forward<V>(value)}),
-            std::forward<Rest>(other_functions)...
+            std::tuple_cat(mem::move(tuple), Tuple<V>{mem::forward<V>(value)}),
+            mem::forward<Rest>(other_functions)...
           );
         }
 
@@ -719,10 +714,10 @@ namespace crab {
           Result<V, Error> value,
           Rest&&... other_functions
         ) const {
-          return std::move(value).and_then([&]<typename R>(R&& result) {
+          return mem::move(value).and_then([&]<typename R>(R&& result) {
             return operator()(
-              std::tuple_cat(std::move(tuple), Tuple<R>(std::forward<R>(result))),
-              std::forward<Rest>(other_functions)...
+              std::tuple_cat(mem::move(tuple), Tuple<R>(mem::forward<R>(result))),
+              mem::forward<Rest>(other_functions)...
             );
           });
         }
@@ -731,24 +726,24 @@ namespace crab {
 
     template<ty::error_type E, std::invocable... F>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto fallible(F&&... fallible) {
-      return impl::fallible<E>{}(Tuple<>{}, std::forward<F>(fallible)...);
+      return impl::fallible<E>{}(Tuple<>{}, mem::forward<F>(fallible)...);
     }
 
     template<ty::ok_type T, typename... Args>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto ok(Args&&... args) {
-      return Ok<T>{T{std::forward<Args>(args)...}};
+      return Ok<T>{T{mem::forward<Args>(args)...}};
     }
 
     template<ty::error_type E, typename... Args>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto err(Args&&... args) {
-      return Err<E>{E{std::forward<Args>(args)...}};
+      return Err<E>{E{mem::forward<Args>(args)...}};
     }
 
     template<typename T>
     CRAB_NODISCARD_INLINE_CONSTEXPR auto ok(T value) {
       static_assert(ty::ok_type<T>, "Value must be a possible 'Ok<T>' type for use in Result<T, E>");
 
-      return Ok<T>{std::move(value)};
+      return Ok<T>{mem::move(value)};
     }
 
     template<typename E>
@@ -756,7 +751,7 @@ namespace crab {
 
       static_assert(ty::ok_type<E>, "Value must be a possible 'Err<E>' type for use in Result<T, E>");
 
-      return Err<E>{std::move(value)};
+      return Err<E>{mem::move(value)};
     }
 
     template<typename T, typename E>
@@ -764,7 +759,7 @@ namespace crab {
       Result<T, E>&& result,
       const SourceLocation loc = SourceLocation::current()
     ) -> T {
-      return std::forward<Result<T, E>>(result).unwrap(loc);
+      return mem::forward<Result<T, E>>(result).unwrap(loc);
     }
 
     template<typename T, typename E>
@@ -772,7 +767,7 @@ namespace crab {
       Result<T, E>&& result,
       const SourceLocation loc = SourceLocation::current()
     ) -> E {
-      return std::forward<Result<T, E>>(result).unwrap_err(loc);
+      return mem::forward<Result<T, E>>(result).unwrap_err(loc);
     }
 
   } // namespace result

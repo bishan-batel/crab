@@ -6,10 +6,7 @@
 
 #include "./core.hpp"
 
-#include <cstdint>
 #include <functional>
-#include <numbers>
-#include <ostream>
 #include <source_location>
 #include <sstream>
 #include <string>
@@ -19,62 +16,17 @@
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>
-#include <ranges>
 
-#include "./num/integer.hpp"
-#include "./num/floating.hpp"
-#include "./num/suffixes.hpp"
+#include "crab/core/cases.hpp"
+#include "crab/core/unit.hpp"
+
+#include "crab/num/integer.hpp"
+#include "crab/num/floating.hpp"
+#include "crab/num/suffixes.hpp"
+
+#include "crab/str/str.hpp"
 
 namespace crab {
-  using namespace crab::num;
-
-  /**
-   * @brief std::string, fat pointer to a heap allocated string
-   */
-  using String = std::string;
-
-  /**
-   * @brief UTF Encoded Character
-   */
-  using widechar = wchar_t;
-
-  /**
-   * @brief std::wstring, fat pointer to a heap allocated unicode string
-   */
-  using WideString = std::wstring;
-
-  /**
-   * @brief Abstraction over any contiguous sequence of characters, always prefer
-   * this over const String&
-   */
-  using StringView = std::string_view;
-
-  /**
-   * @brief Abstraction over any contiguous sequence of unicode characters, always
-   * prefer this over const WideString&
-   */
-  using WideStringView = std::wstring_view;
-
-  /**
-   * @brief std::stringstream
-   */
-  using StringStream = std::stringstream;
-
-  /**
-   * @brief std::stringstream
-   */
-  using OutStringStream = std::ostringstream;
-
-  /**
-   * @brief std::stringstream
-   */
-  using InStringStream = std::istringstream;
-
-  /**
-   * @brief std::wstringstream
-   */
-  using WideStringStream = std::wstringstream;
-
   using SourceLocation = std::source_location;
 
   /**
@@ -129,15 +81,6 @@ namespace crab {
   template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Predicate = std::equal_to<Key>>
   using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;
 
-  /**
-   * @brief Utility class for easily creating a Visitor instance when using
-   * std::visit and alike
-   */
-  template<typename... Functions>
-  struct cases final : Functions... {
-    using Functions::operator()...;
-  };
-
 }
 
 namespace crab::assertion {
@@ -146,14 +89,6 @@ namespace crab::assertion {
 
 namespace crab::prelude {
 
-  using ::crab::widechar;
-  using ::crab::String;
-  using ::crab::WideString;
-  using ::crab::StringView;
-  using ::crab::StringStream;
-  using ::crab::OutStringStream;
-  using ::crab::InStringStream;
-  using ::crab::WideStringStream;
   using ::crab::Func;
   using ::crab::Tuple;
   using ::crab::Pair;
@@ -177,9 +112,6 @@ namespace crab::prelude {
 #if !CRAB_NO_TYPEDEF_DICTIONARY
   using ::crab::Dictionary;
 #endif
-
-  using namespace ::crab::num::suffixes;
-  using namespace ::crab::num;
 
   /**
    * std::ranges

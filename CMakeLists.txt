@@ -111,9 +111,14 @@ add_library(${PROJECT_NAME} INTERFACE
         ./include/crab/rc/impl/RcStorage.hpp
         ./include/crab/rc/Rc.hpp 
 
+        ./include/crab/assertion/todo.hpp 
+
+        ./include/crab/core/unreachable.hpp 
+        ./include/crab/core/cases.hpp
+        ./include/crab/core/discard.hpp
+
         ./include/crab/ref.hpp 
         ./include/crab/result.hpp 
-        ./include/crab/todo.hpp 
         ./include/crab/type_traits.hpp
 )
 

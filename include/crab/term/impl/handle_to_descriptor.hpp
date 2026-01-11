@@ -1,5 +1,7 @@
-#include "crab/preamble.hpp"
+#include "crab/core.hpp"
 #include "crab/term/Handle.hpp"
+#include "crab/core/unreachable.hpp"
+#include "crab/num/integer.hpp"
 
 #if CRAB_UNIX
 #include <unistd.h>
@@ -9,7 +11,7 @@
 #endif
 
 namespace crab::term::impl {
-  CRAB_PURE_INLINE constexpr auto handle_to_descriptor(Handle handle) -> u32 {
+  CRAB_PURE_INLINE constexpr auto handle_to_descriptor(Handle handle) -> num::u32 {
 #if CRAB_UNIX
     switch (handle) {
       case Handle::Out: return STDOUT_FILENO;

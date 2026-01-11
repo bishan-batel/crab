@@ -11,3 +11,7 @@ namespace crab::num {
    */
   using f64 = long double;
 }
+
+namespace crab {
+  using namespace crab::num;
+}

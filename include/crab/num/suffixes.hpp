@@ -112,3 +112,9 @@ namespace crab::num::suffixes {
     return static_cast<uptr>(literal);
   }
 }
+
+namespace crab::prelude {
+  using namespace crab::num::suffixes;
+}
+
+CRAB_PRELUDE_GUARD;

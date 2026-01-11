@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "crab/core.hpp"
+
 namespace crab::num {
   /**
    * @brief Fix Sized Unsigned 8 Bit Integer (cannot be negative)
@@ -108,3 +110,13 @@ namespace crab::num {
   using char32 = u32;
 #endif
 }
+
+namespace crab {
+  using namespace crab::num;
+
+  namespace prelude {
+    using namespace num;
+  }
+}
+
+CRAB_PRELUDE_GUARD;

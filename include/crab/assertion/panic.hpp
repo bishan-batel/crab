@@ -142,10 +142,12 @@ namespace crab::assertion {
   }
 
   CRAB_NORETURN inline auto panic(String msg, SourceLocation loc) -> void {
-    panic(PanicInfo{
-      mem::move(msg),
-      loc,
-    });
+    panic(
+      PanicInfo{
+        mem::move(msg),
+        loc,
+      }
+    );
   }
 }
 

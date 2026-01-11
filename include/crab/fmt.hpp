@@ -1,8 +1,11 @@
 #pragma once
 
-#include "crab/preamble.hpp"
+#include "crab/core.hpp"
+#include "crab/core/cases.hpp"
+#include "crab/str/str.hpp"
+
 #include <concepts>
-#include <string>
+#include <sstream>
 
 // Enum for what format library crab will use
 #define CRAB_FMT_USAGE_STD           0
@@ -83,10 +86,10 @@ namespace crab {
       [](const bool x) { return String{x ? "true" : "false"}; },
       [](String str) { return str; },
       [](auto&& x) -> String {
-        constexpr bool pipeable = requires(std::stringstream stream) { stream << std::declval<T&&>(); };
+        constexpr bool pipeable = requires(std::ostringstream stream) { stream << std::declval<T&&>(); };
 
         if constexpr (pipeable) {
-          std::stringstream stream{};
+          std::ostringstream stream{};
           stream << x;
           return std::move(stream).str();
         } else {

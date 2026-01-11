@@ -8,7 +8,7 @@ namespace crab {
    * @brief Denotes unreachable paths
    * This should be used for optimisation purposes only.
    */
-  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
+  [[noreturn]] CRAB_INLINE auto unreachable() -> void {
 
 #if CRAB_HAS_UNREACHABLE
     std::unreachable();

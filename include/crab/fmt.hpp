@@ -79,7 +79,7 @@
 
 namespace crab {
   template<typename T>
-  CRAB_NODISCARD auto builtin_to_string(T&& obj) -> String {
+  [[nodiscard]] auto builtin_to_string(T&& obj) -> String {
     return crab::cases{
       []<std::integral Ty>(Ty&& x) { return std::to_string(x); },
       []<std::floating_point Ty>(Ty&& x) { return std::to_string(x); },
@@ -128,7 +128,7 @@ namespace crab {
   namespace helper::fmt {}
 
   template<typename... Args>
-  CRAB_NODISCARD auto format(auto&& fmt, Args&&... args) -> String {
+  [[nodiscard]] auto format(auto&& fmt, Args&&... args) -> String {
     std::stringstream stream{};
     stream << "FORMAT_STRING(\"";
     stream << fmt;

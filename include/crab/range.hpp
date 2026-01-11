@@ -24,32 +24,32 @@ namespace crab {
       using pointer = T;
       using reference = T;
 
-      CRAB_INLINE_CONSTEXPR explicit Iterator(T pos): pos(pos) {}
+      CRAB_INLINE constexpr explicit Iterator(T pos): pos(pos) {}
 
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator*() const -> reference {
+      [[nodiscard]] CRAB_INLINE constexpr auto operator*() const -> reference {
         return pos;
       }
 
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator->() -> pointer {
+      [[nodiscard]] CRAB_INLINE constexpr auto operator->() -> pointer {
         return pos;
       }
 
-      CRAB_INLINE_CONSTEXPR auto operator++() -> Iterator& {
+      CRAB_INLINE constexpr auto operator++() -> Iterator& {
         ++pos;
         return *this;
       }
 
-      CRAB_NODISCARD_INLINE_CONSTEXPR auto operator++(int) -> Iterator {
+      [[nodiscard]] CRAB_INLINE constexpr auto operator++(int) -> Iterator {
         Iterator tmp = *this;
         ++*this;
         return tmp;
       }
 
-      CRAB_NODISCARD_INLINE_CONSTEXPR friend auto operator==(const Iterator& a, const Iterator& b) -> bool {
+      [[nodiscard]] CRAB_INLINE constexpr friend auto operator==(const Iterator& a, const Iterator& b) -> bool {
         return a.pos == b.pos;
       };
 
-      CRAB_NODISCARD_INLINE_CONSTEXPR friend auto operator!=(const Iterator& a, const Iterator& b) -> bool {
+      [[nodiscard]] CRAB_INLINE constexpr friend auto operator!=(const Iterator& a, const Iterator& b) -> bool {
         return a.pos != b.pos;
       };
 
@@ -61,7 +61,7 @@ namespace crab {
     /**
      * Constructs a range from min to max, this will panic if max > min
      */
-    CRAB_INLINE_CONSTEXPR Range(T min, T max, const SourceLocation loc = SourceLocation::current()):
+    CRAB_INLINE constexpr Range(T min, T max, const SourceLocation loc = SourceLocation::current()):
         min(min), max(max) {
       debug_assert_transparent(min <= max, loc, "Invalid Range, max cannot be greater than min");
     }
@@ -69,42 +69,42 @@ namespace crab {
     /**
      * Returns the lower bound of this range
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto upper_bound() const -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto upper_bound() const -> T {
       return max;
     }
 
     /**
      * Returns the lower bound of this range
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto lower_bound() const -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto lower_bound() const -> T {
       return min;
     }
 
     /**
      * Begin iterator position.
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto begin() const -> Iterator {
+    [[nodiscard]] CRAB_INLINE constexpr auto begin() const -> Iterator {
       return Iterator{min};
     }
 
     /**
      * End iterator position.
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto end() const -> Iterator {
+    [[nodiscard]] CRAB_INLINE constexpr auto end() const -> Iterator {
       return Iterator{max};
     }
 
     /**
      * Returns the length of this range
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto size() const -> usize {
+    [[nodiscard]] CRAB_INLINE constexpr auto size() const -> usize {
       return static_cast<usize>(max - min);
     }
 
     /**
      * @brief Checks if the given value is within this range
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto contains(const T value) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto contains(const T value) const -> bool {
       return min <= value and value < max;
     }
   };
@@ -121,7 +121,7 @@ namespace crab {
    * for (usize i = 5; i < 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto range(
+  [[nodiscard]] CRAB_INLINE constexpr auto range(
     ty::identity<T> min,
     ty::identity<T> max,
     const SourceLocation loc = SourceLocation::current()
@@ -141,7 +141,7 @@ namespace crab {
    * for (usize i = 0; i < 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto range(
+  [[nodiscard]] CRAB_INLINE constexpr auto range(
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
@@ -160,7 +160,7 @@ namespace crab {
    * for (usize i = 5; i <= 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto range_inclusive(
+  [[nodiscard]] CRAB_INLINE constexpr auto range_inclusive(
     std::type_identity_t<T> min,
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
@@ -180,7 +180,7 @@ namespace crab {
    * for (usize i = 0; i <= 100; i++)
    */
   template<std::integral T = usize>
-  CRAB_NODISCARD_INLINE_CONSTEXPR auto range_inclusive(
+  [[nodiscard]] CRAB_INLINE constexpr auto range_inclusive(
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {

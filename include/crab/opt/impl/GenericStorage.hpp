@@ -20,14 +20,14 @@ namespace crab::opt::impl {
     /**
      * Initialise to Some(value)
      */
-    CRAB_INLINE_CONSTEXPR explicit GenericStorage(T&& value): in_use_flag{true} {
+    CRAB_INLINE constexpr explicit GenericStorage(T&& value): in_use_flag{true} {
       std::construct_at<T, T&&>(address(), mem::forward<T>(value));
     }
 
     /**
      * Copy initialise to Some(value)
      */
-    CRAB_INLINE_CONSTEXPR explicit GenericStorage(const T& value) requires ty::copy_constructible<T>
+    CRAB_INLINE constexpr explicit GenericStorage(const T& value) requires ty::copy_constructible<T>
         : in_use_flag(true) {
       std::construct_at<T, const T&>(address(), value);
     }
@@ -35,7 +35,7 @@ namespace crab::opt::impl {
     /**
      * Default initialises to none
      */
-    CRAB_INLINE_CONSTEXPR explicit GenericStorage(const None& = {}): in_use_flag{false} {}
+    CRAB_INLINE constexpr explicit GenericStorage(const None& = {}): in_use_flag{false} {}
 
     constexpr GenericStorage(const GenericStorage& from) requires ty::copy_constructible<T>
         : in_use_flag{from.in_use_flag} {
@@ -134,15 +134,15 @@ namespace crab::opt::impl {
       return *this;
     }
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto value() const& -> const T& {
+    [[nodiscard]] CRAB_INLINE constexpr auto value() const& -> const T& {
       return reinterpret_cast<const T&>(bytes);
     }
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto value() & -> T& {
+    [[nodiscard]] CRAB_INLINE constexpr auto value() & -> T& {
       return reinterpret_cast<T&>(bytes);
     }
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto value() && -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto value() && -> T {
 #if CRAB_GCC_VERSION
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -157,17 +157,17 @@ namespace crab::opt::impl {
       return moved;
     }
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto in_use() const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto in_use() const -> bool {
       return in_use_flag;
     }
 
   private:
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR CRAB_RETURNS_NONNULL auto address() -> T* {
+    [[nodiscard]] CRAB_INLINE CRAB_RETURNS_NONNULL constexpr auto address() -> T* {
       return reinterpret_cast<T*>(bytes.data());
     }
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR CRAB_RETURNS_NONNULL auto address() const -> const T* {
+    [[nodiscard]] CRAB_INLINE CRAB_RETURNS_NONNULL constexpr auto address() const -> const T* {
       return reinterpret_cast<const T*>(bytes.data());
     }
 

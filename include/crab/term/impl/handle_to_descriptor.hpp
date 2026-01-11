@@ -11,7 +11,7 @@
 #endif
 
 namespace crab::term::impl {
-  CRAB_PURE_INLINE constexpr auto handle_to_descriptor(Handle handle) -> num::u32 {
+  CRAB_PURE CRAB_INLINE constexpr auto handle_to_descriptor(Handle handle) -> num::u32 {
 #if CRAB_UNIX
     switch (handle) {
       case Handle::Out: return STDOUT_FILENO;

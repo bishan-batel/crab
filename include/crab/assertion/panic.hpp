@@ -137,12 +137,12 @@ namespace crab::assertion {
     inline static PanicHook handler{trivial_handler};
   };
 
-  CRAB_NORETURN inline auto panic(PanicInfo info) -> void {
+  [[noreturn]] inline auto panic(PanicInfo info) -> void {
     std::invoke(panic_handler::get(), mem::move(info));
     unreachable();
   }
 
-  CRAB_NORETURN inline auto panic(String msg, SourceLocation loc) -> void {
+  [[noreturn]] inline auto panic(String msg, SourceLocation loc) -> void {
     panic(
       PanicInfo{
         mem::move(msg),

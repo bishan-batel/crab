@@ -45,27 +45,27 @@ namespace crab::fn {
   template<typename Derived>
   struct cast_s final {
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(auto& value) const requires ty::non_const<decltype(value)>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(auto& value) const requires ty::non_const<decltype(value)>
     {
       return ref::cast<Derived>(value);
     }
 
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const auto& value) const {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(const auto& value) const {
       return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(RefMut<T> value) const {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(RefMut<T> value) const {
       return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(Ref<T> value) const -> opt::Option<Ref<Derived>> {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(Ref<T> value) const -> opt::Option<Ref<Derived>> {
       return ref::cast<Derived>(value);
     }
 
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(RcMut<T> value) const {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(RcMut<T> value) const {
       return value.template downcast<T>();
     }
 
@@ -76,12 +76,12 @@ namespace crab::fn {
     }
 
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(const Box<T>& value) const -> opt::Option<const Derived&> {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(const Box<T>& value) const -> opt::Option<const Derived&> {
       return operator()(*value);
     }
 
     template<typename T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator()(Box<T>& value) const -> opt::Option<Derived&> {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator()(Box<T>& value) const -> opt::Option<Derived&> {
       return operator()(*value);
     }
   };

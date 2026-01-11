@@ -18,7 +18,7 @@
 #define CRAB_RELEASE 0
 #endif
 
-#ifdef __APPLE__ 
+#ifdef __APPLE__
 #define CRAB_OSX __APPLE__
 #else
 #define CRAB_OSX 0
@@ -41,7 +41,6 @@
 #else
 #define CRAB_UNIX 0
 #endif
-
 
 /// ===================================================================================================================
 ///                                                 Preproc & Compile-Time Helpers
@@ -112,26 +111,6 @@
 #define CRAB_INLINE inline
 #endif
 
-#if CRAB_HAS_ATTRIBUTE(noreturn)
-#define CRAB_NORETURN [[noreturn]]
-#else
-#define CRAB_NORETURN
-#endif
-
-#if CRAB_HAS_ATTRIBUTE(nodiscard)
-#define CRAB_NODISCARD       [[nodiscard]]
-#define CRAB_NODISCARDF(msg) [[nodiscard(msg)]]
-#else
-#define CRAB_NODISCARD
-#define CRAB_NODISCARDF(msg)
-#endif
-
-#if CRAB_HAS_ATTRIBUTE(maybe_unused)
-#define CRAB_MAYBE_UNUSED [[maybe_unused]]
-#else
-#define CRAB_MAYBE_UNUSED
-#endif
-
 #if CRAB_HAS_ATTRIBUTE(gnu::may_alias)
 #define CRAB_MAY_ALIAS [[gnu::may_alias]]
 #else
@@ -164,20 +143,10 @@
 #define CRAB_RETURNS_NONNULL
 #endif
 
-#define CRAB_INLINE_CONSTEXPR           CRAB_INLINE constexpr
-
-#define CRAB_NODISCARD_INLINE_CONSTEXPR CRAB_NODISCARD CRAB_INLINE constexpr
-
-#define CRAB_NODISCARD_CONSTEVAL        CRAB_NODISCARD CRAB_CONSTEVAL
-
-#define CRAB_NODISCARD_CONSTEXPR        CRAB_NODISCARD constexpr
-
-#define CRAB_PURE_INLINE                CRAB_PURE CRAB_INLINE
-
 #if CRAB_HAS_ATTRIBUTE(pure)
-#define CRAB_PURE CRAB_NODISCARD __attribute__((pure))
+#define CRAB_PURE [[nodiscard]] __attribute__((pure))
 #else
-#define CRAB_PURE CRAB_NODISCARD
+#define CRAB_PURE [[nodiscard]]
 #endif
 
 /// ===================================================================================================================
@@ -232,3 +201,7 @@
 #else
 #define CRAB_PRELUDE_GUARD
 #endif
+
+namespace crab::prelude {}
+
+CRAB_PRELUDE_GUARD;

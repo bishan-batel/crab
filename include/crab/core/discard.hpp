@@ -10,7 +10,7 @@ namespace crab {
    *
    * This returns unit in the case of in templated contexts you want this variadic to be assigned to something.
    */
-  [[maybe_unused]] CRAB_INLINE constexpr auto discard(CRAB_MAYBE_UNUSED auto&&...) -> unit {
+  [[maybe_unused]] CRAB_INLINE constexpr auto discard([[maybe_unused]] auto&&...) -> unit {
     return {};
   }
 }

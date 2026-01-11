@@ -106,7 +106,7 @@ namespace crab::opt {
      * convert implicitly to Option<RefMut<T>> (mainly for backwards
      * compatability)
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<ref::RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
+    [[nodiscard]] CRAB_INLINE constexpr operator Option<ref::RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
     {
       return map<ref::RefMut<std::remove_cvref_t<T>>>();
     }
@@ -116,7 +116,7 @@ namespace crab::opt {
      * to be able to convert implicitly to Option<Ref<T>> (mainly for backwards
      * compatability)
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<ref::Ref<std::remove_cvref_t<T>>>() requires(is_ref)
+    [[nodiscard]] CRAB_INLINE constexpr operator Option<ref::Ref<std::remove_cvref_t<T>>>() requires(is_ref)
     {
       return map<ref::Ref<std::remove_cvref_t<T>>>();
     }
@@ -125,7 +125,7 @@ namespace crab::opt {
      * Conversion constructor for options of the form Option<Ref<T>> to be able to
      * convert implicitly to Option<const T&>
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<crab::ty::crab_ref_decay<T>>() requires(crab::ty::crab_ref<T>)
+    [[nodiscard]] CRAB_INLINE constexpr operator Option<crab::ty::crab_ref_decay<T>>() requires(crab::ty::crab_ref<T>)
     {
       return map<const T&>();
     }
@@ -134,7 +134,8 @@ namespace crab::opt {
      * Conversion constructor for options of the form Option<Ref<T>> to be able to
      * convert implicitly to Option<T&>
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR operator Option<crab::ty::crab_ref_decay<T>>() requires(crab::ty::crab_ref_mut<T>)
+    [[nodiscard]] CRAB_INLINE constexpr operator Option<crab::ty::crab_ref_decay<T>>()
+      requires(crab::ty::crab_ref_mut<T>)
     {
       return map<T&>();
     }
@@ -190,21 +191,21 @@ namespace crab::opt {
     /**
      * Whether this option has a contained value or not (None)
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR explicit operator bool() const {
+    [[nodiscard]] CRAB_INLINE constexpr explicit operator bool() const {
       return is_some();
     }
 
     /**
      * Whether this option contains a value
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto is_some() const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto is_some() const -> bool {
       return storage.in_use();
     }
 
     /**
      * Whether this option does not contain a value
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto is_none() const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto is_none() const -> bool {
       return not storage.in_use();
     }
 
@@ -214,7 +215,7 @@ namespace crab::opt {
      *
      * This function returns Option<const T&>
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto as_ref() const& -> Option<const T&> requires(not is_ref)
+    [[nodiscard]] CRAB_INLINE constexpr auto as_ref() const& -> Option<const T&> requires(not is_ref)
     {
       if (is_none()) {
         return none;
@@ -230,7 +231,7 @@ namespace crab::opt {
      *
      * This function returns Option<T&>
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto as_mut() & -> Option<T&> requires(not is_ref)
+    [[nodiscard]] CRAB_INLINE constexpr auto as_mut() & -> Option<T&> requires(not is_ref)
     {
       if (is_none()) {
         return none;
@@ -243,7 +244,7 @@ namespace crab::opt {
      * Consumes inner value and returns it, if this option was none this
      * will instead return a new default constructed T
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_or_default() && -> T requires ty::default_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto take_or_default() && -> T requires ty::default_constructible<T>
     {
       if (is_none()) {
         return T{};
@@ -257,7 +258,7 @@ namespace crab::opt {
      * exists, else returns a default value
      * @param default_value
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_or(T default_value) && -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto take_or(T default_value) && -> T {
       if (is_some()) {
         return mem::move(*this).unwrap();
       }
@@ -271,7 +272,7 @@ namespace crab::opt {
      * @param default_generator Function to create the default value
      */
     template<ty::provider<T> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_or(F&& default_generator) && -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto take_or(F&& default_generator) && -> T {
       if (is_some()) {
         return mem::move(*this).unwrap();
       }
@@ -283,7 +284,7 @@ namespace crab::opt {
      * Is this option has a value, return a copy of that value. if
      * this opton was none then this returns a default constructed T
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto get_or_default() const -> T requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto get_or_default() const -> T requires ty::copy_constructible<T>
     {
       return copied().take_or_default();
     }
@@ -292,7 +293,7 @@ namespace crab::opt {
      * Gets the contained value if exists, else returns a default value
      * @param default_value
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto get_or(T default_value) const -> T requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto get_or(T default_value) const -> T requires ty::copy_constructible<T>
     {
       return copied().take_or(mem::forward<T>(default_value));
     }
@@ -303,7 +304,7 @@ namespace crab::opt {
      * @param default_generator Function to create the default value
      */
     template<ty::provider<T> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto get_or(F&& default_generator) const -> T requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto get_or(F&& default_generator) const -> T requires ty::copy_constructible<T>
     {
       static_assert(std::is_invocable_r_v<T, F>, "A function with Option<T>::get_or must return T");
       return copied().take_or(mem::forward<F>(default_generator));
@@ -314,7 +315,7 @@ namespace crab::opt {
      * is none, After this, the value has been 'taken out' of this option, after
      * this method is called this option is 'None'
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
       debug_assert_transparent(is_some(), loc, "Cannot unwrap a none option");
 
       return mem::move(storage).value();
@@ -324,7 +325,7 @@ namespace crab::opt {
      * Returns a mutable reference to the contained Some value inside, if
      * this option is none this will panic & crash.
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto get_unchecked(SourceLocation loc = SourceLocation::current()) -> T& {
+    [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) -> T& {
       debug_assert_transparent(is_some(), loc, "Cannot get_unchecked a none option");
 
       return storage.value();
@@ -334,7 +335,7 @@ namespace crab::opt {
      * Returns a const reference to the contained Some value inside, if
      * this option is none this will panic & crash.
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto get_unchecked(SourceLocation loc = SourceLocation::current()) const
+    [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) const
       -> const T& {
       debug_assert_transparent(is_some(), loc, "Cannot get_unchecked a none option");
 
@@ -348,7 +349,7 @@ namespace crab::opt {
      * @param error Error to replace an instance of None
      */
     template<typename E>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto ok_or(E&& error) const
+    [[nodiscard]] CRAB_INLINE constexpr auto ok_or(E&& error) const
       -> result::Result<T, E> requires ty::copy_constructible<T>
     {
       if (is_some()) {
@@ -365,7 +366,7 @@ namespace crab::opt {
      * @param error_generator Function to generate an error to replace "None".
      */
     template<typename E, ty::provider<E> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto ok_or(F&& error_generator) const
+    [[nodiscard]] CRAB_INLINE constexpr auto ok_or(F&& error_generator) const
       -> result::Result<T, E> requires ty::copy_constructible<T>
     {
       if (is_some()) {
@@ -383,7 +384,7 @@ namespace crab::opt {
      * @param error Error to replace an instance of None
      */
     template<typename E>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_ok_or(E error) && -> result::Result<T, E> {
+    [[nodiscard]] CRAB_INLINE constexpr auto take_ok_or(E error) && -> result::Result<T, E> {
       if (is_some()) {
         return result::Result<T, E>{result::Ok<T>{mem::move(*this).unwrap()}};
       }
@@ -398,7 +399,7 @@ namespace crab::opt {
      * @param error_generator Function to generate an error to replace "None".
      */
     template<typename E, ty::provider<E> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto take_ok_or(F&& error_generator) && -> result::Result<T, E> {
+    [[nodiscard]] CRAB_INLINE constexpr auto take_ok_or(F&& error_generator) && -> result::Result<T, E> {
       if (is_some()) {
         return result::Result<T, E>{
           result::Ok<T>{mem::move(*this).unwrap()},
@@ -430,7 +431,7 @@ namespace crab::opt {
      * );
      */
     template<crab::ty::mapper<T> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto map(F&& mapper) && {
+    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& mapper) && {
       using Returned = Option<ty::functor_result<F, T>>;
 
       return is_some() ? Returned{std::invoke(mapper, mem::move(*this).unwrap())} : Returned{};
@@ -457,12 +458,12 @@ namespace crab::opt {
      */
     template<ty::mapper<T> F>
     requires ty::copy_constructible<T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto map(F&& mapper) const& {
+    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& mapper) const& {
       return copied().map(mem::forward<F>(mapper));
     }
 
     template<typename Into>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto map() && -> Option<Into> {
+    [[nodiscard]] CRAB_INLINE constexpr auto map() && -> Option<Into> {
       static_assert(ty::convertible<T, Into>, "'Option<T>::map<Into>()' can only be done if T is convertible to Into");
 
       return mem::move(*this).map([](T&& value) -> Into { return static_cast<Into>(mem::forward<T>(value)); });
@@ -470,7 +471,7 @@ namespace crab::opt {
 
     template<typename Into>
     requires ty::copy_constructible<T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto map() const& -> Option<Into> {
+    [[nodiscard]] CRAB_INLINE constexpr auto map() const& -> Option<Into> {
       return copied().template map<Into>();
     }
 
@@ -478,7 +479,7 @@ namespace crab::opt {
      * Shorthand for calling .map(...).flatten()
      */
     template<ty::mapper<T> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto flat_map(F&& mapper) && {
+    [[nodiscard]] CRAB_INLINE constexpr auto flat_map(F&& mapper) && {
       using Returned = ty::functor_result<F, T>;
       static_assert(ty::option_type<Returned>, "The function passed to flat_map must return an Option");
 
@@ -494,7 +495,7 @@ namespace crab::opt {
      */
     template<ty::mapper<T> F>
     requires ty::copy_constructible<T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto flat_map(F&& mapper) const& {
+    [[nodiscard]] CRAB_INLINE constexpr auto flat_map(F&& mapper) const& {
       return copied().flat_map(mem::forward<F>(mapper));
     }
 
@@ -502,7 +503,7 @@ namespace crab::opt {
      * Equivalent of flat_map but for the 'None' type
      */
     template<ty::provider F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto or_else(F&& mapper) && {
+    [[nodiscard]] CRAB_INLINE constexpr auto or_else(F&& mapper) && {
       using Returned = ty::functor_result<F>;
 
       static_assert(ty::option_type<Returned>, "The function passed to or_else must return an Option");
@@ -519,7 +520,7 @@ namespace crab::opt {
      */
     template<ty::provider F>
     requires ty::copy_constructible<T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto or_else(F&& mapper) const& {
+    [[nodiscard]] CRAB_INLINE constexpr auto or_else(F&& mapper) const& {
       return copied().or_else(mem::forward<F>(mapper));
     }
 
@@ -527,7 +528,7 @@ namespace crab::opt {
      * If this option is of some type Option<Option<T>>, this will flatten
      * it to a single Option<T>
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto flatten() && -> T requires ty::option_type<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto flatten() && -> T requires ty::option_type<T>
     {
       if (is_none()) {
         return None{};
@@ -540,7 +541,8 @@ namespace crab::opt {
      * If this option is of some type Option<Option<T>>, this will flatten
      * it to a single Option<T>
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto flatten() const& -> T requires ty::option_type<T> and ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto flatten() const& -> T
+      requires ty::option_type<T> and ty::copy_constructible<T>
 
     {
       return copied().flatten();
@@ -550,7 +552,7 @@ namespace crab::opt {
      * Copies this option and returns, use this before map if you do not
      * want to consume the option.
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto copied() const -> Option requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto copied() const -> Option requires ty::copy_constructible<T>
     {
       static_assert(ty::copy_constructible<T>, "Cannot call copied() on an option with a non copy-cosntructible type");
 
@@ -566,7 +568,7 @@ namespace crab::opt {
      * will return Some, else None
      */
     template<ty::predicate<const T&> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto filter(F&& predicate) && -> Option {
+    [[nodiscard]] CRAB_INLINE constexpr auto filter(F&& predicate) && -> Option {
       if (is_none()) {
         return None{};
       }
@@ -590,7 +592,7 @@ namespace crab::opt {
      */
     template<crab::ty::predicate<const T&> F>
     requires crab::ty::copy_constructible<T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto filter(F&& predicate) const& -> Option<T> {
+    [[nodiscard]] CRAB_INLINE constexpr auto filter(F&& predicate) const& -> Option<T> {
       return copied().filter(mem::forward<F>(predicate));
     }
 
@@ -600,7 +602,7 @@ namespace crab::opt {
      */
     template<crab::ty::predicate<const T&> F>
     requires crab::ty::copy_constructible<T>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto filter(F&& predicate) & -> Option<T> {
+    [[nodiscard]] CRAB_INLINE constexpr auto filter(F&& predicate) & -> Option<T> {
       return copied().filter(mem::forward<F>(predicate));
     }
 
@@ -612,7 +614,7 @@ namespace crab::opt {
      * Option<i32>{10}.is_ok_and(crab::fn::odd) -> false
      */
     template<crab::ty::predicate<const T&> F>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto is_some_and(F&& functor) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto is_some_and(F&& functor) const -> bool {
       return is_some() and std::invoke(functor, get_unchecked());
     }
 
@@ -630,7 +632,7 @@ namespace crab::opt {
      * ````
      */
     template<typename... Vals>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto zip(Option<Vals>... other) && -> Option<Tuple<T, Vals...>> {
+    [[nodiscard]] CRAB_INLINE constexpr auto zip(Option<Vals>... other) && -> Option<Tuple<T, Vals...>> {
       if (is_none()) {
         return None{};
       }
@@ -652,7 +654,7 @@ namespace crab::opt {
      * contained value of the second
      */
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator and(Option<S> other) && -> Option<S> {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator and(Option<S> other) && -> Option<S> {
       if (is_none()) {
         return None{};
       }
@@ -666,7 +668,7 @@ namespace crab::opt {
      * contained value of the second
      */
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator and(Option<S> other) const& -> Option<S>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator and(Option<S> other) const& -> Option<S>
       requires ty::copy_constructible<T>
     {
       return copied() and mem::move(other);
@@ -676,7 +678,7 @@ namespace crab::opt {
      * Boolean or operation, if this option is some it will return that, if the
      * other option is some it will return that, else this returns none
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator or(Option other) && -> Option {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator or(Option other) && -> Option {
       if (is_none()) {
         return other;
       }
@@ -688,7 +690,8 @@ namespace crab::opt {
      * Boolean or operation, if this option is some it will return that, if the
      * other option is some it will return that, else this returns none
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator or(Option other) const& -> Option requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator or(Option other) const& -> Option
+      requires ty::copy_constructible<T>
     {
       return copied() or mem::move(other);
     }
@@ -696,7 +699,7 @@ namespace crab::opt {
     /**
      * The same as or but if both options are some then this will be none
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator xor(Option other) && -> Option {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator xor(Option other) && -> Option {
       if (is_none()) {
         return other;
       }
@@ -711,7 +714,7 @@ namespace crab::opt {
     /**
      * The same as or but if both options are some then this will be none
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator xor(Option other) const& -> Option
+    [[nodiscard]] CRAB_INLINE constexpr auto operator xor(Option other) const& -> Option
       requires crab::ty::copy_constructible<T>
     {
       return copied() xor mem::move(other);
@@ -722,7 +725,7 @@ namespace crab::opt {
     ///
 
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator==(const Option<S>& other) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator==(const Option<S>& other) const -> bool {
       static_assert(
         std::equality_comparable_with<T, S>,
         "Cannot equate to options if the inner types are not equatable"
@@ -735,7 +738,7 @@ namespace crab::opt {
     }
 
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator!=(const Option<S>& other) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator!=(const Option<S>& other) const -> bool {
       static_assert(
         std::equality_comparable_with<T, S>,
         "Cannot equate to options if the inner types are not inverse equatable"
@@ -749,7 +752,7 @@ namespace crab::opt {
     }
 
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator>(const Option<S>& other) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator>(const Option<S>& other) const -> bool {
       static_assert(
         requires(const T& a, const S& b) {
           { a > b } -> ty::convertible<bool>;
@@ -769,7 +772,7 @@ namespace crab::opt {
     }
 
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator>=(const Option<S>& other) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator>=(const Option<S>& other) const -> bool {
       static_assert(
         requires(const T& a, const S& b) {
           { a >= b } -> crab::ty::convertible<bool>;
@@ -790,7 +793,7 @@ namespace crab::opt {
     }
 
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator<=(const Option<S>& other) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=(const Option<S>& other) const -> bool {
       static_assert(
         requires(const T& a, const S& b) {
           { a <= b } -> crab::ty::convertible<bool>;
@@ -811,7 +814,7 @@ namespace crab::opt {
     }
 
     template<typename S>
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator<=>(const Option<S>& other) const -> std::partial_ordering {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Option<S>& other) const -> std::partial_ordering {
       static_assert(
         std::three_way_comparable_with<T, S>,
         "Cannot compare to options if the inner types are not comparable with "
@@ -838,42 +841,42 @@ namespace crab::opt {
     /**
      * Option<T> == None only if the former is none
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator==(const None&) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator==(const None&) const -> bool {
       return is_none();
     }
 
     /**
      * Option<T> != None only if the former is some
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator!=(const None&) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator!=(const None&) const -> bool {
       return is_some();
     }
 
     /**
      * Option<T> > None only if the former is some
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator>(const None&) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator>(const None&) const -> bool {
       return is_some();
     }
 
     /**
      * Option<T> >= None is always true
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator>=(const None&) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator>=(const None&) const -> bool {
       return true;
     }
 
     /**
      * Option<T> < None is never true
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator<(const None&) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<(const None&) const -> bool {
       return false;
     }
 
     /**
      * Option<T> <= None is never true
      */
-    CRAB_NODISCARD_INLINE_CONSTEXPR auto operator<=(const None&) const -> bool {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=(const None&) const -> bool {
       return is_none();
     }
 
@@ -904,7 +907,7 @@ CRAB_INLINE constexpr auto operator<<(std::ostream& os, const ::crab::opt::Optio
 
 template<typename T>
 struct std::hash<::crab::opt::Option<T>> /*NOLINT*/ {
-  CRAB_NODISCARD CRAB_INLINE constexpr auto operator()(const ::crab::opt::Option<T>& opt) const -> crab::hash_code {
+  [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::opt::Option<T>& opt) const -> crab::hash_code {
     if (opt.is_none()) {
       return crab::hash(false);
     }

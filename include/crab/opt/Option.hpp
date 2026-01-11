@@ -3,10 +3,8 @@
 // ReSharper disable  CppNonExplicitConvertingConstructor
 // ReSharper disable CppDFAUnreachableCode
 // ReSharper disable CppNonExplicitConversionOperator
-// NOLINTBEGIN(*explicit*)
 
-#ifndef CRAB_OPT_OPTION_HPP
-#define CRAB_OPT_OPTION_HPP
+#pragma once
 
 #include <concepts>
 #include <cstddef>
@@ -15,12 +13,12 @@
 #include <type_traits>
 
 #include "crab/preamble.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/assertion/assert.hpp"
 #include "crab/hash.hpp"
+
 #include "./none.hpp"
 #include "./impl/GenericStorage.hpp"
 #include "./impl/RefStorage.hpp"
-#include "crab/assertion/assert.hpp"
 
 namespace crab::opt {
 
@@ -84,6 +82,8 @@ namespace crab::opt {
      */
     inline static constexpr bool is_mut_ref = is_ref and ty::non_const<T>;
 
+    // NOLINTBEGIN(*explicit*)
+
     /**
      * Create an option that wraps Some(T)
      */
@@ -139,12 +139,15 @@ namespace crab::opt {
       return map<T&>();
     }
 
+    // NOLINTEND(*explicit*)
+
     /**
      * Reassign option to Some(T),
      * If this option previously contained Some(K), the previous value is
      * discarded and is replaced by Some(T)
      */
-    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref) {
+    CRAB_INLINE_CONSTEXPR auto operator=(T&& from) -> Option& requires(not is_ref)
+    {
       storage = mem::forward<T>(from);
       return *this;
     }
@@ -915,11 +918,3 @@ namespace crab::prelude {
 }
 
 CRAB_PRELUDE_GUARD;
-
-#endif
-
-#ifndef CRAB_ASSERTION_PANIC_HPP
-#include "crab/assertion/panic.hpp"
-#endif
-
-// NOLINTEND(*explicit*)

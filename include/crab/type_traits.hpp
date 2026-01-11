@@ -7,6 +7,7 @@
 #include <crab/preamble.hpp>
 #include <concepts>
 #include <type_traits>
+#include "crab/opt/forward.hpp"
 
 namespace crab {
   namespace ty {
@@ -268,12 +269,10 @@ namespace crab {
 
   }
 
-  namespace opt {
-    struct None;
-
+  namespace boxed {
     template<typename T>
-    class Option;
-  }
+    class Box;
+  };
 
   namespace result {
     template<typename T, typename E>

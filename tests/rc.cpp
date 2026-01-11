@@ -70,11 +70,12 @@ TEST_CASE("Rc/RcMut") {
   }
 
   SECTION("Option Niche Optimisation") {
+    using crab::mem::size_of;
 
     asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
-      STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(RcMut<T>));
-      STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(Option<Rc<T>>));
-      STATIC_REQUIRE(sizeof(RcMut<T>) == sizeof(Option<RcMut<T>>));
+      STATIC_REQUIRE(size_of<Rc<T>>() == size_of<RcMut<T>>());
+      STATIC_REQUIRE(size_of<Rc<T>>() == size_of<Option<Rc<T>>>());
+      STATIC_REQUIRE(size_of<RcMut<T>>() == size_of<Option<RcMut<T>>>);
     });
   }
 }

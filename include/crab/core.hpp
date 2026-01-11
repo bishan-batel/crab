@@ -218,7 +218,7 @@ namespace crab {
   /**
    * Used to discard / explicitly ignore certain outputs
    */
-  CRAB_INLINE_CONSTEXPR auto discard(CRAB_MAYBE_UNUSED auto&&...) -> void {}
+  CRAB_INLINE constexpr auto discard(CRAB_MAYBE_UNUSED auto&&...) -> void {}
 }
 
 #define CRAB_EVAL0(...) __VA_ARGS__

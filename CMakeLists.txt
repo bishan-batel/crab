@@ -68,7 +68,7 @@ configure_file(
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 add_library(${PROJECT_NAME} INTERFACE
-        ./include/crab/box.hpp 
+        ./include/crab/boxed/Box.hpp 
         ./include/crab/casts.hpp 
 
         ./include/crab/choice/choice.hpp 

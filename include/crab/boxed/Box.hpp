@@ -9,17 +9,19 @@
 #include "crab/core.hpp"
 #include "crab/preamble.hpp"
 #include "crab/casts.hpp"
-#include "crab/debug.hpp"
 #include "crab/mem/take.hpp"
-#include "crab/opt/none.hpp"
 #include "crab/ref.hpp"
 #include "crab/type_traits.hpp"
+
+#include "crab/opt/forward.hpp"
+
+#include "./impl/BoxStorage.hpp"
 
 // NOLINTBEGIN(*explicit*)
 
 namespace crab {
 
-  namespace box {
+  namespace boxed {
 
     /**
      * @brief Owned Pointer (RAII) to an instance of T on the heap, this is an owned smart pointer type with no interior
@@ -48,11 +50,6 @@ namespace crab {
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T>;
   }
 
-  namespace box::impl {
-    template<typename T>
-    struct BoxStorage;
-  }
-
   namespace opt {
 
     template<typename T>
@@ -62,12 +59,12 @@ namespace crab {
      * @brief Storage type
      */
     template<typename T>
-    struct Storage<::crab::box::Box<T>> final {
-      using type = box::impl::BoxStorage<T>;
+    struct Storage<::crab::boxed::Box<T>> final {
+      using type = boxed::impl::BoxStorage<T>;
     };
   }
 
-  namespace box {
+  namespace boxed {
     /**
      * @brief Owned Pointer (RAII) to an instance of T on the heap.
      *
@@ -257,7 +254,7 @@ namespace crab {
 
       [[nodiscard]] CRAB_INLINE constexpr auto clone() const& -> Box requires ty::copy_constructible<T>
       {
-        return box::make_box<T, const T&>(as_ref());
+        return boxed::make_box<T, const T&>(as_ref());
       }
 
       CRAB_INLINE constexpr auto clone_from(const Box& from) const& -> void
@@ -356,55 +353,12 @@ namespace crab {
     }
   }
 
-  using box::make_box;
-
-  namespace box::impl {
-
-    template<typename T>
-    struct BoxStorage final {
-      using Box = crab::box::Box<T>;
-
-      CRAB_INLINE constexpr explicit BoxStorage(Box value): inner{std::move(value)} {}
-
-      CRAB_INLINE constexpr explicit BoxStorage(const opt::None& = {}): inner{nullptr} {}
-
-      CRAB_INLINE constexpr auto operator=(Box&& value) -> BoxStorage& {
-        debug_assert(value.obj != nullptr, "Option<Box<T>>, BoxStorage::operator= called with an invalid box");
-        inner = std::move(value);
-        return *this;
-      }
-
-      CRAB_INLINE constexpr auto operator=(const opt::None&) -> BoxStorage& {
-        crab::discard(Box{std::move(inner)});
-        return *this;
-      }
-
-      [[nodiscard]] CRAB_INLINE constexpr auto value() const& -> const Box& {
-        return inner;
-      }
-
-      [[nodiscard]] CRAB_INLINE constexpr auto value() & -> Box& {
-        return inner;
-      }
-
-      [[nodiscard]] CRAB_INLINE constexpr auto value() && -> Box {
-        return std::move(inner);
-      }
-
-      [[nodiscard]] CRAB_INLINE constexpr auto in_use() const -> bool {
-        return inner.obj != nullptr;
-      }
-
-    private:
-
-      Box inner;
-    };
-  }
+  using boxed::make_box;
 
 } // namespace crab
 
 namespace crab::prelude {
-  using crab::box::Box;
+  using crab::boxed::Box;
 }
 
 CRAB_PRELUDE_GUARD;

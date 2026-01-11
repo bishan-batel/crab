@@ -5,7 +5,7 @@
 #include <functional>
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
-#include <crab/box.hpp>
+#include <crab/boxed/Box.hpp>
 #include <crab/ref.hpp>
 #include <crab/fn.hpp>
 #include <crab/range.hpp>

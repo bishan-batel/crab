@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iterator>
 
+#include "crab/core.hpp"
 #include "crab/num/integer.hpp"
 #include "crab/type_traits.hpp"
 #include "crab/assertion/assert.hpp"
@@ -26,30 +27,32 @@ namespace crab {
 
       CRAB_INLINE constexpr explicit Iterator(T pos): pos(pos) {}
 
-      [[nodiscard]] CRAB_INLINE constexpr auto operator*() const -> reference {
+      [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto operator*() const -> reference {
         return pos;
       }
 
-      [[nodiscard]] CRAB_INLINE constexpr auto operator->() -> pointer {
+      [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto operator->() -> pointer {
         return pos;
       }
 
-      CRAB_INLINE constexpr auto operator++() -> Iterator& {
+      CRAB_PURE CRAB_INLINE constexpr auto operator++() -> Iterator& {
         ++pos;
         return *this;
       }
 
-      [[nodiscard]] CRAB_INLINE constexpr auto operator++(int) -> Iterator {
+      [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto operator++(int) -> Iterator {
         Iterator tmp = *this;
         ++*this;
         return tmp;
       }
 
-      [[nodiscard]] CRAB_INLINE constexpr friend auto operator==(const Iterator& a, const Iterator& b) -> bool {
+      [[nodiscard]]
+      CRAB_PURE CRAB_INLINE constexpr friend auto operator==(const Iterator& a, const Iterator& b) -> bool {
         return a.pos == b.pos;
       };
 
-      [[nodiscard]] CRAB_INLINE constexpr friend auto operator!=(const Iterator& a, const Iterator& b) -> bool {
+      [[nodiscard]]
+      CRAB_PURE CRAB_INLINE constexpr friend auto operator!=(const Iterator& a, const Iterator& b) -> bool {
         return a.pos != b.pos;
       };
 
@@ -69,42 +72,42 @@ namespace crab {
     /**
      * Returns the lower bound of this range
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto upper_bound() const -> T {
+    [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto upper_bound() const -> T {
       return max;
     }
 
     /**
      * Returns the lower bound of this range
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto lower_bound() const -> T {
+    [[nodiscard]] CRAB_PURE constexpr auto lower_bound() const -> T {
       return min;
     }
 
     /**
      * Begin iterator position.
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto begin() const -> Iterator {
+    [[nodiscard]] CRAB_PURE constexpr auto begin() const -> Iterator {
       return Iterator{min};
     }
 
     /**
      * End iterator position.
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto end() const -> Iterator {
+    [[nodiscard]] CRAB_PURE constexpr auto end() const -> Iterator {
       return Iterator{max};
     }
 
     /**
      * Returns the length of this range
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto size() const -> usize {
+    [[nodiscard]] CRAB_PURE constexpr auto size() const -> usize {
       return static_cast<usize>(max - min);
     }
 
     /**
      * @brief Checks if the given value is within this range
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto contains(const T value) const -> bool {
+    [[nodiscard]] CRAB_PURE constexpr auto contains(const T value) const -> bool {
       return min <= value and value < max;
     }
   };
@@ -186,10 +189,11 @@ namespace crab {
   ) -> Range<T> {
     return range(max + 1, loc);
   }
+
 } // namespace crab
 
-#if CRAB_USE_PRELUDE
+namespace crab::prelude {
+  using crab::Range;
+}
 
-using crab::Range;
-
-#endif
+CRAB_PRELUDE_GUARD;

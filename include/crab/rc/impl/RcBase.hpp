@@ -43,20 +43,18 @@ namespace crab::rc::impl {
   public:
 
     RcBase(const RcBase& from): data{from.data}, counter{from.counter} {
-      // debug_assert(from.is_valid(), "Cannot copy from a moved-from RcBase");
+      debug_assert(from.is_valid(), "Cannot copy from a moved-from RcBase");
       counter->increment_strong();
     }
 
-    RcBase(RcBase&& from) noexcept: data{mem::take(from.data)}, counter{mem::take(from.counter)} {
-      // debug_assert(is_valid(), "Cannot move from a moved-from RcBase");
-    }
+    RcBase(RcBase&& from) noexcept: data{mem::take(from.data)}, counter{mem::take(from.counter)} {}
 
     constexpr RcBase& operator=(const RcBase& from) {
       if (mem::address_of(from) == this) [[unlikely]] {
         return *this;
       }
 
-      // debug_assert(from.is_valid(), "Cannot copy from a partially constructed RcBase");
+      debug_assert(from.is_valid(), "Cannot copy from a partially constructed RcBase");
 
       // if we are copying from another rcbase of the same counter, we can do nothing
       if (counter == from.counter) [[unlikely]] {
@@ -80,8 +78,6 @@ namespace crab::rc::impl {
       if (mem::address_of(from) == this) [[unlikely]] {
         return *this;
       }
-
-      // debug_assert(from.is_valid(), "Cannot move from a partially constructed RcBase");
 
       // if we are being assigned the same counter, we can just let it destruct and keep ours
       if (counter == from.counter) [[unlikely]] {

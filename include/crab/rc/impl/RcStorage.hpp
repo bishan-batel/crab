@@ -23,6 +23,40 @@ namespace crab {
         CRAB_INLINE constexpr explicit RcStorage(const opt::None& = {}):
             inner{RefCounted::from_owned_unchecked(nullptr, nullptr)} {}
 
+        CRAB_INLINE constexpr RcStorage(const RcStorage& storage):
+            inner{storage.in_use() ? storage.inner : RefCounted::from_owned_unchecked(nullptr, nullptr)} {}
+
+        CRAB_INLINE constexpr RcStorage(RcStorage&& storage):
+            inner{storage.in_use() ? storage.inner : RefCounted::from_owned_unchecked(nullptr, nullptr)} {}
+
+        CRAB_INLINE constexpr auto operator=(const RcStorage& value) -> RcStorage& {
+          if (&value == this) [[unlikely]] {
+            return *this;
+          }
+
+          if (value.in_use()) {
+            inner = mem::move(value.inner);
+          } else {
+            operator=(none);
+          }
+
+          return *this;
+        }
+
+        CRAB_INLINE constexpr auto operator=(RcStorage&& value) -> RcStorage& {
+          if (&value == this) [[unlikely]] {
+            return *this;
+          }
+
+          if (value.in_use()) {
+            inner = mem::move(value.inner);
+          } else {
+            operator=(none);
+          }
+
+          return *this;
+        }
+
         CRAB_INLINE constexpr auto operator=(RefCounted&& value) -> RcStorage& {
           inner = mem::move(value);
           return *this;

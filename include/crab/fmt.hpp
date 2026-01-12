@@ -12,9 +12,16 @@
 #pragma clang diagnostic ignored "-Wdeprecated-literal-operator"
 #endif
 
-#include <fmt/core.h>
-#include <fmt/base.h>
+#if CRAB_GCC_VERSION
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdangling-reference"
+#endif
+
 #include <fmt/format.h>
+
+#if CRAB_GCC_VERSION
+#pragma GCC diagnostic pop
+#endif
 
 #if CRAB_CLANG_VERSION
 #pragma clang diagnostic pop

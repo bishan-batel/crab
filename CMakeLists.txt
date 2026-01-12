@@ -62,59 +62,11 @@ configure_file(
         @ONLY
 )
 
+
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
-add_library(${PROJECT_NAME} INTERFACE
-        ./include/crab/boxed/Box.hpp 
-        ./include/crab/casts.hpp 
-
-        ./include/crab/cmp/max.hpp 
-        ./include/crab/cmp/min.hpp 
-
-        ./include/crab/core.hpp 
-        ./include/crab/fmt.hpp 
-        ./include/crab/fn.hpp 
-        ./include/crab/hash.hpp 
-
-        ./include/crab/mem/address_of.hpp 
-        ./include/crab/mem/copy.hpp 
-        ./include/crab/mem/forward.hpp 
-        ./include/crab/mem/mem.hpp 
-        ./include/crab/mem/move.hpp 
-        ./include/crab/mem/replace.hpp 
-        ./include/crab/mem/size_of.hpp 
-        ./include/crab/mem/swap.hpp 
-        ./include/crab/mem/take.hpp 
-
-        ./include/crab/opt/Option.hpp 
-        ./include/crab/opt/boolean_constructs.hpp 
-        ./include/crab/opt/fallible.hpp 
-        ./include/crab/opt/impl/GenericStorage.hpp 
-        ./include/crab/opt/impl/RefStorage.hpp 
-        ./include/crab/opt/impl/fallible.hpp 
-        ./include/crab/opt/none.hpp 
-        ./include/crab/opt/opt.hpp 
-        ./include/crab/opt/some.hpp 
-
-        ./include/crab/preamble.hpp 
-
-        ./include/crab/range.hpp 
-
-        ./include/crab/rc/impl/Counter.hpp 
-        ./include/crab/rc/impl/RcBase.hpp
-        ./include/crab/rc/impl/RcStorage.hpp
-        ./include/crab/rc/Rc.hpp 
-
-        ./include/crab/assertion/todo.hpp 
-
-        ./include/crab/core/unreachable.hpp 
-        ./include/crab/core/cases.hpp
-        ./include/crab/core/discard.hpp
-
-        ./include/crab/ref.hpp 
-        ./include/crab/result.hpp 
-        ./include/crab/type_traits.hpp
-)
+file(GLOB_RECURSE CRAB_SOURCES "include/*.hpp")
+add_library(${PROJECT_NAME} INTERFACE ${CRAB_SOURCES})
 
 # crab only supports C++20 and above
 # target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)

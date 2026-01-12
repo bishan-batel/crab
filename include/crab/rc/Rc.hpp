@@ -179,6 +179,14 @@ namespace crab::rc {
       return *this;
     }
 
+    [[nodiscard]] CRAB_INLINE constexpr operator const T&() const {
+      return this->as_ref();
+    }
+
+    [[nodiscard]] CRAB_INLINE constexpr operator const T*() const {
+      return this->as_ptr();
+    }
+
     [[nodiscard]] auto clone() const -> Rc {
       return *this;
     }

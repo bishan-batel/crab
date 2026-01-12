@@ -157,14 +157,6 @@ namespace crab::rc::impl {
       return as_ref();
     }
 
-    [[nodiscard]] CRAB_INLINE constexpr operator TConst&() const {
-      return as_ref();
-    }
-
-    [[nodiscard]] CRAB_INLINE constexpr operator TConst*() const {
-      return as_ptr();
-    }
-
     [[nodiscard]] constexpr auto is_valid() const -> bool {
       return data != nullptr and counter != nullptr;
     }

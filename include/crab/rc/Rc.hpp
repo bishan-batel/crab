@@ -42,13 +42,13 @@ namespace crab::rc {
 
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr auto operator=(const RcMut<Derived>& derived) -> RcMut& {
-      operator=(derived.template upcast<T>);
+      operator=(derived.template upcast<T>());
       return *this;
     }
 
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr auto operator=(RcMut<Derived>&& derived) -> RcMut& {
-      operator=(mem::move(derived).template upcast<T>);
+      operator=(mem::move(derived).template upcast<T>());
       return *this;
     }
 
@@ -142,13 +142,13 @@ namespace crab::rc {
 
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr auto operator=(const Rc<Derived>& derived) -> Rc& {
-      operator=(derived.template upcast<T>);
+      operator=(derived.template upcast<T>());
       return *this;
     }
 
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr auto operator=(Rc<Derived>&& derived) -> Rc& {
-      operator=(mem::move(derived).template upcast<T>);
+      operator=(mem::move(derived).template upcast<T>());
       return *this;
     }
 

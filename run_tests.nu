@@ -42,8 +42,9 @@ def "main windows" [] {
 def cmake_test [build_type: string, compiler: record] {
 	let builddir = $"build/_($compiler.name)_($build_type)"
 
+
 	print "> Setting up cmake"
-	cmake "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" -GNinja
+	cmake "-B" $builddir "-DCRAB_TESTS=ON" $"-DCMAKE_BUILD_TYPE=($build_type)" $"-DCMAKE_CXX_COMPILER=($compiler.cpp)" "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON" "-DCPM_USE_LOCAL_PACKAGES=OFF" $"-DCPM_SOURCE_CACHE=($env.HOME)/.cache/CPM" -GNinja
 	# $"-G($generator)" 
 
 	print "> Compiling"

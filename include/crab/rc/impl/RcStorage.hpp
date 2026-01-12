@@ -35,7 +35,7 @@ namespace crab {
           }
 
           if (value.in_use()) {
-            inner = mem::move(value.inner);
+            inner = value.inner;
           } else {
             operator=(none);
           }

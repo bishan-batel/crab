@@ -7,9 +7,8 @@
 #pragma once
 
 #include <concepts>
-#include <cstddef>
+#include <fmt/base.h>
 #include <functional>
-#include <iostream>
 #include <type_traits>
 
 #include "crab/assertion/assert.hpp"
@@ -886,24 +885,20 @@ namespace crab::opt {
   };
 }
 
-// TODO: change this into usage for std::formatter or fmt::formatter
-template<typename T>
-CRAB_INLINE constexpr auto operator<<(std::ostream& os, const ::crab::opt::Option<T>& opt) -> std::ostream& {
-  if (opt.is_none()) {
-    return os << "None";
+template<typename T, typename Char>
+struct fmt::formatter<::crab::opt::Option<T>, Char> : fmt::formatter<fmt::string_view> {
+
+  template<typename FormatContext>
+  auto format(const crab::opt::Option<T>& opt, FormatContext& ctx) const -> decltype(ctx.out()) {
+    formatter<T, Char> underlying{};
+
+    if (opt.is_some()) {
+      return fmt::format_to(ctx.out(), "Some({})", opt.get_unchecked());
+    } else {
+      return fmt::format_to(ctx.out(), "None");
+    }
   }
-
-  os << "Some(";
-
-  if constexpr (requires { os << opt.get_unchecked(); }) {
-    os << opt.get_unchecked();
-  } else {
-    os << typeid(T).name();
-  }
-  os << ")";
-
-  return os;
-}
+};
 
 template<typename T>
 struct std::hash<::crab::opt::Option<T>> /*NOLINT*/ {

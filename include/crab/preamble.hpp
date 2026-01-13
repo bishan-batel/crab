@@ -13,6 +13,7 @@
 #include <utility>
 #include <array>
 #include <span>
+#include <ranges>
 #include <vector>
 #include <unordered_set>
 #include <unordered_map>

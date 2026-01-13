@@ -39,4 +39,11 @@ TEST_CASE("AnyOf") {
 
     CHECK(value.as<MoveOnly>().is_some_and([](const MoveOnly& o) { return o.get_name() == "hello"; }));
   }
+  SECTION("match") {
+    using AnyOf = crab::any::AnyOf<i32, u32, f32, MoveOnly>;
+
+    AnyOf value{MoveOnly{"hello"}};
+    u8 tag{0};
+    value.match();
+  }
 }

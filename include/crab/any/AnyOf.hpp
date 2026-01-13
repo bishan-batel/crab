@@ -1,14 +1,18 @@
 #pragma once
 
-#include "crab/any/impl/AnyOfStorage.hpp"
-#include "crab/any/impl/Buffer.hpp"
+#include <variant>
 #include "crab/assertion/assert.hpp"
 #include "crab/core/cases.hpp"
 #include "crab/core/discard.hpp"
+#include "crab/fn/Func.hpp"
 #include "crab/mem/forward.hpp"
 #include "crab/core/SourceLocation.hpp"
 #include "crab/mem/size_of.hpp"
 #include "crab/type_traits.hpp"
+
+#include "crab/any/impl/AnyOfStorage.hpp"
+#include "crab/any/impl/Buffer.hpp"
+#include "crab/any/impl/visitor.hpp"
 
 namespace crab::any {
 
@@ -113,7 +117,16 @@ namespace crab::any {
     }
 
     template<typename... Fs>
-    auto match(Fs&&... functions) const& -> decltype(auto) {
+    [[nodiscard]] constexpr auto match(Fs&&... functions) const& -> decltype(auto) {
+      static_assert(sizeof...(Fs) != 0, "Must have at least one functor to match with");
+
+      using R = decltype(visit(
+        crab::cases{
+          mem::forward<Fs>(functions)...,
+        }
+      ));
+
+      static_assert(ty::not_void<R>);
       return visit(
         crab::cases{
           mem::forward<Fs>(functions)...,
@@ -121,17 +134,61 @@ namespace crab::any {
       );
     }
 
-    template<typename R = void>
-    auto visit(auto&& visitor) const& -> R {
-      static_requires((ty::consumer<decltype(visitor), const Ts&> and ...));
+    template<typename... Fs>
+    constexpr auto match(Fs&&... functions) const& -> void {
+      static_assert(sizeof...(Fs) != 0, "Must have at least one functor to match with");
+
+      using R = decltype(visit(
+        crab::cases{
+          mem::forward<Fs>(functions)...,
+        }
+      ));
+
+      static_assert(ty::same_as<R, void>);
+
+      visit(
+        crab::cases{
+          mem::forward<Fs>(functions)...,
+        }
+      );
+    }
+
+    template<impl::VisitorForTypes<const Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, const Ts&...>>
+    constexpr auto visit(Visitor&& visitor) const& -> R {
+      static_assert(
+        impl::VisitorForTypes<Visitor, const Ts&...>,
+        "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
+      );
+
+      ensure_valid();
+
+      std::visit(visitor);
+
+      constexpr std::array<Func<R(const AnyOf&)>, NumTypes> table{
+        [](const impl::Buffer<Size, Alignment>& buffer, Visitor&& visitor) {
+          const Ts& value{Storage<Ts>::as_ref(buffer)};
+
+          if constexpr (ty::not_void<R>) {
+            return std::invoke(visitor, value);
+          } else {
+            std::invoke(visitor, value);
+          }
+        }...
+      };
 
       if constexpr (ty::not_void<R>) {
-        visitor();
+        return std::invoke(table.at(index), buffer, mem::forward<Visitor>(visitor));
       } else {
+        std::invoke(table.at(index), buffer, mem::forward<Visitor>(visitor));
       }
     }
 
-    [[nodiscard]] CRAB_INLINE constexpr auto get_index() const -> usize {
+    template<ty::either<Ts...> T>
+    [[nodiscard]] constexpr auto is() const -> bool {
+      return get_index() == IndexOf<T>;
+    }
+
+    [[nodiscard]] constexpr auto get_index() const -> usize {
       ensure_valid();
 
       return index;
@@ -145,7 +202,7 @@ namespace crab::any {
 
     constexpr auto destruct() {
       crab::discard(([this]() -> bool {
-        if (index == IndexOf<Ts>) {
+        if (is<Ts>()) {
           Storage<Ts>::destroy(buffer);
           return true;
         }

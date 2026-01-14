@@ -116,41 +116,17 @@ namespace crab::any {
       return opt::Option<T&>{Storage<T>::as_ref(buffer)};
     }
 
-    template<typename... Fs>
-    [[nodiscard]] constexpr auto match(Fs&&... functions) const& -> decltype(auto) {
+    template<typename... Fs, typename R = impl::VisitorResultType<crab::cases<Fs...>, const Ts&...>>
+    [[nodiscard]] constexpr auto match(Fs&&... functions) const& -> R {
       static_assert(sizeof...(Fs) != 0, "Must have at least one functor to match with");
 
-      using R = decltype(visit(
-        crab::cases{
-          mem::forward<Fs>(functions)...,
-        }
-      ));
+      using Visitor = crab::cases<Fs...>;
 
-      static_assert(ty::not_void<R>);
-      return visit(
-        crab::cases{
-          mem::forward<Fs>(functions)...,
-        }
-      );
-    }
-
-    template<typename... Fs>
-    constexpr auto match(Fs&&... functions) const& -> void {
-      static_assert(sizeof...(Fs) != 0, "Must have at least one functor to match with");
-
-      using R = decltype(visit(
-        crab::cases{
-          mem::forward<Fs>(functions)...,
-        }
-      ));
-
-      static_assert(ty::same_as<R, void>);
-
-      visit(
-        crab::cases{
-          mem::forward<Fs>(functions)...,
-        }
-      );
+      if constexpr (ty::not_void<R>) {
+        return visit<Visitor, R>(Visitor{mem::forward<Fs>(functions)...});
+      } else {
+        visit<Visitor, R>(Visitor{mem::forward<Fs>(functions)...});
+      }
     }
 
     template<impl::VisitorForTypes<const Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, const Ts&...>>
@@ -162,10 +138,10 @@ namespace crab::any {
 
       ensure_valid();
 
-      std::visit(visitor);
+      using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
 
-      constexpr std::array<Func<R(const AnyOf&)>, NumTypes> table{
-        [](const impl::Buffer<Size, Alignment>& buffer, Visitor&& visitor) {
+      std::array<JumpTableFn, NumTypes> table{
+        [](const impl::Buffer<Size, Alignment>& buffer, Visitor visitor) {
           const Ts& value{Storage<Ts>::as_ref(buffer)};
 
           if constexpr (ty::not_void<R>) {
@@ -173,13 +149,13 @@ namespace crab::any {
           } else {
             std::invoke(visitor, value);
           }
-        }...
+        }...,
       };
 
       if constexpr (ty::not_void<R>) {
-        return std::invoke(table.at(index), buffer, mem::forward<Visitor>(visitor));
+        return table.at(index)(buffer, mem::forward<Visitor>(visitor));
       } else {
-        std::invoke(table.at(index), buffer, mem::forward<Visitor>(visitor));
+        table.at(index)(buffer, mem::forward<Visitor>(visitor));
       }
     }
 

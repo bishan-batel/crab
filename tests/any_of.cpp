@@ -1,6 +1,7 @@
 
 #include <catch2/catch_test_macros.hpp>
 
+#include "crab/core/discard.hpp"
 #include "crab/preamble.hpp"
 #include "crab/any/AnyOf.hpp"
 #include "test_static_asserts.hpp"
@@ -44,6 +45,11 @@ TEST_CASE("AnyOf") {
 
     AnyOf value{MoveOnly{"hello"}};
     u8 tag{0};
-    value.match();
+
+    String str = value.match([](const MoveOnly& bruh) { return bruh.get_name(); }, [](const auto&) { return "bruh"; });
+
+    crab::discard(tag, str);
+
+    CHECK(str == "hello");
   }
 }

@@ -40,16 +40,39 @@ TEST_CASE("AnyOf") {
 
     CHECK(value.as<MoveOnly>().is_some_and([](const MoveOnly& o) { return o.get_name() == "hello"; }));
   }
-  SECTION("match") {
+
+  SECTION("match / visit") {
     using AnyOf = crab::any::AnyOf<i32, u32, f32, MoveOnly>;
 
-    AnyOf value{MoveOnly{"hello"}};
-    u8 tag{0};
+    SECTION("mut") {
+      AnyOf value{MoveOnly{"hello"}};
 
-    String str = value.match([](const MoveOnly& bruh) { return bruh.get_name(); }, [](const auto&) { return "bruh"; });
+      value.match([](MoveOnly& m) { m.set_name("world"); }, [](auto&&) {});
 
-    crab::discard(tag, str);
+      REQUIRE(value.is<MoveOnly>());
+      CHECK(value.as<MoveOnly>().unwrap().get_name() == "world");
+    }
 
-    CHECK(str == "hello");
+    SECTION("const") {
+      const AnyOf value{MoveOnly{"hello"}};
+
+      CHECK(
+        value.match([](const MoveOnly& bruh) { return bruh.get_name(); }, [](const auto&) { return "bruh"; }) == "hello"
+      );
+    }
+
+    SECTION("visit returning reference type") {
+      const AnyOf value{MoveOnly{"hello"}};
+
+      String outer{"world"};
+
+      const crab::cases visitor{
+        [outer](const MoveOnly&) -> const String& { return outer; },
+        [outer](const auto&) -> const String& { return outer; },
+      };
+
+      const String& ref = value.visit<const decltype(visitor)&, const String&>(visitor);
+      CHECK(crab::mem::address_of(ref) == crab::mem::address_of(outer));
+    }
   }
 }

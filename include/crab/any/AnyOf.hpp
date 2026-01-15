@@ -18,6 +18,7 @@ namespace crab::any {
 
   template<typename... Ts>
   class AnyOf final {
+    static_assert((ty::non_reference<Ts> and ...), "Cannot construct an AnyOf with an reference");
     static_assert((ty::movable<Ts> and ...), "Cannot construct an AnyOf with an immovable Type");
     static_assert((ty::non_const<Ts> and ...), "Cannot have a variant of AnyOf be const");
 
@@ -129,6 +130,19 @@ namespace crab::any {
       }
     }
 
+    template<typename... Fs, typename R = impl::VisitorResultType<crab::cases<Fs...>, Ts&...>>
+    [[nodiscard]] constexpr auto match(Fs&&... functions) & -> R {
+      static_assert(sizeof...(Fs) != 0, "Must have at least one functor to match with");
+
+      using Visitor = crab::cases<Fs...>;
+
+      if constexpr (ty::not_void<R>) {
+        return visit<Visitor, R>(Visitor{mem::forward<Fs>(functions)...});
+      } else {
+        visit<Visitor, R>(Visitor{mem::forward<Fs>(functions)...});
+      }
+    }
+
     template<impl::VisitorForTypes<const Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, const Ts&...>>
     constexpr auto visit(Visitor&& visitor) const& -> R {
       static_assert(
@@ -138,10 +152,12 @@ namespace crab::any {
 
       ensure_valid();
 
-      using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
+      // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
+
+      using JumpTableFn = R (*)(const impl::Buffer<Size, Alignment>&, Visitor);
 
       std::array<JumpTableFn, NumTypes> table{
-        [](const impl::Buffer<Size, Alignment>& buffer, Visitor visitor) {
+        [](const impl::Buffer<Size, Alignment>& buffer, Visitor visitor) -> R {
           const Ts& value{Storage<Ts>::as_ref(buffer)};
 
           if constexpr (ty::not_void<R>) {
@@ -158,6 +174,40 @@ namespace crab::any {
         table.at(index)(buffer, mem::forward<Visitor>(visitor));
       }
     }
+
+    template<impl::VisitorForTypes<Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, Ts&...>>
+    constexpr auto visit(Visitor&& visitor) & -> R {
+      static_assert(
+        impl::VisitorForTypes<Visitor, Ts&...>,
+        "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
+      );
+
+      ensure_valid();
+
+      // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
+
+      using JumpTableFn = R (*)(impl::Buffer<Size, Alignment>&, Visitor);
+
+      std::array<JumpTableFn, NumTypes> table{
+        [](impl::Buffer<Size, Alignment>& buffer, Visitor visitor) -> R {
+          Ts& value{Storage<Ts>::as_ref(buffer)};
+
+          if constexpr (ty::not_void<R>) {
+            return std::invoke(visitor, value);
+          } else {
+            std::invoke(visitor, value);
+          }
+        }...,
+      };
+
+      if constexpr (ty::not_void<R>) {
+        return table.at(index)(buffer, mem::forward<Visitor>(visitor));
+      } else {
+        table.at(index)(buffer, mem::forward<Visitor>(visitor));
+      }
+    }
+
+    // TODO: rvalue qualified visit, match
 
     template<ty::either<Ts...> T>
     [[nodiscard]] constexpr auto is() const -> bool {

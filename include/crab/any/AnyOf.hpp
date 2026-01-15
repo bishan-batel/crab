@@ -1,7 +1,9 @@
 #pragma once
 
+#include <type_traits>
 #include <variant>
 #include "crab/assertion/assert.hpp"
+#include "crab/core.hpp"
 #include "crab/core/cases.hpp"
 #include "crab/core/discard.hpp"
 #include "crab/fn/Func.hpp"
@@ -17,10 +19,14 @@
 namespace crab::any {
 
   template<typename... Ts>
-  class AnyOf final {
-    static_assert((ty::non_reference<Ts> and ...), "Cannot construct an AnyOf with an reference");
-    static_assert((ty::movable<Ts> and ...), "Cannot construct an AnyOf with an immovable Type");
+  class AnyOf final : private impl::AnyOfConstructor<Ts>... {
+    static_assert(
+      ((ty::movable<Ts> or ty::is_reference<Ts>) and ...),
+      "Cannot construct an AnyOf with an immovable Type"
+    );
     static_assert((ty::non_const<Ts> and ...), "Cannot have a variant of AnyOf be const");
+
+  public:
 
     /**
      * The total number of different types
@@ -32,19 +38,26 @@ namespace crab::any {
     /**
      * The minimum sized storage buffer required for storage
      */
-    static constexpr usize Size{
-      std::max({mem::size_of<Ts>()...}),
-    };
+    static constexpr usize Size{impl::ByteSize<Ts...>};
 
     /**
      * The minimum alignment required for storage
      */
-    static constexpr usize Alignment{
-      std::max({alignof(Ts)...}),
-    };
+    static constexpr usize Alignment{impl::AlignOf<Ts...>};
+
+  private:
 
     template<ty::either<Ts...> T>
     using Storage = impl::AnyOfStorage<T>;
+
+    template<typename F>
+    static constexpr bool FunctorAcceptsMutRef = (ty::consumer<F, Ts&> or ...);
+
+    template<typename F>
+    static constexpr bool FunctorAcceptsConstRef = (ty::consumer<F, const Ts&> or ...);
+
+    template<typename F>
+    static constexpr bool FunctorAcceptsRvalue = (ty::consumer<F, Ts&&> or ...);
 
   public:
 
@@ -62,15 +75,6 @@ namespace crab::any {
       }() + ...);
     }();
 
-    template<typename F>
-    static constexpr bool FunctorAcceptsMutRef = (ty::consumer<F, Ts&> or ...);
-
-    template<typename F>
-    static constexpr bool FunctorAcceptsConstRef = (ty::consumer<F, const Ts&> or ...);
-
-    template<typename F>
-    static constexpr bool FunctorAcceptsRvalue = (ty::consumer<F, Ts&&> or ...);
-
     AnyOf(AnyOf&& from) = delete;
 
     AnyOf(const AnyOf& from) = delete;
@@ -79,11 +83,37 @@ namespace crab::any {
 
     auto operator=(const AnyOf& from) -> const AnyOf& = delete;
 
-    // NOLINTBEGIN(*explicit*)
-    template<ty::either<Ts...> T>
-    AnyOf(T&& value): index{IndexOf<T>} {
-      Storage<T>::construct(buffer, mem::forward<T>(value));
+  private:
+
+    template<usize I>
+    constexpr explicit AnyOf(const std::integral_constant<usize, I>&, NthType<I>&& value): index{I} {
+      Storage<NthType<I>>::construct(buffer, mem::forward<NthType<I>>(value));
     }
+
+  public:
+
+    // NOLINTBEGIN(*explicit*)
+    template<typename T>
+    constexpr AnyOf(T&& value) {
+      const auto& result{
+        impl_construct(mem::forward<T>(value), buffer),
+      };
+      index = IndexOf<typename std::remove_cvref_t<decltype(result)>::type>;
+    }
+
+    template<ty::either<Ts...> T>
+    [[nodiscard]] static constexpr auto from(T&& value) -> AnyOf {
+      return AnyOf{
+        std::integral_constant<usize, IndexOf<T>>{},
+        mem::forward<T>(value),
+      };
+    }
+
+  private:
+
+    using impl::AnyOfConstructor<Ts>::impl_construct...;
+
+  public:
 
     ~AnyOf() {
       if (not is_valid()) {
@@ -96,26 +126,42 @@ namespace crab::any {
     // NOLINTEND(*explicit*)
 
     template<ty::either<Ts...> T>
-    [[nodiscard]] constexpr auto as() -> opt::Option<const T&> {
+    [[nodiscard]] constexpr auto as() const -> opt::Option<const T&> {
       ensure_valid();
 
       if (get_index() != IndexOf<T>) {
         return {};
       }
 
-      return opt::Option<const T&>{Storage<T>::as_ref(buffer)};
+      return opt::Option<const T&>{as_unchecked<T>()};
     }
 
     template<ty::either<Ts...> T>
-    [[nodiscard]] constexpr auto as_mut() -> opt::Option<T&> {
+    [[nodiscard]] constexpr auto as() -> opt::Option<T&> {
       ensure_valid();
 
       if (get_index() != IndexOf<T>) {
         return {};
       }
 
-      return opt::Option<T&>{Storage<T>::as_ref(buffer)};
+      return opt::Option<T&>{as_unchecked<T>()};
     }
+
+  private:
+
+    template<ty::either<Ts...> T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() -> T& {
+      debug_assert(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() const -> const T& {
+      debug_assert(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+  public:
 
     template<typename... Fs, typename R = impl::VisitorResultType<crab::cases<Fs...>, const Ts&...>>
     [[nodiscard]] constexpr auto match(Fs&&... functions) const& -> R {
@@ -145,20 +191,24 @@ namespace crab::any {
 
     template<impl::VisitorForTypes<const Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, const Ts&...>>
     constexpr auto visit(Visitor&& visitor) const& -> R {
+
+      // ensure visitor has a call overload that can accept any type contained in this AnyOf
+
       static_assert(
         impl::VisitorForTypes<Visitor, const Ts&...>,
         "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
       );
 
+      // calling visit on a moved-from AnyOf is ill-formed
       ensure_valid();
 
       // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
 
-      using JumpTableFn = R (*)(const impl::Buffer<Size, Alignment>&, Visitor);
+      using JumpTableFn = R (*)(const AnyOf& self, Visitor);
 
       std::array<JumpTableFn, NumTypes> table{
-        [](const impl::Buffer<Size, Alignment>& buffer, Visitor visitor) -> R {
-          const Ts& value{Storage<Ts>::as_ref(buffer)};
+        [](const AnyOf& self, Visitor visitor) -> R {
+          const Ts& value{self.as_unchecked<Ts>()};
 
           if constexpr (ty::not_void<R>) {
             return std::invoke(visitor, value);
@@ -169,28 +219,32 @@ namespace crab::any {
       };
 
       if constexpr (ty::not_void<R>) {
-        return table.at(index)(buffer, mem::forward<Visitor>(visitor));
+        return table.at(index)(*this, mem::forward<Visitor>(visitor));
       } else {
-        table.at(index)(buffer, mem::forward<Visitor>(visitor));
+        table.at(index)(*this, mem::forward<Visitor>(visitor));
       }
     }
 
     template<impl::VisitorForTypes<Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, Ts&...>>
     constexpr auto visit(Visitor&& visitor) & -> R {
+
+      // ensure visitor has a call overload that can accept any type contained in this AnyOf
+
       static_assert(
         impl::VisitorForTypes<Visitor, Ts&...>,
         "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
       );
 
+      // calling visit on a moved-from AnyOf is ill-formed
       ensure_valid();
 
       // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
 
-      using JumpTableFn = R (*)(impl::Buffer<Size, Alignment>&, Visitor);
+      using JumpTableFn = R (*)(AnyOf& self, Visitor);
 
       std::array<JumpTableFn, NumTypes> table{
-        [](impl::Buffer<Size, Alignment>& buffer, Visitor visitor) -> R {
-          Ts& value{Storage<Ts>::as_ref(buffer)};
+        [](AnyOf& self, Visitor visitor) -> R {
+          Ts& value{self.as_unchecked<Ts>()};
 
           if constexpr (ty::not_void<R>) {
             return std::invoke(visitor, value);
@@ -201,9 +255,9 @@ namespace crab::any {
       };
 
       if constexpr (ty::not_void<R>) {
-        return table.at(index)(buffer, mem::forward<Visitor>(visitor));
+        return table.at(index)(*this, mem::forward<Visitor>(visitor));
       } else {
-        table.at(index)(buffer, mem::forward<Visitor>(visitor));
+        table.at(index)(*this, mem::forward<Visitor>(visitor));
       }
     }
 
@@ -216,7 +270,7 @@ namespace crab::any {
 
     [[nodiscard]] constexpr auto get_index() const -> usize {
       ensure_valid();
-
+      CRAB_ASSUME(index < NumTypes);
       return index;
     }
 
@@ -236,6 +290,10 @@ namespace crab::any {
       }() or ...));
     }
 
+    constexpr auto invalidate() {
+      index = static_cast<usize>(-1);
+    }
+
     CRAB_INLINE constexpr auto ensure_valid(const SourceLocation& loc = SourceLocation::current()) const -> void {
       debug_assert_transparent(is_valid(), loc, "Invalid use of a moved-from AnyOf");
     }
@@ -244,3 +302,9 @@ namespace crab::any {
     usize index;
   };
 }
+
+namespace crab::prelude {
+  using any::AnyOf;
+}
+
+CRAB_PRELUDE_GUARD;

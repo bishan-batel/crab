@@ -1,4 +1,5 @@
 
+#include <alloca.h>
 #include <catch2/catch_test_macros.hpp>
 
 #include "crab/core/discard.hpp"
@@ -72,7 +73,44 @@ TEST_CASE("AnyOf") {
       };
 
       const String& ref = value.visit<const decltype(visitor)&, const String&>(visitor);
-      CHECK(crab::mem::address_of(ref) == crab::mem::address_of(outer));
+      CHECK(&ref == &outer);
+    }
+  }
+
+  SECTION("Reference types") {
+    const u32 a{10};
+    u32 b{10};
+
+    {
+      AnyOf<const u32&> value{a};
+      CHECK(value.is<const u32&>());
+    }
+
+    {
+      AnyOf<const u32&> value{b};
+      CHECK(value.is<const u32&>());
+    }
+
+    {
+      AnyOf<const u32&, u32&> value{a};
+      CHECK(value.is<const u32&>());
+    }
+
+    {
+      AnyOf<const u32&, u32&> value{b};
+      CHECK(value.is<u32&>());
+    }
+
+    {
+      AnyOf<const u32&, u32&> value{crab::implicit_cast<const u32&>(b)};
+      CHECK(value.is<const u32&>());
+    }
+
+    {
+      auto value{
+        AnyOf<const u32&, u32&>::from<const u32&>(b),
+      };
+      CHECK(value.is<const u32&>());
     }
   }
 }

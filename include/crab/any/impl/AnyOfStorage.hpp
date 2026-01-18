@@ -8,6 +8,7 @@
 #include "crab/mem/size_of.hpp"
 #include "crab/mem/address_of.hpp"
 #include "crab/mem/forward.hpp"
+#include "crab/mem/move.hpp"
 
 namespace crab::any::impl {
 
@@ -47,6 +48,29 @@ namespace crab::any::impl {
     }
 
     template<usize Size, usize Align>
+    static auto move(Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      contruct(to, mem::move(as_ref(from.buffer)));
+    }
+
+    template<usize Size, usize Align>
+    static auto copy(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      static_assert(ty::copyable<T>, "Cannot use copy on a non-copyable type");
+
+      contruct(to, as_ref(from.buffer));
+    }
+
+    template<usize Size, usize Align>
+    static auto move_assign(Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      as_ref(to) = mem::move(as_ref(from.buffer));
+    }
+
+    template<usize Size, usize Align>
+    static auto copy_assign(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      static_assert(ty::movable<T>, "Cannot use copy on a non-copyable type");
+      as_ref(to) = implicit_cast<const T&>(as_ref(from.buffer));
+    }
+
+    template<usize Size, usize Align>
     CRAB_PURE static auto as_ref(Buffer<Size, Align>& buffer) -> T& {
       return *as_ptr(buffer);
     }
@@ -72,6 +96,8 @@ namespace crab::any::impl {
   template<typename T>
   struct AnyOfStorage<T&> final {
 
+    static_assert(false); // should not be used in evaluated contexts
+
     template<usize Size, usize Align>
     static auto construct(Buffer<Size, Align>& buffer, T& ref) -> void {
       T** ptr{buffer.template as_ptr<T*>()};
@@ -83,6 +109,31 @@ namespace crab::any::impl {
 
     template<usize Size, usize Align>
     CRAB_PURE static auto as_ref(const Buffer<Size, Align>& buffer) -> const T& {
+      return *as_ptr(buffer);
+    }
+
+    template<usize Size, usize Align>
+    static auto move(Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      copy(from, to);
+    }
+
+    template<usize Size, usize Align>
+    static auto copy(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      contruct(to, as_ref(from.buffer));
+    }
+
+    template<usize Size, usize Align>
+    static auto move_assign(Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      copy(from, to);
+    }
+
+    template<usize Size, usize Align>
+    static auto copy_assign(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
+      contruct(to, as_ref(from.buffer));
+    }
+
+    template<usize Size, usize Align>
+    CRAB_PURE static auto as_ref(Buffer<Size, Align>& buffer) -> T& {
       return *as_ptr(buffer);
     }
   };

@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <variant>
 #include "crab/assertion/assert.hpp"
+#include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
 #include "crab/core/cases.hpp"
 #include "crab/core/discard.hpp"
@@ -25,6 +26,11 @@ namespace crab::any {
       "Cannot construct an AnyOf with an immovable Type"
     );
     static_assert((ty::non_const<Ts> and ...), "Cannot have a variant of AnyOf be const");
+
+    static_assert(
+      (not ty::same_as<Ts, AnyOf> and ...),
+      "Cannot have an AnyOf<Ts...> instantiate that recursively contains itself."
+    );
 
   public:
 
@@ -75,20 +81,14 @@ namespace crab::any {
       }() + ...);
     }();
 
-    AnyOf(AnyOf&& from) = delete;
-
-    AnyOf(const AnyOf& from) = delete;
-
-    auto operator=(AnyOf&& from) -> AnyOf& = delete;
-
-    auto operator=(const AnyOf& from) -> const AnyOf& = delete;
-
   private:
 
     template<usize I>
     constexpr explicit AnyOf(const std::integral_constant<usize, I>&, NthType<I>&& value): index{I} {
       Storage<NthType<I>>::construct(buffer, mem::forward<NthType<I>>(value));
     }
+
+    using impl::AnyOfConstructor<Ts>::impl_construct...;
 
   public:
 
@@ -101,17 +101,82 @@ namespace crab::any {
       index = IndexOf<typename std::remove_cvref_t<decltype(result)>::type>;
     }
 
+    constexpr AnyOf(AnyOf&& from) noexcept((std::is_nothrow_move_constructible_v<Ts> and ...)): index{from.index} {
+      crab_check(from.is_valid(), "Cannot construct AnyOf from an invalid (moved-from) AnyOf");
+
+      ([this, &from]() {
+        if (index != IndexOf<Ts>) {
+          return false;
+        }
+
+        Storage<Ts>::move(from.buffer, buffer);
+        return true;
+      } or ...);
+
+      from.destroy();
+      from.invalidate();
+    }
+
+    constexpr AnyOf(const AnyOf& from) requires(ty::copyable<Ts> and ...)
+        : index{from.index} {
+      crab_check(from.is_valid(), "Cannot construct AnyOf from an invalid (moved-from) AnyOf");
+
+      static_assert(
+        (ty::copyable<Ts> and ...),
+        "Cannot copy construct an AnyOf<Ts...> that may contain a non copyable type."
+      );
+
+      ([this, &from]() {
+        if (index != IndexOf<Ts>) {
+          return false;
+        }
+
+        Storage<Ts>::copy(from.buffer, buffer);
+        return true;
+      } or ...);
+
+      from.destroy();
+      from.invalidate();
+    }
+
+    auto operator=(const AnyOf& from) -> AnyOf& {
+      if (mem::address_of(from) == this) [[unlikely]] {
+        return *this;
+      }
+
+      if (from.index == index) {
+        ([this, &from]() {
+          if (index != IndexOf<Ts>) {
+            return false;
+          }
+
+          Storage<Ts>::copy_asign(from.buffer, buffer);
+          return true;
+        } or ...);
+        return *this;
+      }
+
+      ([this, &from]() {
+        if (index != IndexOf<Ts>) {
+          return false;
+        }
+
+        Storage<Ts>::copy(from.buffer, buffer);
+        return true;
+      } or ...);
+
+      return *this;
+    }
+
+    auto operator=(AnyOf&& from) -> AnyOf& = delete;
+
     template<ty::either<Ts...> T>
-    [[nodiscard]] static constexpr auto from(T&& value) -> AnyOf {
+    [[nodiscard]] static constexpr auto from(T value) -> AnyOf {
       return AnyOf{
         std::integral_constant<usize, IndexOf<T>>{},
         mem::forward<T>(value),
       };
     }
-
-  private:
-
-    using impl::AnyOfConstructor<Ts>::impl_construct...;
 
   public:
 
@@ -120,7 +185,7 @@ namespace crab::any {
         return;
       }
 
-      destruct();
+      destroy();
     }
 
     // NOLINTEND(*explicit*)
@@ -150,15 +215,27 @@ namespace crab::any {
   private:
 
     template<ty::either<Ts...> T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() -> T& {
-      debug_assert(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() & -> T& {
+      crab_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
       return Storage<T>::as_ref(buffer);
     }
 
     template<ty::either<Ts...> T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() const -> const T& {
-      debug_assert(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() const& -> const T& {
+      crab_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
       return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() && -> T {
+      crab_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+
+      T value{mem::forward<T>(Storage<T>::as_ref(buffer))};
+
+      destroy();
+      invalidate();
+
+      return value;
     }
 
   public:
@@ -189,6 +266,19 @@ namespace crab::any {
       }
     }
 
+    template<typename... Fs, typename R = impl::VisitorResultType<crab::cases<Fs...>, Ts&&...>>
+    [[nodiscard]] constexpr auto match(Fs&&... functions) && -> R {
+      static_assert(sizeof...(Fs) != 0, "Must have at least one functor to match with");
+
+      using Visitor = crab::cases<Fs...>;
+
+      if constexpr (ty::not_void<R>) {
+        return std::move(*this).template visit<Visitor, R>(Visitor{mem::forward<Fs>(functions)...});
+      } else {
+        std::move(*this).template visit<Visitor, R>(Visitor{mem::forward<Fs>(functions)...});
+      }
+    }
+
     template<impl::VisitorForTypes<const Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, const Ts&...>>
     constexpr auto visit(Visitor&& visitor) const& -> R {
 
@@ -206,7 +296,7 @@ namespace crab::any {
 
       using JumpTableFn = R (*)(const AnyOf& self, Visitor);
 
-      std::array<JumpTableFn, NumTypes> table{
+      const std::array<JumpTableFn, NumTypes> table{
         [](const AnyOf& self, Visitor visitor) -> R {
           const Ts& value{self.as_unchecked<Ts>()};
 
@@ -242,7 +332,7 @@ namespace crab::any {
 
       using JumpTableFn = R (*)(AnyOf& self, Visitor);
 
-      std::array<JumpTableFn, NumTypes> table{
+      const std::array<JumpTableFn, NumTypes> table{
         [](AnyOf& self, Visitor visitor) -> R {
           Ts& value{self.as_unchecked<Ts>()};
 
@@ -261,7 +351,41 @@ namespace crab::any {
       }
     }
 
-    // TODO: rvalue qualified visit, match
+    template<impl::VisitorForTypes<Ts&&...> Visitor, typename R = impl::VisitorResultType<Visitor, Ts&&...>>
+    constexpr auto visit(Visitor&& visitor) && -> R {
+
+      // ensure visitor has a call overload that can accept any type contained in this AnyOf
+
+      static_assert(
+        impl::VisitorForTypes<Visitor, Ts&&...>,
+        "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
+      );
+
+      // calling visit on a moved-from AnyOf is ill-formed
+      ensure_valid();
+
+      // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
+
+      using JumpTableFn = R (*)(AnyOf self, Visitor);
+
+      const std::array<JumpTableFn, NumTypes> table{
+        [](AnyOf self, Visitor visitor) -> R {
+          Ts& value{mem::move(self).template as_unchecked<Ts>()};
+
+          if constexpr (ty::not_void<R>) {
+            return std::invoke(visitor, value);
+          } else {
+            std::invoke(visitor, value);
+          }
+        }...,
+      };
+
+      if constexpr (ty::not_void<R>) {
+        return table.at(index)(mem::move(*this), mem::forward<Visitor>(visitor));
+      } else {
+        table.at(index)(mem::move(*this), mem::forward<Visitor>(visitor));
+      }
+    }
 
     template<ty::either<Ts...> T>
     [[nodiscard]] constexpr auto is() const -> bool {
@@ -280,7 +404,7 @@ namespace crab::any {
 
   private:
 
-    constexpr auto destruct() {
+    constexpr auto destroy() {
       crab::discard(([this]() -> bool {
         if (is<Ts>()) {
           Storage<Ts>::destroy(buffer);
@@ -295,7 +419,7 @@ namespace crab::any {
     }
 
     CRAB_INLINE constexpr auto ensure_valid(const SourceLocation& loc = SourceLocation::current()) const -> void {
-      debug_assert_transparent(is_valid(), loc, "Invalid use of a moved-from AnyOf");
+      crab_check_with_location(is_valid(), loc, "Invalid use of a moved-from AnyOf");
     }
 
     impl::Buffer<Size, Alignment> buffer;

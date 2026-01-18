@@ -1,16 +1,12 @@
 #pragma once
 
 #include <type_traits>
-#include <variant>
-#include "crab/assertion/assert.hpp"
 #include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
 #include "crab/core/cases.hpp"
 #include "crab/core/discard.hpp"
-#include "crab/fn/Func.hpp"
 #include "crab/mem/forward.hpp"
 #include "crab/core/SourceLocation.hpp"
-#include "crab/mem/size_of.hpp"
 #include "crab/type_traits.hpp"
 
 #include "crab/any/impl/AnyOfStorage.hpp"
@@ -292,8 +288,6 @@ namespace crab::any {
       // calling visit on a moved-from AnyOf is ill-formed
       ensure_valid();
 
-      // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
-
       using JumpTableFn = R (*)(const AnyOf& self, Visitor);
 
       const std::array<JumpTableFn, NumTypes> table{
@@ -327,8 +321,6 @@ namespace crab::any {
 
       // calling visit on a moved-from AnyOf is ill-formed
       ensure_valid();
-
-      // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
 
       using JumpTableFn = R (*)(AnyOf& self, Visitor);
 

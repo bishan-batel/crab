@@ -18,19 +18,19 @@
 #define CRAB_RELEASE 0
 #endif
 
-#ifdef __APPLE__
+#if defined(__APPLE__) && __APPLE__
 #define CRAB_OSX __APPLE__
 #else
 #define CRAB_OSX 0
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && _WIN32
 #define CRAB_WIN32 _WIN32
 #else
 #define CRAB_WIN32 0
 #endif
 
-#ifdef __linux__
+#if defined(__linux__) && __linux__
 #define CRAB_LINUX __linux__
 #else
 #define CRAB_LINUX 0

@@ -12,6 +12,7 @@
 #include <type_traits>
 
 #include "crab/assertion/assert.hpp"
+#include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
 #include "crab/hash.hpp"
 
@@ -315,7 +316,7 @@ namespace crab::opt {
      * this method is called this option is 'None'
      */
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
-      debug_assert_transparent(is_some(), loc, "Cannot unwrap a none option");
+      crab_check_with_location(is_some(), loc, "Cannot unwrap a none option");
 
       return mem::move(storage).value();
     }
@@ -325,7 +326,7 @@ namespace crab::opt {
      * this option is none this will panic & crash.
      */
     [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) -> T& {
-      debug_assert_transparent(is_some(), loc, "Cannot get_unchecked a none option");
+      crab_check_with_location(is_some(), loc, "Cannot get_unchecked a none option");
 
       return storage.value();
     }
@@ -336,7 +337,7 @@ namespace crab::opt {
      */
     [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) const
       -> const T& {
-      debug_assert_transparent(is_some(), loc, "Cannot get_unchecked a none option");
+      crab_check_with_location(is_some(), loc, "Cannot get_unchecked a none option");
 
       return storage.value();
     }

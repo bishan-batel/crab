@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Counter.hpp"
+#include "crab/assertion/check.hpp"
 #include "crab/mem/address_of.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/type_traits.hpp"
@@ -25,11 +26,11 @@ namespace crab::rc::impl {
     auto destroy() {
 
       if (counter == nullptr) [[unlikely]] {
-        debug_assert(data == nullptr, "No counter paired with data");
+        crab_check(data == nullptr, "No counter paired with data");
         return;
       }
 
-      debug_assert(data != nullptr, "No data paired with counter");
+      crab_check(data != nullptr, "No data paired with counter");
 
       // if decrementing the strong counter leaves it 0 and the counter has 0 weak references, delete it
       if (counter->decrement_strong() and not counter->has_any_weak()) {
@@ -43,7 +44,7 @@ namespace crab::rc::impl {
   public:
 
     RcBase(const RcBase& from): data{from.data}, counter{from.counter} {
-      debug_assert(from.is_valid(), "Cannot copy from a moved-from RcBase");
+      crab_check(from.is_valid(), "Cannot copy from a moved-from RcBase");
       counter->increment_strong();
     }
 
@@ -54,7 +55,7 @@ namespace crab::rc::impl {
         return *this;
       }
 
-      debug_assert(from.is_valid(), "Cannot copy from a partially constructed RcBase");
+      crab_check(from.is_valid(), "Cannot copy from a partially constructed RcBase");
 
       // if we are copying from another rcbase of the same counter, we can do nothing
       if (counter == from.counter) [[unlikely]] {
@@ -109,7 +110,7 @@ namespace crab::rc::impl {
     }
 
     [[nodiscard]] constexpr auto get_ref_count_unchecked() const -> usize {
-      debug_assert(counter != nullptr, "canot read from null counter");
+      crab_dbg_check(counter != nullptr, "canot read from null counter");
 
       return counter->strong_count();
     }
@@ -123,7 +124,7 @@ namespace crab::rc::impl {
     }
 
     [[nodiscard]] constexpr auto get_weak_ref_count_unchecked() const -> usize {
-      debug_assert(counter != nullptr, "canot read from null counter");
+      crab_dbg_check(counter != nullptr, "canot read from null counter");
       return counter->weak_count();
     }
 
@@ -198,7 +199,7 @@ namespace crab::rc::impl {
   protected:
 
     CRAB_INLINE constexpr auto assert_valid(const SourceLocation& loc = SourceLocation::current()) const {
-      debug_assert_transparent(
+      crab_check_with_location(
         is_valid(),
         loc,
         "Invalid use of partially constructed Rc/RcMut (most likely an use after move)"

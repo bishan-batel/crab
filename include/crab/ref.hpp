@@ -128,7 +128,7 @@ namespace crab::ref {
      * Gets underlying pointer, this pointer is always non null
      *
      */
-    [[nodiscard]] CRAB_INLINE constexpr T* as_ptr() const {
+    [[nodiscard]] CRAB_RETURNS_NONNULL CRAB_INLINE constexpr T* as_ptr() const {
       return pointer;
     }
 

@@ -111,7 +111,7 @@ namespace crab::rc {
           mem::take(from.data),
           mem::take(from.counter),
         } {
-      debug_assert(this->is_valid(), "Cannot move from a moved-from RcMut");
+      crab_check(this->is_valid(), "Cannot move from a moved-from RcMut");
     }
 
     CRAB_INLINE constexpr Rc(const RcMut<T, IsAtomic>& from): Rc{reinterpret_cast<const Rc&>(from)} {
@@ -157,7 +157,7 @@ namespace crab::rc {
     }
 
     constexpr auto operator=(RcMut<T, IsAtomic>&& from) -> Rc& {
-      debug_assert(from.is_valid(), "Cannot move from partially constructed RcMut");
+      crab_check(from.is_valid(), "Cannot move from partially constructed RcMut");
 
       if (this->counter == from.counter) [[unlikely]] {
         return *this;

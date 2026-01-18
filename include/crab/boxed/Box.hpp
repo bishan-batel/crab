@@ -6,6 +6,7 @@
 
 #include <utility>
 
+#include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
 #include "crab/casts.hpp"
 #include "crab/mem/take.hpp"
@@ -134,7 +135,7 @@ namespace crab {
       template<std::derived_from<T> Derived>
       CRAB_INLINE constexpr Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
           Box{Box<Derived>::unwrap(std::move(from))} {
-        debug_assert_transparent(obj != nullptr, loc, "Invalid Box, moved from invalid box.");
+        crab_check_with_location(obj != nullptr, loc, "Invalid Box, moved from invalid box.");
       }
 
       /**
@@ -232,13 +233,13 @@ namespace crab {
       }
 
       [[nodiscard]] CRAB_INLINE constexpr auto as_ptr_mut(const SourceLocation loc = SourceLocation::current()) -> T* {
-        debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
+        crab_check_with_location(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
 
       [[nodiscard]] CRAB_INLINE constexpr auto as_ptr(const SourceLocation loc = SourceLocation::current()) const
         -> const T* {
-        debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
+        crab_check_with_location(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
 
@@ -328,7 +329,7 @@ namespace crab {
     private:
 
       [[nodiscard]] CRAB_INLINE constexpr auto raw_ptr(const SourceLocation loc = SourceLocation::current()) -> T*& {
-        debug_assert_transparent(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
+        crab_check_with_location(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
     };

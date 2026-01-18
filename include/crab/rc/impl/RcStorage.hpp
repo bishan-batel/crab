@@ -8,10 +8,10 @@
 namespace crab {
 
   namespace rc {
-    template<typename, bool>
+    template<typename T>
     class Rc;
 
-    template<typename, bool>
+    template<typename T>
     class RcMut;
 
     namespace impl {
@@ -96,14 +96,14 @@ namespace crab {
     template<typename T>
     struct Storage;
 
-    template<typename T, bool IsAtomic>
-    struct Storage<rc::Rc<T, IsAtomic>> final {
-      using type = rc::impl::RcStorage<rc::Rc<T, IsAtomic>>;
+    template<typename T>
+    struct Storage<rc::Rc<T>> final {
+      using type = rc::impl::RcStorage<rc::Rc<T>>;
     };
 
-    template<typename T, bool IsAtomic>
-    struct Storage<rc::RcMut<T, IsAtomic>> final {
-      using type = rc::impl::RcStorage<rc::RcMut<T, IsAtomic>>;
+    template<typename T>
+    struct Storage<rc::RcMut<T>> final {
+      using type = rc::impl::RcStorage<rc::RcMut<T>>;
     };
   }
 }

@@ -1,39 +1,40 @@
 #pragma once
 
+#include "crab/assertion/check.hpp"
 #include "crab/core/SourceLocation.hpp"
 #include "crab/type_traits.hpp"
 
 #include <atomic>
 
 namespace crab::rc::impl {
-  template<bool IsAtomic>
-  class Counter {
+  class Counter final {
 
   public:
 
-    explicit Counter(usize strong_count = 1, usize weak_count = 0): strong{strong_count}, weak{weak_count} {}
+    explicit CRAB_INLINE Counter(usize strong_count = 1, usize weak_count = 0):
+        strong{strong_count}, weak{weak_count} {}
 
-    constexpr auto increment_strong() -> void {
+    constexpr CRAB_INLINE auto increment_strong() -> void {
       strong++;
     }
 
-    constexpr auto increment_weak() -> void {
+    constexpr CRAB_INLINE auto increment_weak() -> void {
       weak++;
     }
 
-    [[nodiscard]] constexpr auto has_any_strong() const -> bool {
+    [[nodiscard]] constexpr CRAB_INLINE auto has_any_strong() const -> bool {
       return strong != 0;
     }
 
-    [[nodiscard]] constexpr auto has_any_weak() const -> bool {
+    [[nodiscard]] constexpr CRAB_INLINE auto has_any_weak() const -> bool {
       return weak != 0;
     }
 
-    [[nodiscard]] constexpr auto strong_count() const -> usize {
+    [[nodiscard]] constexpr CRAB_INLINE auto strong_count() const -> usize {
       return strong;
     }
 
-    [[nodiscard]] constexpr auto weak_count() const -> usize {
+    [[nodiscard]] constexpr CRAB_INLINE auto weak_count() const -> usize {
       return weak;
     }
 
@@ -42,10 +43,13 @@ namespace crab::rc::impl {
      *
      * Returns whether this leaves the counter at 0
      */
-    [[nodiscard]] constexpr auto decrement_strong(const SourceLocation& loc = SourceLocation::current()) -> bool {
-      debug_assert_transparent(strong != 0, loc, "Counter::decrement should not cause unsigned underflow");
+    [[nodiscard]]
+    constexpr CRAB_INLINE auto decrement_strong(const SourceLocation& loc = SourceLocation::current()) -> bool {
+      crab_dbg_check_with_location(strong != 0, loc, "Counter::decrement should not cause unsigned underflow");
 
-      return --strong == 0;
+      strong--;
+
+      return strong == 0;
     }
 
     /**
@@ -53,14 +57,18 @@ namespace crab::rc::impl {
      *
      * Returns whether this leaves the counter at 0
      */
-    [[nodiscard]] constexpr auto decrement_weak(const SourceLocation& loc = SourceLocation::current()) -> bool {
-      debug_assert_transparent(strong != 0, loc, "Counter::decrement should not cause unsigned underflow");
+    [[nodiscard]]
+    constexpr CRAB_INLINE auto decrement_weak(const SourceLocation& loc = SourceLocation::current()) -> bool {
+      crab_dbg_check_with_location(strong != 0, loc, "Counter::decrement should not cause unsigned underflow");
 
-      return --weak == 0;
+      weak--;
+
+      return weak == 0;
     }
 
   private:
 
+    static constexpr bool IsAtomic = false;
     ty::conditional<IsAtomic, std::atomic_size_t, usize> strong{}, weak{};
   };
 

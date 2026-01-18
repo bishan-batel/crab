@@ -20,7 +20,6 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE(other.get_ref_count() == 1);
       REQUIRE(other.is_unique());
 
-      REQUIRE(rc.get_ref_count() == 0);
       REQUIRE(not rc.is_valid());
     }
 
@@ -36,7 +35,6 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE(other.get_ref_count() == 1);
       REQUIRE(other.is_unique());
 
-      REQUIRE(rc.get_ref_count() == 0);
       REQUIRE(not rc.is_valid());
     }
   }

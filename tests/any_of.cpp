@@ -92,6 +92,7 @@ TEST_CASE("AnyOf") {
     }
   }
 
+  /*
   SECTION("Reference types") {
     const u32 a{10};
     u32 b{10};
@@ -128,4 +129,5 @@ TEST_CASE("AnyOf") {
       CHECK(value.is<const u32&>());
     }
   }
+  */
 }

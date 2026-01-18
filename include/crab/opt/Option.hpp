@@ -610,8 +610,8 @@ namespace crab::opt {
      * Checks if this result contains a value, and if so does it also
      * match with the given predicate
      *
-     * Option<i32>{10}.is_ok_and(crab::fn::even) -> true
-     * Option<i32>{10}.is_ok_and(crab::fn::odd) -> false
+     * `Option<i32>{10}.is_ok_and(crab::fn::even) -> true`
+     * `Option<i32>{10}.is_ok_and(crab::fn::odd) -> false`
      */
     template<crab::ty::predicate<const T&> F>
     [[nodiscard]] CRAB_INLINE constexpr auto is_some_and(F&& functor) const -> bool {

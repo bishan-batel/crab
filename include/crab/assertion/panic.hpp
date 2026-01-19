@@ -1,7 +1,15 @@
 #pragma once
 
+#include <array>
+#include <cstdlib>
+#include <iomanip>
 #include <iostream>
+#include <span>
 #include <stdexcept>
+
+#if CRAB_UNIX
+#include <execinfo.h>
+#endif
 
 #include "crab/core/SourceLocation.hpp"
 #include "crab/fn/Func.hpp"
@@ -76,60 +84,57 @@ namespace crab::assertion {
       stream << msg.location.function_name();
       stream << "'\n";
 
-#if false
-#if CRAB_UNIX 
-    ansii(ansii_white_bold);
+      if (StringView{"1"} == std::getenv("CRAB_BACKTRACE")) {
+#if CRAB_UNIX
+        ansii(ansii_white_bold);
 
-    stream << std::setw(15);
-    stream << "Backtrace: " << '\n';
+        stream << std::setw(15);
+        stream << "Backtrace: " << '\n';
 
-    SizedArray<void*, MAX_BACKTRACE_STACKFRAMES> buffer{};
+        std::array<void*, MAX_BACKTRACE_STACKFRAMES> buffer{};
 
-    backtrace(buffer.data(), buffer.size());
+        backtrace(buffer.data(), buffer.size());
 
-    usize count = 0;
+        usize count = 0;
 
-    for (const void* v: buffer) {
-      if (v == nullptr) {
-        continue;
-      }
+        for (const void* v: buffer) {
+          if (v == nullptr) {
+            continue;
+          }
 
-      count++;
-    }
-
-    Span<char*> symbols{backtrace_symbols(buffer.data(), static_cast<int>(count)), count};
-
-    if (not symbols.empty()) {
-      for (const char* symbol: symbols) {
-        if (symbol == nullptr) {
-          break;
+          count++;
         }
 
-        stream << "\t " << symbol << '\n';
-      }
+        std::span<char*> symbols{backtrace_symbols(buffer.data(), static_cast<int>(count)), count};
 
-      free(symbols.data());
-    } else {
-      stream << "\t Failed to get backtrace" << '\n';
-    }
+        if (not symbols.empty()) {
+          for (const char* symbol: symbols) {
+            if (symbol == nullptr) {
+              break;
+            }
+
+            stream << "\t " << symbol << '\n';
+          }
+
+          free(symbols.data());
+        } else {
+          stream << "\t Failed to get backtrace" << '\n';
+        }
 #else
-    stream << "\t Failed to get backtrace" << '\n';
+        stream << "\t Failed to get backtrace" << '\n';
 #endif
-#endif
+      }
 
       ansii(ansii_reset);
       stream << '\n';
     }
 
     inline static auto trivial_handler(PanicInfo info) -> void {
+
 #if CRAB_THROW_ON_DEFAULT_PANIC
       throw std::runtime_error{mem::move(info.message)};
 #else
-      log_panic_to_stream( //
-        std::cerr,         //
-        term::try_enable_ansi(term::Handle::Error),
-        info
-      );
+      log_panic_to_stream(std::cerr, term::try_enable_ansi(term::Handle::Error), info);
       std::abort();
 #endif
     }

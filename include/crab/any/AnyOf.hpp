@@ -21,12 +21,20 @@ namespace crab::any {
       ((ty::movable<Ts> or ty::is_reference<Ts>) and ...),
       "Cannot construct an AnyOf with an immovable Type"
     );
+
     static_assert((ty::non_const<Ts> and ...), "Cannot have a variant of AnyOf be const");
 
     static_assert(
       (not ty::same_as<Ts, AnyOf> and ...),
       "Cannot have an AnyOf<Ts...> instantiate that recursively contains itself."
     );
+
+    template<typename T>
+    static constexpr auto _instances_of_type() -> usize {
+      return ([]() { return ty::same_as<T, Ts> ? 1 : 0; }() + ...);
+    }
+
+    static_assert(((_instances_of_type<Ts>() == 1) and ...), "Cannot have duplicate types in an AnyOf");
 
   public:
 
@@ -68,8 +76,7 @@ namespace crab::any {
 
     template<ty::either<Ts...> T>
     static constexpr usize IndexOf = []() {
-      usize i{0};
-
+      usize i = 0;
       return ([&i]() {
         const bool is_index{ty::same_as<T, Ts>};
         i++;
@@ -187,9 +194,8 @@ namespace crab::any {
     // NOLINTEND(*explicit*)
 
     template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
     [[nodiscard]] constexpr auto as() const -> opt::Option<const T&> {
-      ensure_valid();
-
       if (get_index() != IndexOf<T>) {
         return {};
       }
@@ -198,9 +204,8 @@ namespace crab::any {
     }
 
     template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
     [[nodiscard]] constexpr auto as() -> opt::Option<T&> {
-      ensure_valid();
-
       if (get_index() != IndexOf<T>) {
         return {};
       }
@@ -208,23 +213,33 @@ namespace crab::any {
       return opt::Option<T&>{as_unchecked<T>()};
     }
 
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr auto as() const& -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      return opt::Option<T>{as_unchecked<T>()};
+    }
+
   private:
 
     template<ty::either<Ts...> T>
     [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() & -> T& {
-      crab_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
       return Storage<T>::as_ref(buffer);
     }
 
     template<ty::either<Ts...> T>
     [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() const& -> const T& {
-      crab_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
       return Storage<T>::as_ref(buffer);
     }
 
     template<ty::either<Ts...> T>
     [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() && -> T {
-      crab_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
 
       T value{mem::forward<T>(Storage<T>::as_ref(buffer))};
 
@@ -285,9 +300,6 @@ namespace crab::any {
         "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
       );
 
-      // calling visit on a moved-from AnyOf is ill-formed
-      ensure_valid();
-
       using JumpTableFn = R (*)(const AnyOf& self, Visitor);
 
       const std::array<JumpTableFn, NumTypes> table{
@@ -303,9 +315,9 @@ namespace crab::any {
       };
 
       if constexpr (ty::not_void<R>) {
-        return table.at(index)(*this, mem::forward<Visitor>(visitor));
+        return table.at(get_index())(*this, mem::forward<Visitor>(visitor));
       } else {
-        table.at(index)(*this, mem::forward<Visitor>(visitor));
+        table.at(get_index())(*this, mem::forward<Visitor>(visitor));
       }
     }
 
@@ -318,9 +330,6 @@ namespace crab::any {
         impl::VisitorForTypes<Visitor, Ts&...>,
         "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
       );
-
-      // calling visit on a moved-from AnyOf is ill-formed
-      ensure_valid();
 
       using JumpTableFn = R (*)(AnyOf& self, Visitor);
 
@@ -337,9 +346,9 @@ namespace crab::any {
       };
 
       if constexpr (ty::not_void<R>) {
-        return table.at(index)(*this, mem::forward<Visitor>(visitor));
+        return table.at(get_index())(*this, mem::forward<Visitor>(visitor));
       } else {
-        table.at(index)(*this, mem::forward<Visitor>(visitor));
+        table.at(get_index())(*this, mem::forward<Visitor>(visitor));
       }
     }
 
@@ -352,9 +361,6 @@ namespace crab::any {
         impl::VisitorForTypes<Visitor, Ts&&...>,
         "Visitor must be able to accept all types that could be contained in an AnyOf<Ts...>"
       );
-
-      // calling visit on a moved-from AnyOf is ill-formed
-      ensure_valid();
 
       // using JumpTableFn = Func<R(const impl::Buffer<Size, Alignment>&, Visitor)>;
 
@@ -373,9 +379,9 @@ namespace crab::any {
       };
 
       if constexpr (ty::not_void<R>) {
-        return table.at(index)(mem::move(*this), mem::forward<Visitor>(visitor));
+        return table.at(get_index())(mem::move(*this), mem::forward<Visitor>(visitor));
       } else {
-        table.at(index)(mem::move(*this), mem::forward<Visitor>(visitor));
+        table.at(get_index())(mem::move(*this), mem::forward<Visitor>(visitor));
       }
     }
 
@@ -385,7 +391,7 @@ namespace crab::any {
     }
 
     [[nodiscard]] constexpr auto get_index() const -> usize {
-      ensure_valid();
+      crab_check(is_valid(), "Invalid use of a moved-from AnyOf");
       CRAB_ASSUME(index < NumTypes);
       return index;
     }
@@ -406,12 +412,8 @@ namespace crab::any {
       }() or ...));
     }
 
-    constexpr auto invalidate() {
+    constexpr auto invalidate() -> void {
       index = static_cast<usize>(-1);
-    }
-
-    CRAB_INLINE constexpr auto ensure_valid(const SourceLocation& loc = SourceLocation::current()) const -> void {
-      crab_check_with_location(is_valid(), loc, "Invalid use of a moved-from AnyOf");
     }
 
     impl::Buffer<Size, Alignment> buffer;

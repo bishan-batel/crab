@@ -7,7 +7,7 @@
 namespace crab {
 
   /**
-   * @brief Function pointer that supports lambdas with captures
+   * (Alias) Function pointer that supports lambdas with captures
    */
   template<typename F = void()>
   using Func = std::function<F>;

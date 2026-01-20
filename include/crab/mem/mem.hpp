@@ -1,12 +1,8 @@
 #pragma once
 
+/**
+ * @namespace crab::mem
+ * This namespace relates to raw memory / type memory management functions for crab. This includes things like
+ * std::address_of, crab::move, crab::replace, as well as size_of, copy, swap, etc
+ */
 namespace crab::mem {}
-
-#include "./address_of.hpp"
-#include "./forward.hpp"
-#include "./mem.hpp"
-#include "./move.hpp"
-#include "./replace.hpp"
-#include "./size_of.hpp"
-#include "./swap.hpp"
-#include "./take.hpp"

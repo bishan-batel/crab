@@ -7,13 +7,15 @@
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
 #include <concepts>
-#include <format>
 #include <type_traits>
 #include <variant>
 
+#include "crab/assertion/check.hpp"
+#include "crab/collections/Tuple.hpp"
+#include "crab/str/str.hpp"
 #include "crab/type_traits.hpp"
-#include "crab/opt/opt.hpp"
 #include "crab/mem/replace.hpp"
+#include "crab/mem/forward.hpp"
 
 namespace crab {
   /**

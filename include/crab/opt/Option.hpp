@@ -7,10 +7,8 @@
 #pragma once
 
 #include <concepts>
-#include <fmt/base.h>
-#include <functional>
-#include <type_traits>
 
+#include "crab/type_traits.hpp"
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
 #include "crab/hash.hpp"

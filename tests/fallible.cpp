@@ -4,7 +4,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include "crab/fn/identity.hpp"
-#include "test_static_asserts.hpp"
 
 [[nodiscard]] auto non_zero(u8 x) -> Option<u8> {
   return crab::some(x).filter([](u8 x) { return x != 0; });

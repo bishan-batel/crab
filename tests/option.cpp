@@ -1,8 +1,6 @@
 #include <algorithm>
 #include <concepts>
-#include <ranges>
 #include <catch2/catch_test_macros.hpp>
-#include <functional>
 #include "crab/fn/cast.hpp"
 #include "crab/fn/identity.hpp"
 #include "test_static_asserts.hpp"

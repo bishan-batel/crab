@@ -10,6 +10,11 @@
 
 #include <array>
 
+#if CRAB_GCC_VERSION
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 namespace crab::opt::impl {
   /**
    * Generic tagged union storage for Option<T>
@@ -143,15 +148,8 @@ namespace crab::opt::impl {
     }
 
     [[nodiscard]] CRAB_INLINE constexpr auto value() && -> T {
-#if CRAB_GCC_VERSION
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-#endif
       T moved{mem::move(reinterpret_cast<T&>(bytes))};
 
-#if CRAB_GCC_VERSION
-#pragma GCC diagnostic pop
-#endif
       std::destroy_at<T>(address());
       in_use_flag = false;
       return moved;
@@ -175,3 +173,7 @@ namespace crab::opt::impl {
     bool in_use_flag;
   };
 }
+
+#if CRAB_GCC_VERSION
+#pragma GCC diagnostic pop
+#endif

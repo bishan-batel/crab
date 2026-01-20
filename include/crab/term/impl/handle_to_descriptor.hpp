@@ -1,3 +1,5 @@
+#pragma once
+
 #include "crab/core.hpp"
 #include "crab/term/Handle.hpp"
 #include "crab/core/unreachable.hpp"

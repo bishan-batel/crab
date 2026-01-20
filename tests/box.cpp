@@ -4,8 +4,7 @@
 #include <crab/preamble.hpp>
 #include <crab/boxed/Box.hpp>
 #include <utility>
-#include "crab/opt/opt.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/opt/none.hpp"
 #include "test_types.hpp"
 
 struct SelfReferential;

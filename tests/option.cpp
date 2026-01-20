@@ -10,6 +10,7 @@
 #include <crab/num/range.hpp>
 #include <crab/result.hpp>
 #include <crab/opt/Option.hpp>
+#include <crab/opt/some.hpp>
 #include <utility>
 
 namespace ty = crab::ty;
@@ -271,7 +272,7 @@ TEST_CASE("Option", "Tests for all option methods") {
 
   SECTION("flatten") {
     asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
-      STATIC_REQUIRE(not requires(Option<T> opt) { opt.flatten(); });
+      STATIC_REQUIRE(not requires(crab::opt::Option<T> opt) { opt.flatten(); });
       STATIC_REQUIRE(requires(Option<Option<T>> opt) { Option<T>{std::move(opt).flatten()}; });
     });
   }

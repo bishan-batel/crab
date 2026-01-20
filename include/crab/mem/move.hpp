@@ -16,6 +16,7 @@ namespace crab::mem {
 
   template<typename T>
   [[nodiscard]] CRAB_INLINE constexpr auto move(const T&& value) = delete;
+
   using std::move;
 }
 

@@ -1,3 +1,4 @@
+#pragma once
 
 #include "crab/num/integer.hpp"
 #include "crab/term/Handle.hpp"

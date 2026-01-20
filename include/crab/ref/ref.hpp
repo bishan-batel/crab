@@ -171,14 +171,14 @@ namespace crab::ref {
  * @brief Hash Implementation for Ref<T> is identical for std::hash<T>
  */
 template<typename T>
-struct ::std::hash<::crab::ref::Ref<T>> {
+struct std::hash<::crab::ref::Ref<T>> {
   [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::ref::Ref<T>& mut) const -> usize {
     return std::hash<const T*>{}(mut.as_ptr());
   };
 };
 
 template<typename T>
-struct ::std::hash<::crab::ref::RefMut<T>> {
+struct std::hash<::crab::ref::RefMut<T>> {
   [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::ref::RefMut<T>& mut) const -> usize {
     return std::hash<const T*>{}(mut.as_ptr());
   };

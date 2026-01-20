@@ -168,7 +168,9 @@
 
 #if CRAB_HAS_ATTRIBUTE(assume)
 #define CRAB_ASSUME(condition)                                                                                         \
-  do { __attribute__((assume(static_cast<bool>(condition))))} while(false)
+  do {                                                                                                                 \
+    __attribute__((assume(static_cast<bool>(condition))));                                                             \
+  } while (false)
 #else
 #define CRAB_ASSUME(condition)                                                                                         \
   do {                                                                                                                 \

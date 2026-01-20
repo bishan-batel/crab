@@ -1,12 +1,10 @@
 // NOLINTBEGIN(*-explicit-constructor)
 #pragma once
 
-#include <memory_resource>
-#include "crab/casts.hpp"
+#include "crab/ref/implicit_cast.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/type_traits.hpp"
 
-#include "crab/rc/impl/Counter.hpp"
 #include "crab/rc/impl/RcBase.hpp"
 #include "crab/rc/impl/RcStorage.hpp"
 

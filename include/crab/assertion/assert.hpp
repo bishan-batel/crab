@@ -1,10 +1,9 @@
 #pragma once
 
-#include "crab/fmt.hpp"
-
 #include "crab/core/discard.hpp"
 #include "crab/core/unreachable.hpp"
 
+#include "./fmt.hpp"
 #include "./forward.hpp"
 #include "./panic.hpp"
 

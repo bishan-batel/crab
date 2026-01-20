@@ -1,7 +1,4 @@
 #include <catch2/catch_test_macros.hpp>
-#include <crab/fn.hpp>
-#include <tuple>
-#include <optional>
 #include "crab/mem/move.hpp"
 #include "crab/mem/size_of.hpp"
 #include "crab/mem/swap.hpp"
@@ -42,9 +39,6 @@ TEST_CASE("mem::address_of") {
 }
 
 TEST_CASE("mem::size_of") {
-
-
-
 
   asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
     INFO(typeid(T).name());

@@ -11,7 +11,6 @@
 #include <type_traits>
 #include <variant>
 
-#include "crab/fmt.hpp"
 #include "crab/type_traits.hpp"
 #include "crab/opt/opt.hpp"
 #include "crab/mem/replace.hpp"
@@ -295,7 +294,7 @@ namespace crab {
         -> T& {
         ensure_valid(loc);
 
-        debug_assert_transparent(
+        crab_check_with_location(
           is_ok(),
           loc,
           "Called unwrap on result with Error:\n{}",
@@ -313,7 +312,7 @@ namespace crab {
         -> E& {
         ensure_valid(loc);
 
-        debug_assert_transparent(is_err(), loc, "Called unwrap with Ok value");
+        crab_check_with_location(is_err(), loc, "Called unwrap with Ok value");
 
         return std::get<Err>(inner).value;
       }
@@ -326,7 +325,7 @@ namespace crab {
         -> const T& {
         ensure_valid(loc);
 
-        debug_assert_transparent(
+        crab_check_with_location(
           is_ok(),
           loc,
           "Called unwrap on result with Error:\n{}",
@@ -345,7 +344,7 @@ namespace crab {
       ) const -> const E& {
         ensure_valid(loc);
 
-        debug_assert_transparent(is_err(), loc, "Called unwrap on Ok value");
+        crab_check_with_location(is_err(), loc, "Called unwrap on Ok value");
 
         return std::get<Err>(inner).value;
       }
@@ -353,7 +352,7 @@ namespace crab {
       [[nodiscard]] CRAB_INLINE constexpr auto unwrap(const SourceLocation loc = SourceLocation::current()) && -> T {
         ensure_valid(loc);
 
-        debug_assert_transparent(
+        crab_check_with_location(
           is_ok(),
           loc,
           "Called unwrap on result with Error:\n{}",
@@ -368,7 +367,7 @@ namespace crab {
       ) && -> E {
         ensure_valid(loc);
 
-        debug_assert_transparent(is_err(), loc, "Called unwrap_err on result with Ok value");
+        crab_check_with_location(is_err(), loc, "Called unwrap_err on result with Ok value");
 
         return std::get<Err>(mem::replace(inner, invalidated{})).value;
       }
@@ -377,8 +376,7 @@ namespace crab {
        * @brief Internal method for preventing use-after-movas
        */
       CRAB_INLINE constexpr auto ensure_valid(const SourceLocation loc = SourceLocation::current()) const -> void {
-
-        debug_assert_transparent(not std::holds_alternative<invalidated>(inner), loc, "Invalid use of moved result");
+        crab_check_with_location(not std::holds_alternative<invalidated>(inner), loc, "Invalid use of moved result");
       }
 
       friend CRAB_INLINE constexpr auto operator<<(std::ostream& os, const Result& result) -> std::ostream& {

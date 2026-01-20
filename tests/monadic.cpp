@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <crab/preamble.hpp>
-#include <crab/fn.hpp>
+#include "crab/fn/identity.hpp"
 #include "crab/opt/opt.hpp"
 #include "test_types.hpp"
 

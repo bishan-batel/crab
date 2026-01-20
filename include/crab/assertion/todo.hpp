@@ -2,7 +2,7 @@
 
 #include "crab/core/discard.hpp"
 #include "crab/assertion/panic.hpp"
-#include "crab/fmt.hpp"
+#include "crab/assertion/fmt.hpp"
 
 /**
  * Does not return, use when you are waiting to implement a function.

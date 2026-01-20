@@ -8,7 +8,7 @@
 #include "crab/type_traits.hpp"
 #include "crab/assertion/assert.hpp"
 
-namespace crab {
+namespace crab::range {
   template<std::integral T = usize>
   class Range final {
     T min, max;
@@ -193,7 +193,7 @@ namespace crab {
 } // namespace crab
 
 namespace crab::prelude {
-  using crab::Range;
+  using crab::range::Range;
 }
 
 CRAB_PRELUDE_GUARD;

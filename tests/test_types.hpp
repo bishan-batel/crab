@@ -2,7 +2,7 @@
 
 #include <utility>
 #include <crab/preamble.hpp>
-#include <crab/ref.hpp>
+#include <crab/ref/ref.hpp>
 #include "crab/rc/Rc.hpp"
 #include "test_static_asserts.hpp"
 

@@ -8,9 +8,10 @@
 
 #include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
-#include "crab/casts.hpp"
 #include "crab/mem/take.hpp"
-#include "crab/ref.hpp"
+#include "crab/ref/ref.hpp"
+#include "crab/ref/casts.hpp"
+#include "crab/ref/from_ptr.hpp"
 #include "crab/type_traits.hpp"
 
 #include "crab/opt/forward.hpp"
@@ -169,21 +170,21 @@ namespace crab {
         return as_ref();
       }
 
-      CRAB_INLINE constexpr operator Ref<T>() const {
+      CRAB_INLINE constexpr operator ref::Ref<T>() const {
         return as_ref();
       }
 
-      CRAB_INLINE constexpr operator RefMut<T>() {
-        return as_ref();
-      }
-
-      template<std::derived_from<T> Base>
-      CRAB_INLINE constexpr operator Ref<Base>() const {
+      CRAB_INLINE constexpr operator ref::RefMut<T>() {
         return as_ref();
       }
 
       template<std::derived_from<T> Base>
-      CRAB_INLINE constexpr operator RefMut<Base>() {
+      CRAB_INLINE constexpr operator ref::Ref<Base>() const {
+        return as_ref();
+      }
+
+      template<std::derived_from<T> Base>
+      CRAB_INLINE constexpr operator ref::RefMut<Base>() {
         return as_mut();
       }
 

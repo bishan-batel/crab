@@ -1,9 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <tuple>
 #include <optional>
+#include "crab/fn/identity.hpp"
 #include "test_types.hpp"
 #include <crab/opt/opt.hpp>
-#include <crab/fn.hpp>
 
 TEST_CASE("fn") {
 

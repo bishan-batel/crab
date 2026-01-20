@@ -11,12 +11,11 @@
 #include <functional>
 #include <type_traits>
 
-#include "crab/assertion/assert.hpp"
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
 #include "crab/hash.hpp"
-
 #include "./none.hpp"
+
 #include "./impl/GenericStorage.hpp"
 #include "./impl/RefStorage.hpp"
 

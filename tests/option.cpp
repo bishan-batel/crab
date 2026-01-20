@@ -3,12 +3,13 @@
 #include <ranges>
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
+#include "crab/fn/cast.hpp"
+#include "crab/fn/identity.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
 #include <crab/boxed/Box.hpp>
-#include <crab/ref.hpp>
-#include <crab/fn.hpp>
-#include <crab/range.hpp>
+#include <crab/ref/ref.hpp>
+#include <crab/num/range.hpp>
 #include <crab/result.hpp>
 #include <crab/opt/Option.hpp>
 #include <utility>
@@ -162,12 +163,6 @@ TEST_CASE("Option", "Tests for all option methods") {
   }
 
   SECTION("filter") {
-    CHECK(Option{10}.filter(crab::fn::is_even).is_some());
-    CHECK(Option<i32>{}.filter(crab::fn::is_even).is_none());
-
-    CHECK(Option{10}.filter(crab::fn::is_odd).is_none());
-    CHECK(Option<i32>{}.filter(crab::fn::is_odd).is_none());
-
     CHECK(Option<String>{""}.filter(&String::empty).is_some());
     CHECK(Option<String>{}.filter(&String::empty).is_none());
     CHECK(Option<String>{""}.filter(&String::empty).is_some());

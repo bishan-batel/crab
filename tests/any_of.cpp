@@ -83,8 +83,8 @@ TEST_CASE("AnyOf") {
       String outer{"world"};
 
       const crab::cases visitor{
-        [outer](const MoveOnly&) -> const String& { return outer; },
-        [outer](const auto&) -> const String& { return outer; },
+        [&](const MoveOnly&) -> const String& { return outer; },
+        [&](const auto&) -> const String& { return outer; },
       };
 
       const String& ref = value.visit<const decltype(visitor)&, const String&>(visitor);

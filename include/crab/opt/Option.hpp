@@ -29,9 +29,6 @@ namespace crab::opt {
       ty::conditional<ty::is_reference<T>, impl::RefStorage<ty::remove_reference<T>>, impl::GenericStorage<T>>;
   };
 
-  template<typename T>
-  using TStorage = typename Storage<T>::type;
-
   /**
    * Tagged union type between T and unit, alternative to std::optional<T>
    * (or std::variant<T, std::monostate>/std::variant<T>)

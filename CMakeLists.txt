@@ -67,7 +67,7 @@ configure_file(
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 
 file(GLOB_RECURSE CRAB_SOURCES "include/*.hpp")
-set(CRAB_SOURCES
+set(CRAB_SOURCES_0
         include/crab/any/AnyOf.hpp 
         include/crab/any/any.hpp 
 

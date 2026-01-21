@@ -92,16 +92,18 @@ namespace crab::any {
     }
 
     using impl::AnyOfConstructor<Ts>::impl_construct...;
+    using impl::AnyOfConstructor<Ts>::impl_insert...;
+    using impl::AnyOfConstructor<Ts>::impl_emplace...;
 
   public:
 
     // NOLINTBEGIN(*explicit*)
     template<typename T>
     constexpr AnyOf(T&& value) {
-      const auto& result{
+      const auto result{
         impl_construct(mem::forward<T>(value), buffer),
       };
-      index = IndexOf<typename std::remove_cvref_t<decltype(result)>::type>;
+      index = IndexOf<typename decltype(result)::type>;
     }
 
     constexpr AnyOf(AnyOf&& from) noexcept((std::is_nothrow_move_constructible_v<Ts> and ...)): index{from.index} {
@@ -215,7 +217,7 @@ namespace crab::any {
 
     template<ty::either<Ts...> T>
     requires ty::is_reference<T>
-    [[nodiscard]] constexpr auto as() const& -> opt::Option<T> {
+    [[nodiscard]] constexpr auto as() -> opt::Option<T> {
       if (get_index() != IndexOf<T>) {
         return {};
       }
@@ -223,21 +225,62 @@ namespace crab::any {
       return opt::Option<T>{as_unchecked<T>()};
     }
 
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr auto as() const -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      return opt::Option<T>{as_unchecked<T>()};
+    }
+
+    template<typename T>
+    constexpr auto insert(T&& value) & -> void {
+      static_assert(
+        (ty::convertible<T, Ts> or ...),
+        "Cannot insert with a type that is incompatible with all cases of this AnyOf"
+      );
+
+      if (is_valid()) {
+        destroy();
+      }
+
+      auto result{
+        this->impl_insert(mem::forward<T>(value), buffer),
+      };
+
+      index = IndexOf<typename decltype(result)::type>;
+    }
+
+    template<ty::either<Ts...> T, typename... Args>
+    constexpr auto emplace(Args&&... args) & -> void {
+      if (is_valid()) {
+        destroy();
+      }
+
+      this->impl_emplace(std::type_identity<T>{}, buffer, mem::forward<Args>(args)...);
+      index = IndexOf<T>;
+    }
+
   private:
 
     template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
     [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() & -> T& {
       crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
       return Storage<T>::as_ref(buffer);
     }
 
     template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
     [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() const& -> const T& {
       crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
       return Storage<T>::as_ref(buffer);
     }
 
     template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
     [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() && -> T {
       crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
 
@@ -246,6 +289,32 @@ namespace crab::any {
       destroy();
       invalidate();
 
+      return value;
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() & -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() const& -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked() && -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      T value{Storage<T>::as_ref(buffer)};
+
+      // no destructor required, we know this is a reference
+
+      invalidate();
       return value;
     }
 

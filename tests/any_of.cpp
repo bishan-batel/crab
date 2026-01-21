@@ -19,24 +19,68 @@ TEST_CASE("AnyOf<Ts...>:IndexOf", "[anyof]") {
   STATIC_CHECK(T::IndexOf<f32> == 2);
   STATIC_CHECK(T::IndexOf<MoveOnly> == 3);
 
-  {
-    T value{i32{}};
-    CHECK(T::IndexOf<i32> == value.get_index());
+  SECTION("get_index()") {
+    {
+      T value{i32{}};
+      CHECK(T::IndexOf<i32> == value.get_index());
+    }
+
+    {
+      T value{u32{}};
+      CHECK(T::IndexOf<u32> == value.get_index());
+    }
+
+    {
+      T value{f32{}};
+      CHECK(T::IndexOf<f32> == value.get_index());
+    }
+
+    {
+      T value{MoveOnly{"hello"}};
+      CHECK(T::IndexOf<MoveOnly> == value.get_index());
+    }
+  }
+}
+
+TEST_CASE("AnyOf as", "[anyof]") {
+  using T = AnyOf<i32, u32, f32, MoveOnly>;
+  T value{MoveOnly{"hello"}};
+
+  CHECK(value.as<MoveOnly>().is_some_and([](const MoveOnly& o) { return o.get_name() == "hello"; }));
+}
+
+TEST_CASE("AnyOf<Ts...> match/visit", "[anyof]") {
+  using AnyOf = crab::any::AnyOf<i32, u32, f32, MoveOnly>;
+
+  SECTION("mut") {
+    AnyOf value{MoveOnly{"hello"}};
+
+    value.match([](MoveOnly& m) { m.set_name("world"); }, [](auto&&) {});
+
+    REQUIRE(value.is<MoveOnly>());
+    CHECK(value.as<MoveOnly>().unwrap().get_name() == "world");
   }
 
-  {
-    T value{u32{}};
-    CHECK(T::IndexOf<u32> == value.get_index());
+  SECTION("const") {
+    const AnyOf value{MoveOnly{"hello"}};
+
+    CHECK(
+      value.match([](const MoveOnly& bruh) { return bruh.get_name(); }, [](const auto&) { return "bruh"; }) == "hello"
+    );
   }
 
-  {
-    T value{f32{}};
-    CHECK(T::IndexOf<f32> == value.get_index());
-  }
+  SECTION("visit returning reference type") {
+    const AnyOf value{MoveOnly{"hello"}};
 
-  {
-    T value{MoveOnly{"hello"}};
-    CHECK(T::IndexOf<MoveOnly> == value.get_index());
+    String outer{"world"};
+
+    const crab::cases visitor{
+      [&](const MoveOnly&) -> const String& { return outer; },
+      [&](const auto&) -> const String& { return outer; },
+    };
+
+    const String& ref = value.visit<const decltype(visitor)&, const String&>(visitor);
+    CHECK(&ref == &outer);
   }
 }
 
@@ -51,75 +95,42 @@ TEST_CASE("AnyOf<Ts...>:NthType", "[anyof]") {
   STATIC_CHECK(ty::same_as<T::NthType<T::IndexOf<MoveOnly>>, MoveOnly>);
 }
 
-TEST_CASE("AnyOf") {
-  using T = AnyOf<i32, u32, f32, MoveOnly>;
-  T value{MoveOnly{"hello"}};
+TEST_CASE("Reference Types") {
 
-  CHECK(value.as<MoveOnly>().is_some_and([](const MoveOnly& o) { return o.get_name() == "hello"; }));
-
-  SECTION("match / visit") {
-    using AnyOf = crab::any::AnyOf<i32, u32, f32, MoveOnly>;
-
-    SECTION("mut") {
-      AnyOf value{MoveOnly{"hello"}};
-
-      value.match([](MoveOnly& m) { m.set_name("world"); }, [](auto&&) {});
-
-      REQUIRE(value.is<MoveOnly>());
-      CHECK(value.as<MoveOnly>().unwrap().get_name() == "world");
-    }
-
-    SECTION("const") {
-      const AnyOf value{MoveOnly{"hello"}};
-
-      CHECK(
-        value.match([](const MoveOnly& bruh) { return bruh.get_name(); }, [](const auto&) { return "bruh"; }) == "hello"
-      );
-    }
-
-    SECTION("visit returning reference type") {
-      const AnyOf value{MoveOnly{"hello"}};
-
-      String outer{"world"};
-
-      const crab::cases visitor{
-        [&](const MoveOnly&) -> const String& { return outer; },
-        [&](const auto&) -> const String& { return outer; },
-      };
-
-      const String& ref = value.visit<const decltype(visitor)&, const String&>(visitor);
-      CHECK(&ref == &outer);
-    }
-  }
-
-  /*
-  SECTION("Reference types") {
+  SECTION("construction & as") {
     const u32 a{10};
     u32 b{10};
 
     {
       AnyOf<const u32&> value{a};
       CHECK(value.is<const u32&>());
+      CHECK(&value.as<const u32&>().unwrap() == &a);
     }
 
     {
       AnyOf<const u32&> value{b};
       CHECK(value.is<const u32&>());
+      CHECK(&value.as<const u32&>().unwrap() == &b);
     }
 
     {
       AnyOf<const u32&, u32&> value{a};
       CHECK(value.is<const u32&>());
+      CHECK(not value.is<u32&>());
+      CHECK(&value.as<const u32&>().unwrap() == &a);
     }
 
     {
       AnyOf<const u32&, u32&> value{b};
       CHECK(value.is<u32&>());
+      CHECK(not value.is<const u32&>());
+      CHECK(&value.as<u32&>().unwrap() == &b);
     }
 
     {
       AnyOf<const u32&, u32&> value{crab::implicit_cast<const u32&>(b)};
       CHECK(value.is<const u32&>());
+      CHECK(not value.is<u32&>());
     }
 
     {
@@ -129,5 +140,21 @@ TEST_CASE("AnyOf") {
       CHECK(value.is<const u32&>());
     }
   }
-  */
+
+  SECTION("emplace") {
+    const u32 a{10};
+    u32 b{10};
+
+    {
+      AnyOf<const u32&, u32&> value{a};
+      CHECK(&value.as<const u32&>().unwrap() == &a);
+
+      value.emplace<const u32&>(a);
+      CHECK(&value.as<const u32&>().unwrap() == &a);
+
+      value.emplace<u32&>(b);
+
+      CHECK(&value.as<u32&>().unwrap() == &b);
+    }
+  }
 }

@@ -96,8 +96,6 @@ namespace crab::any::impl {
   template<typename T>
   struct AnyOfStorage<T&> final {
 
-    static_assert(false); // should not be used in evaluated contexts
-
     template<usize Size, usize Align>
     static auto construct(Buffer<Size, Align>& buffer, T& ref) -> void {
       T** ptr{buffer.template as_ptr<T*>()};
@@ -108,8 +106,9 @@ namespace crab::any::impl {
     static auto destroy(Buffer<Size, Align>&) -> void {}
 
     template<usize Size, usize Align>
-    CRAB_PURE static auto as_ref(const Buffer<Size, Align>& buffer) -> const T& {
-      return *as_ptr(buffer);
+    CRAB_PURE static auto as_ref(const Buffer<Size, Align>& buffer) -> T& {
+      T* const* ptr{buffer.template as_ptr<T*>()};
+      return **ptr;
     }
 
     template<usize Size, usize Align>
@@ -131,24 +130,30 @@ namespace crab::any::impl {
     static auto copy_assign(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
       contruct(to, as_ref(from.buffer));
     }
-
-    template<usize Size, usize Align>
-    CRAB_PURE static auto as_ref(Buffer<Size, Align>& buffer) -> T& {
-      return *as_ptr(buffer);
-    }
   };
 
   template<typename T>
   struct AnyOfConstructor {
-
-    using type = T;
-
   protected:
 
-    auto impl_construct(T&& value, auto& buffer) -> const AnyOfConstructor& {
+    auto impl_construct(T&& value, auto& buffer) -> std::type_identity<T> {
       AnyOfStorage<T>::construct(buffer, mem::forward<T>(value));
 
-      return *this;
+      return {};
+    }
+
+    auto impl_insert(T&& value, auto& buffer) -> std::type_identity<T> {
+      AnyOfStorage<T>::construct(buffer, mem::forward<T>(value));
+
+      return {};
+    }
+
+    template<typename... Args>
+    requires std::constructible_from<T, Args...>
+    auto impl_emplace(std::type_identity<T>, auto& buffer, Args&&... args) -> std::type_identity<T> {
+      AnyOfStorage<T>::construct(buffer, mem::forward<Args>(args)...);
+
+      return {};
     }
   };
 

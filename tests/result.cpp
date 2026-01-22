@@ -54,7 +54,7 @@ TEST_CASE("Result", "[result]") {
     REQUIRE(Result<unit, Error>{unit{}}.is_ok());
   }
 
-  SECTION("std::visit") {
+  SECTION("map") {
     Result<i32, Error> huh{10};
     huh = std::move(huh).map([](const i32 a) { return a * 2; });
     REQUIRE(huh.get_unchecked() == 20);

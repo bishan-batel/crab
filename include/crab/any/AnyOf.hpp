@@ -162,6 +162,9 @@ namespace crab::any {
         return *this;
       }
 
+      destroy();
+      index = from.index;
+
       ([this, &from]() {
         if (index != IndexOf<Ts>) {
           return false;
@@ -196,6 +199,9 @@ namespace crab::any {
 
         return *this;
       }
+
+      destroy();
+      index = from.index;
 
       ([this, &from]() {
         if (index != IndexOf<Ts>) {
@@ -530,7 +536,7 @@ namespace crab::any {
      */
     constexpr auto destroy() {
       crab::discard(([this]() -> bool {
-        if (is<Ts>()) {
+        if (index == IndexOf<Ts>) {
           Storage<Ts>::destroy(buffer);
           return true;
         }

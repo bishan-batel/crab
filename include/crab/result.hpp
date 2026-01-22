@@ -8,7 +8,6 @@
 #pragma once
 #include <concepts>
 #include <type_traits>
-#include <variant>
 
 #include "crab/any/AnyOf.hpp"
 #include "crab/assertion/check.hpp"

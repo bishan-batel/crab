@@ -49,25 +49,25 @@ namespace crab::any::impl {
 
     template<usize Size, usize Align>
     static auto move(Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
-      contruct(to, mem::move(as_ref(from.buffer)));
+      construct<Size, Align, T&&>(to, mem::move(as_ref(from)));
     }
 
     template<usize Size, usize Align>
     static auto copy(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
       static_assert(ty::copyable<T>, "Cannot use copy on a non-copyable type");
 
-      contruct(to, as_ref(from.buffer));
+      construct<Size, Align, const T&>(to, as_ref(from));
     }
 
     template<usize Size, usize Align>
     static auto move_assign(Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
-      as_ref(to) = mem::move(as_ref(from.buffer));
+      as_ref(to) = mem::move(as_ref(from));
     }
 
     template<usize Size, usize Align>
     static auto copy_assign(const Buffer<Size, Align>& from, Buffer<Size, Align>& to) -> void {
       static_assert(ty::movable<T>, "Cannot use copy on a non-copyable type");
-      as_ref(to) = implicit_cast<const T&>(as_ref(from.buffer));
+      as_ref(to) = implicit_cast<const T&>(as_ref(from));
     }
 
     template<usize Size, usize Align>

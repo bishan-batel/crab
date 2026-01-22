@@ -10,12 +10,14 @@
 #include <type_traits>
 #include <variant>
 
+#include "crab/any/AnyOf.hpp"
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
+#include "crab/mem/address_of.hpp"
 #include "crab/str/str.hpp"
 #include "crab/type_traits.hpp"
-#include "crab/mem/replace.hpp"
 #include "crab/mem/forward.hpp"
+#include "crab/opt/Option.hpp"
 
 namespace crab {
   /**
@@ -85,14 +87,39 @@ namespace crab {
       static_assert(ty::ok_type<T>, "Ok<T> must satisfy ok_type");
 
       using Inner = T;
-      T value;
 
       CRAB_INLINE constexpr explicit Ok(T value): value(mem::move(value)) {}
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() & -> T& {
+        return value;
+      }
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() const& -> const T& {
+        return value;
+      }
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() && -> T&& {
+        return mem::forward<T>(value);
+      }
+
+    private:
+
+      T value;
     };
 
     template<typename T>
-    struct Ok<T&> : Ok<std::reference_wrapper<T>> {
-      CRAB_INLINE constexpr explicit Ok(T& value): Ok<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
+    struct Ok<T&> {
+      using Inner = T&;
+
+      CRAB_INLINE constexpr explicit Ok(T& value): ptr{mem::address_of(value)} {}
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() const -> T& {
+        return *ptr;
+      }
+
+    private:
+
+      T* ptr;
     };
 
     /**
@@ -105,14 +132,38 @@ namespace crab {
 
       using Inner = E;
 
-      E value;
-
       CRAB_INLINE constexpr explicit Err(E value): value(mem::move(value)) {}
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() & -> E& {
+        return value;
+      }
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() const& -> const E& {
+        return value;
+      }
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() && -> E&& {
+        return mem::move<E>(value);
+      }
+
+    private:
+
+      E value;
     };
 
-    template<typename T>
-    struct Err<T&> : Err<std::reference_wrapper<T>> {
-      CRAB_INLINE constexpr explicit Err(T& value): Err<std::reference_wrapper<T>>{std::reference_wrapper<T>{value}} {}
+    template<typename E>
+    struct Err<E&> {
+      using Inner = E&;
+
+      CRAB_INLINE constexpr explicit Err(E& value): ptr{mem::address_of(value)} {}
+
+      [[nodiscard]] CRAB_INLINE constexpr auto get() const -> E& {
+        return *ptr;
+      }
+
+    private:
+
+      E* ptr;
     };
 
     namespace impl {
@@ -185,9 +236,8 @@ namespace crab {
 
     private:
 
-      struct invalidated final {};
-
-      std::variant<Ok, Err, invalidated> inner;
+      using AnyOf = any::AnyOf<Ok, Err>;
+      AnyOf storage;
 
     public:
 
@@ -203,13 +253,13 @@ namespace crab {
       CRAB_INLINE constexpr Result(E&& from) requires(not is_same)
           : Result{Err{mem::forward<E>(from)}} {}
 
-      CRAB_INLINE constexpr Result(Ok&& from): inner{mem::forward<Ok>(from)} {}
+      CRAB_INLINE constexpr Result(Ok&& from): storage{AnyOf::template from<Ok>(mem::move(from))} {}
 
-      CRAB_INLINE constexpr Result(Err&& from): inner{mem::forward<Err>(from)} {}
+      CRAB_INLINE constexpr Result(Err&& from): storage{AnyOf::template from<Err>(mem::move(from))} {}
 
-      CRAB_INLINE constexpr Result(Result&& from) noexcept: inner{mem::replace(from.inner, invalidated{})} {}
+      CRAB_INLINE constexpr Result(Result&& from) noexcept: storage{mem::move(from.storage)} {}
 
-      CRAB_INLINE constexpr Result(const Result& res): inner{res.inner} {
+      CRAB_INLINE constexpr Result(const Result& res): storage{res.storage} {
         static_assert(is_copyable, "Cannot copy a result with a non-copyable Err or Ok type");
       }
 
@@ -219,34 +269,36 @@ namespace crab {
           return *this;
         }
 
-        inner = res.inner;
+        storage = res.storage;
 
         return *this;
       }
 
       CRAB_INLINE constexpr auto operator=(Result&& res) noexcept -> Result& {
-        inner = mem::replace(res.inner, invalidated{});
+        storage = mem::move(res.storage);
         return *this;
       }
 
-      CRAB_INLINE constexpr auto operator=(Ok&& from) -> Result& {
-        inner = mem::forward<Ok>(from);
+      CRAB_INLINE constexpr auto operator=(Ok from) -> Result& {
+        storage.template emplace<Ok>(mem::move<Ok>(from));
         return *this;
       }
 
-      CRAB_INLINE constexpr auto operator=(Err&& from) -> Result& {
-        inner = mem::forward<Err>(from);
+      CRAB_INLINE constexpr auto operator=(Err from) -> Result& {
+        storage.template emplace<Err>(mem::move<Err>(from));
         return *this;
       }
 
       CRAB_INLINE constexpr auto operator=(T&& from) -> Result& requires(not is_same)
       {
-        return *this = Ok{mem::forward<T>(from)}; /* NOLINT(*operator*)*/
+        storage.template emplace<Ok>(mem::forward<T>(from));
+        return *this;
       }
 
       CRAB_INLINE constexpr auto operator=(E&& from) -> Result& requires(not is_same)
       {
-        return *this = Err{mem::forward<E>(from)}; /* NOLINT(*operator*)*/
+        storage.template emplace<Err>(mem::forward<E>(from));
+        return *this;
       }
 
       [[nodiscard]] CRAB_INLINE constexpr explicit operator bool() const {
@@ -257,14 +309,14 @@ namespace crab {
        * @brief Does this result hold an ok value
        */
       [[nodiscard]] CRAB_INLINE constexpr auto is_ok() const -> bool {
-        return std::holds_alternative<Ok>(inner);
+        return storage.template is<Ok>();
       }
 
       /**
        * @brief Does this result hold an err value
        */
       [[nodiscard]] CRAB_INLINE constexpr auto is_err() const -> bool {
-        return std::holds_alternative<Err>(inner);
+        return storage.template is<Err>();
       }
 
       /**
@@ -303,7 +355,7 @@ namespace crab {
           ::crab::result::error_to_string(get_err_unchecked())
         );
 
-        return std::get<Ok>(inner).value;
+        return storage.template as<Ok>().unwrap().get();
       }
 
       /**
@@ -316,7 +368,7 @@ namespace crab {
 
         crab_check_with_location(is_err(), loc, "Called unwrap with Ok value");
 
-        return std::get<Err>(inner).value;
+        return storage.template as<Err>().unwrap().get();
       }
 
       /**
@@ -334,7 +386,7 @@ namespace crab {
           ::crab::result::error_to_string(get_err_unchecked())
         );
 
-        return std::get<Ok>(inner).value;
+        return storage.template as<Ok>().unwrap().get();
       }
 
       /**
@@ -348,7 +400,7 @@ namespace crab {
 
         crab_check_with_location(is_err(), loc, "Called unwrap on Ok value");
 
-        return std::get<Err>(inner).value;
+        return storage.template as<Err>().unwrap().get();
       }
 
       [[nodiscard]] CRAB_INLINE constexpr auto unwrap(const SourceLocation loc = SourceLocation::current()) && -> T {
@@ -361,7 +413,7 @@ namespace crab {
           ::crab::result::error_to_string(get_err_unchecked())
         );
 
-        return std::get<Ok>(mem::replace(inner, invalidated{})).value;
+        return mem::move(storage).template as<Ok>().unwrap().get();
       }
 
       [[nodiscard]] CRAB_INLINE constexpr auto unwrap_err(
@@ -371,14 +423,14 @@ namespace crab {
 
         crab_check_with_location(is_err(), loc, "Called unwrap_err on result with Ok value");
 
-        return std::get<Err>(mem::replace(inner, invalidated{})).value;
+        return mem::move(storage).template as<Err>().unwrap().get();
       }
 
       /**
        * @brief Internal method for preventing use-after-movas
        */
       CRAB_INLINE constexpr auto ensure_valid(const SourceLocation loc = SourceLocation::current()) const -> void {
-        crab_check_with_location(not std::holds_alternative<invalidated>(inner), loc, "Invalid use of moved result");
+        crab_check_with_location(storage.is_valid(), loc, "Invalid use of moved result");
       }
 
       friend CRAB_INLINE constexpr auto operator<<(std::ostream& os, const Result& result) -> std::ostream& {

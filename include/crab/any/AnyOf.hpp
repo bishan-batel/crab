@@ -157,7 +157,8 @@ namespace crab::any {
 
           Storage<Ts>::copy_asign(from.buffer, buffer);
           return true;
-        } or ...);
+        }()
+         or ...);
         return *this;
       }
 
@@ -168,15 +169,45 @@ namespace crab::any {
 
         Storage<Ts>::copy(from.buffer, buffer);
         return true;
-      } or ...);
+      }()
+       or ...);
 
       return *this;
     }
 
-    auto operator=(AnyOf&& from) -> AnyOf& = delete;
+    auto operator=(AnyOf&& from) noexcept -> AnyOf& {
+      if (mem::address_of(from) == this) [[unlikely]] {
+        return *this;
+      }
+
+      if (from.index == index) {
+        ([this, &from]() {
+          if (index != IndexOf<Ts>) {
+            return false;
+          }
+
+          Storage<Ts>::move_assign(from.buffer, buffer);
+          return true;
+        }()
+         or ...);
+        return *this;
+      }
+
+      ([this, &from]() {
+        if (index != IndexOf<Ts>) {
+          return false;
+        }
+
+        Storage<Ts>::move(from.buffer, buffer);
+        return true;
+      }()
+       or ...);
+
+      return *this;
+    }
 
     template<ty::either<Ts...> T>
-    [[nodiscard]] static constexpr auto from(T value) -> AnyOf {
+    [[nodiscard]] static constexpr auto from(ty::identity<T> value) -> AnyOf {
       return AnyOf{
         std::integral_constant<usize, IndexOf<T>>{},
         mem::forward<T>(value),
@@ -251,6 +282,12 @@ namespace crab::any {
       };
 
       index = IndexOf<typename decltype(result)::type>;
+    }
+
+    template<typename T>
+    auto operator=(T&& value) -> AnyOf& {
+      insert<T>(mem::forward<T>(value));
+      return *this;
     }
 
     template<ty::either<Ts...> T, typename... Args>
@@ -471,6 +508,9 @@ namespace crab::any {
 
   private:
 
+    /**
+     * Destroys interior
+     */
     constexpr auto destroy() {
       crab::discard(([this]() -> bool {
         if (is<Ts>()) {

@@ -141,6 +141,44 @@ TEST_CASE("Reference Types") {
     }
   }
 
+  SECTION("operator=") {
+    const u32 a{10};
+    u32 b{10};
+
+    AnyOf<const u32&, u32&> value{a};
+    CHECK(&value.as<const u32&>().unwrap() == &a);
+
+    value = a;
+    CHECK(&value.as<const u32&>().unwrap() == &a);
+
+    value = b;
+
+    CHECK(&value.as<u32&>().unwrap() == &b);
+
+    value = crab::implicit_cast<const u32&>(b);
+
+    CHECK(&value.as<const u32&>().unwrap() == &b);
+  }
+
+  SECTION("insert") {
+    const u32 a{10};
+    u32 b{10};
+
+    AnyOf<const u32&, u32&> value{a};
+    CHECK(&value.as<const u32&>().unwrap() == &a);
+
+    value.insert(a);
+    CHECK(&value.as<const u32&>().unwrap() == &a);
+
+    value.insert(b);
+
+    CHECK(&value.as<u32&>().unwrap() == &b);
+
+    value.insert<const u32&>(b);
+
+    CHECK(&value.as<const u32&>().unwrap() == &b);
+  }
+
   SECTION("emplace") {
     const u32 a{10};
     u32 b{10};

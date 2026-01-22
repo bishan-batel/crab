@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdlib>
+#include <fmt/format.h>
 #include <iomanip>
 #include <iostream>
 #include <span>
@@ -132,7 +133,16 @@ namespace crab::assertion {
     inline static auto trivial_handler(PanicInfo info) -> void {
 
 #if CRAB_THROW_ON_DEFAULT_PANIC
-      throw std::runtime_error{mem::move(info.message)};
+      throw std::runtime_error{
+        fmt::format(
+          "{} at function {} ({}:{}@{})",
+          info.message,
+          info.location.function_name(),
+          info.location.line(),
+          info.location.column(),
+          info.location.file_name()
+        ),
+      };
 #else
       log_panic_to_stream(std::cerr, term::try_enable_ansi(term::Handle::Error), info);
       std::abort();

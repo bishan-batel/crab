@@ -190,6 +190,10 @@ namespace crab::any {
           return true;
         }()
          or ...);
+
+        from.destroy();
+        from.invalidate();
+
         return *this;
       }
 
@@ -202,6 +206,9 @@ namespace crab::any {
         return true;
       }()
        or ...);
+
+      from.destroy();
+      from.invalidate();
 
       return *this;
     }
@@ -228,7 +235,7 @@ namespace crab::any {
 
     template<ty::either<Ts...> T>
     requires ty::non_reference<T>
-    [[nodiscard]] constexpr auto as() const -> opt::Option<const T&> {
+    [[nodiscard]] constexpr auto as() const& -> opt::Option<const T&> {
       if (get_index() != IndexOf<T>) {
         return {};
       }
@@ -238,12 +245,22 @@ namespace crab::any {
 
     template<ty::either<Ts...> T>
     requires ty::non_reference<T>
-    [[nodiscard]] constexpr auto as() -> opt::Option<T&> {
+    [[nodiscard]] constexpr auto as() & -> opt::Option<T&> {
       if (get_index() != IndexOf<T>) {
         return {};
       }
 
       return opt::Option<T&>{as_unchecked<T>()};
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      return opt::Option<T>{mem::move(*this).template as_unchecked<T>()};
     }
 
     template<ty::either<Ts...> T>

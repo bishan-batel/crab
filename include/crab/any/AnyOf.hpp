@@ -48,7 +48,7 @@ namespace crab::any {
     /**
      * The minimum sized storage buffer required for storage
      */
-    static constexpr usize Size{impl::ByteSize<Ts...>};
+    static constexpr usize DataSize{impl::ByteSize<Ts...>};
 
     /**
      * The minimum alignment required for storage
@@ -617,7 +617,7 @@ namespace crab::any {
       index = static_cast<u8>(-1);
     }
 
-    impl::Buffer<Size, Alignment> buffer;
+    impl::Buffer<DataSize, Alignment> buffer;
     u8 index;
   };
 }

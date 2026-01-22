@@ -58,6 +58,7 @@ TEST_CASE("Result", "[result]") {
     Result<i32, Error> huh{10};
     huh = std::move(huh).map([](const i32 a) { return a * 2; });
     REQUIRE(huh.get_unchecked() == 20);
+    REQUIRE(huh.get_unchecked() == 20);
 
     std::ignore = std::move(huh).map([](const i32 a) { return a * 2; });
     REQUIRE_THROWS(huh.get_unchecked());

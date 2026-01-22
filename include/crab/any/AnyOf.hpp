@@ -71,6 +71,11 @@ namespace crab::any {
 
   public:
 
+    static_assert(
+      static_cast<usize>(-1) >= NumTypes,
+      "AnyOf does not support more than 255 variants, please reflect on the design of your program"
+    );
+
     template<usize I>
     using NthType = ty::nth_type<I, Ts...>;
 
@@ -219,6 +224,10 @@ namespace crab::any {
       return *this;
     }
 
+    /**
+     * Factor method for an AnyOf allowing explicit specification of the variant to emplace, useful if you have
+     * an AnyOf<Ts...> where multiple types could be convertible to one another like references or scalars.
+     */
     template<ty::either<Ts...> T>
     [[nodiscard]] static constexpr auto from(ty::identity<T> value) -> AnyOf {
       return AnyOf{
@@ -227,7 +236,18 @@ namespace crab::any {
       };
     }
 
-  public:
+    /**
+     * Factor method for an AnyOf with explicit specification for the type by index (AnyOf<T0,T1,T2,...>)
+     */
+    template<usize N>
+    [[nodiscard]] static constexpr auto from(NthType<N> value) -> AnyOf {
+      static_assert(N < NumTypes, "Invalid type index passed to AnyOf::from<usize>");
+
+      return AnyOf{
+        std::integral_constant<usize, N>{},
+        mem::forward<NthType<N>>(value),
+      };
+    }
 
     ~AnyOf() {
       if (not is_valid()) {
@@ -239,6 +259,9 @@ namespace crab::any {
 
     // NOLINTEND(*explicit*)
 
+    /**
+     * Retrieves an optional const reference to the inner value if the current type is the one being asked for
+     */
     template<ty::either<Ts...> T>
     requires ty::non_reference<T>
     [[nodiscard]] constexpr auto as() const& -> opt::Option<const T&> {
@@ -249,6 +272,9 @@ namespace crab::any {
       return opt::Option<const T&>{as_unchecked<T>()};
     }
 
+    /**
+     * Retrieves a mutable const reference to the inner value if the current type is the one being asked for
+     */
     template<ty::either<Ts...> T>
     requires ty::non_reference<T>
     [[nodiscard]] constexpr auto as() & -> opt::Option<T&> {
@@ -259,19 +285,28 @@ namespace crab::any {
       return opt::Option<T&>{as_unchecked<T>()};
     }
 
+    /**
+     * If the requested type is the one contained, this will return an option with the value moved into, note that
+     * even if this method returns none the storage inside will be destroyed.
+     */
     template<ty::either<Ts...> T>
     requires ty::non_reference<T>
     [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
       if (get_index() != IndexOf<T>) {
+        destroy();
+        invalidate();
         return {};
       }
 
       return opt::Option<T>{mem::move(*this).template as_unchecked<T>()};
     }
 
+    /**
+     * Returns the reference type requested if the current value is of that type.
+     */
     template<ty::either<Ts...> T>
     requires ty::is_reference<T>
-    [[nodiscard]] constexpr auto as() -> opt::Option<T> {
+    [[nodiscard]] constexpr auto as() & -> opt::Option<T> {
       if (get_index() != IndexOf<T>) {
         return {};
       }
@@ -279,9 +314,12 @@ namespace crab::any {
       return opt::Option<T>{as_unchecked<T>()};
     }
 
+    /**
+     * Returns the reference type requested if the current value is of that type.
+     */
     template<ty::either<Ts...> T>
     requires ty::is_reference<T>
-    [[nodiscard]] constexpr auto as() const -> opt::Option<T> {
+    [[nodiscard]] constexpr auto as() const& -> opt::Option<T> {
       if (get_index() != IndexOf<T>) {
         return {};
       }
@@ -289,6 +327,28 @@ namespace crab::any {
       return opt::Option<T>{as_unchecked<T>()};
     }
 
+    /**
+     * Returns the reference type requested if the current value is of that type.
+     * Note that after this method is called, this AnyOf is left invalid (this is rvalue qualified)
+     */
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        destroy();
+        invalidate();
+        return {};
+      }
+
+      return opt::Option<T>{mem::move(*this).template as_unchecked<T>()};
+    }
+
+    /**
+     * Insert an existing value to replace the one stored
+     *
+     * This method can be safely called on an moved-from AnyOf, this implementation will always be the same as
+     * operator=(T)
+     */
     template<typename T>
     constexpr auto insert(T&& value) & -> void {
       static_assert(
@@ -313,6 +373,12 @@ namespace crab::any {
       return *this;
     }
 
+    /**
+     * Construct a value of the specified type to replace the one stored
+     *
+     * This method can be safely called on an moved-from AnyOf, this implementation will always be the same as
+     * operator=(T)
+     */
     template<ty::either<Ts...> T, typename... Args>
     constexpr auto emplace(Args&&... args) & -> void {
       if (is_valid()) {
@@ -525,7 +591,7 @@ namespace crab::any {
       return index;
     }
 
-    [[nodiscard]] CRAB_INLINE constexpr auto is_valid() const -> usize {
+    [[nodiscard]] CRAB_INLINE constexpr auto is_valid() const -> bool {
       return index < NumTypes;
     }
 
@@ -544,12 +610,15 @@ namespace crab::any {
       }() or ...));
     }
 
+    /**
+     * Marks this instance as invalid
+     */
     constexpr auto invalidate() -> void {
-      index = static_cast<usize>(-1);
+      index = static_cast<u8>(-1);
     }
 
     impl::Buffer<Size, Alignment> buffer;
-    usize index;
+    u8 index;
   };
 }
 

@@ -134,7 +134,7 @@ namespace crab::ref {
     /**
      * Spaceship operator between two refs is the same as the operator between the underlying *pointers*
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Ref& other) -> decltype(auto) {
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const RefMut& other) -> decltype(auto) {
       return as_ptr() <=> other.as_ptr();
     }
 

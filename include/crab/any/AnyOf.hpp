@@ -61,13 +61,13 @@ namespace crab::any {
     using Storage = impl::AnyOfStorage<T>;
 
     template<typename F>
-    static constexpr bool FunctorAcceptsMutRef = (ty::consumer<F, Ts&> or ...);
+    static constexpr bool FunctorAcceptsMutRef{(ty::consumer<F, Ts&> or ...)};
 
     template<typename F>
-    static constexpr bool FunctorAcceptsConstRef = (ty::consumer<F, const Ts&> or ...);
+    static constexpr bool FunctorAcceptsConstRef{(ty::consumer<F, const Ts&> or ...)};
 
     template<typename F>
-    static constexpr bool FunctorAcceptsRvalue = (ty::consumer<F, Ts&&> or ...);
+    static constexpr bool FunctorAcceptsRvalue{(ty::consumer<F, Ts&&> or ...)};
 
   public:
 

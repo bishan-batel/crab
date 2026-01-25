@@ -1,6 +1,7 @@
 
 #include <alloca.h>
 #include <catch2/catch_test_macros.hpp>
+#include <type_traits>
 
 #include "crab/core/discard.hpp"
 #include "crab/preamble.hpp"
@@ -10,6 +11,56 @@
 #include "test_types.hpp"
 
 using crab::any::AnyOf;
+
+TEST_CASE("AnyOf::NumTypes", "[anyof]") {
+  // unique type helper
+#define T std::integral_constant<usize, __COUNTER__>
+
+  // simple brute force check, i dont care enough for cases past 24 lol
+
+  STATIC_CHECK(AnyOf<T>::NumTypes == 1);
+  STATIC_CHECK(AnyOf<T, T>::NumTypes == 2);
+  STATIC_CHECK(AnyOf<T, T, T>::NumTypes == 3);
+  STATIC_CHECK(AnyOf<T, T, T, T>::NumTypes == 4);
+  STATIC_CHECK(AnyOf<T, T, T, T, T>::NumTypes == 5);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T>::NumTypes == 6);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T>::NumTypes == 7);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T>::NumTypes == 8);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T>::NumTypes == 9);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T>::NumTypes == 10);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 11);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 12);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 13);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 14);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 15);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 16);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 17);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 18);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 19);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 20);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 21);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 22);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 23);
+  STATIC_CHECK(AnyOf<T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T, T>::NumTypes == 24);
+
+#undef T
+}
+
+TEST_CASE("AnyOf<Ts...>::DataSize", "[anyof]") {
+  STATIC_CHECK(AnyOf<u32>::DataSize == sizeof(i32));
+  STATIC_CHECK(AnyOf<i64>::DataSize == sizeof(i64));
+  STATIC_CHECK(AnyOf<u32, i64>::DataSize == sizeof(i64));
+  STATIC_CHECK(AnyOf<u8, i64>::DataSize == sizeof(i64));
+  STATIC_CHECK(AnyOf<std::array<u32, 24>, u32>::DataSize == sizeof(u32) * 24);
+}
+
+TEST_CASE("AnyOf<Ts...>::Alignment", "[anyof]") {
+  STATIC_CHECK(AnyOf<u32>::Alignment == alignof(i32));
+  STATIC_CHECK(AnyOf<i64>::Alignment == alignof(i64));
+  STATIC_CHECK(AnyOf<u32, i64>::Alignment == alignof(i64));
+  STATIC_CHECK(AnyOf<u8, i64>::Alignment == alignof(i64));
+  STATIC_CHECK(AnyOf<std::array<u32, 24>, u32>::Alignment == alignof(u32));
+}
 
 TEST_CASE("AnyOf<Ts...>:IndexOf", "[anyof]") {
   using T = AnyOf<i32, u32, f32, MoveOnly>;

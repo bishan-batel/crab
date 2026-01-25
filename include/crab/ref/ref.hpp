@@ -59,6 +59,13 @@ namespace crab::ref {
     }
 
     /**
+     * Spaceship operator between two refs is the same as the operator between the underlying *pointers*
+     */
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Ref& other) -> decltype(auto) {
+      return as_ptr() <=> other.as_ptr();
+    }
+
+    /**
      * Gets underlying pointer, this pointer is always non null
      */
     [[nodiscard]] CRAB_INLINE constexpr const T* as_ptr() const {
@@ -122,6 +129,13 @@ namespace crab::ref {
 
     [[nodiscard]] CRAB_INLINE constexpr T* operator->() const {
       return as_ptr();
+    }
+
+    /**
+     * Spaceship operator between two refs is the same as the operator between the underlying *pointers*
+     */
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Ref& other) -> decltype(auto) {
+      return as_ptr() <=> other.as_ptr();
     }
 
     /**

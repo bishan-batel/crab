@@ -9,13 +9,15 @@
 #include <unistd.h>
 #elif CRAB_WIN32
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
+#undef NOMINMAX
 #endif
 
 namespace crab::term::impl {
   CRAB_PURE CRAB_INLINE constexpr auto handle_to_descriptor(Handle handle) -> num::u32 {
-#if CRAB_UNIX
     switch (handle) {
+#if CRAB_UNIX
       case Handle::Out: return STDOUT_FILENO;
       case Handle::Error: return STDERR_FILENO;
       case Handle::Input: return STDIN_FILENO;

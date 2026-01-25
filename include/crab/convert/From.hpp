@@ -3,6 +3,7 @@
 #include <concepts>
 
 #include "crab/mem/forward.hpp"
+#include "crab/type_traits.hpp"
 
 namespace crab::conv {
 
@@ -13,9 +14,29 @@ namespace crab::conv {
     };
   }
 
+  /**
+   * Constraint that a value of type T must be able to be constructible with a value of F, or have a factory method
+   * 'from' that takes F.
+   *
+   * To properly apply the use of this concept, see crab::conv::from
+   * st
+   * ```
+   *
+   * @tparam T Output type
+   * @tparam F Input type
+   *
+   */
   template<typename T, typename F>
-  concept From = std::convertible_to<F, T> or impl::HasFromMethod<T, F>;
+  concept From = ty::convertible<F, T> or impl::HasFromMethod<T, F>;
 
+  /**
+   * Performs conversion between a value of F -> T
+   *
+   * @tparam T Produced type
+   * @tparam F Input type
+   * @param value Value to be converted
+   * @return Converted type
+   */
   template<typename T, typename F>
   requires From<T, F>
   [[nodiscard]] constexpr auto from(F&& value) -> T {

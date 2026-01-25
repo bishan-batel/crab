@@ -5,7 +5,7 @@
 
 namespace crab {
   /**
-   * @brief Unordered key-value collection
+   * @brief (Alias) Unordered key-value collection
    */
   template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Predicate = std::equal_to<Key>>
   using Dictionary = std::unordered_map<Key, Value, Hash, Predicate>;

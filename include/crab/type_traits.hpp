@@ -343,13 +343,13 @@ namespace crab {
      * @brief A valid error type for use in Err<T> / Result<_, E>
      */
     template<typename E>
-    concept error_type = std::is_move_constructible_v<E> or ty::is_reference<E>;
+    concept error_type = std::is_move_constructible_v<E>;
 
     /**
      * @brief Type constraint for a type that can be used with Result<T>
      */
     template<typename T>
-    concept ok_type = std::is_move_constructible_v<T> or ty::is_reference<T>;
+    concept ok_type = std::is_move_constructible_v<T>;
 
     namespace impl {
 

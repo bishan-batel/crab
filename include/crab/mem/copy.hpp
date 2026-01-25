@@ -1,6 +1,5 @@
 #pragma once
 
-#include "crab/assertion/assert.hpp"
 #include "crab/assertion/check.hpp"
 #include "size_of.hpp"
 #include "crab/type_traits.hpp"

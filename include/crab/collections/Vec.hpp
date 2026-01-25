@@ -5,7 +5,7 @@
 
 namespace crab {
   /**
-   * @brief Heap allocated, dynamically sized list
+   * @brief (Alias) Heap allocated, dynamically sized list
    */
   template<typename T>
   using Vec = std::vector<T>;

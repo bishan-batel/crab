@@ -5,7 +5,7 @@
 
 namespace crab {
   /**
-   * @brief std::tuple<T...> alias.
+   * @brief (Alias) std::tuple<T...> alias.
    */
   template<typename... Types>
   using Tuple = std::tuple<Types...>;

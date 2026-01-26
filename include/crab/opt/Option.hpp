@@ -309,7 +309,7 @@ namespace crab::opt {
      * is none, After this, the value has been 'taken out' of this option, after
      * this method is called this option is 'None'
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto unwrap(SourceLocation loc = SourceLocation::current()) && -> T {
+    [[nodiscard]] CRAB_INLINE constexpr auto unwrap(const SourceLocation& loc = SourceLocation::current()) && -> T {
       crab_check_with_location(is_some(), loc, "Cannot unwrap a none option");
 
       return mem::move(storage).value();
@@ -319,7 +319,8 @@ namespace crab::opt {
      * Returns a mutable reference to the contained Some value inside, if
      * this option is none this will panic & crash.
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) -> T& {
+    [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(const SourceLocation& loc = SourceLocation::current())
+      -> T& {
       crab_check_with_location(is_some(), loc, "Cannot get_unchecked a none option");
 
       return storage.value();
@@ -329,7 +330,7 @@ namespace crab::opt {
      * Returns a const reference to the contained Some value inside, if
      * this option is none this will panic & crash.
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(SourceLocation loc = SourceLocation::current()) const
+    [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(const SourceLocation& loc = SourceLocation::current()) const
       -> const T& {
       crab_check_with_location(is_some(), loc, "Cannot get_unchecked a none option");
 

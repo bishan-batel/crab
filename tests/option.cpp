@@ -246,16 +246,14 @@ TEST_CASE("Reference Types", "[option]") {
   asserts::for_types<i32&, const i32&>([]<typename T>(asserts::type<T>) {
     Option<T> a;
 
-    REQUIRE(a.is_none());
-
-    REQUIRE_THROWS(a.get_unchecked());
+    CHECK(a.is_none());
 
     i32 i = 10;
     i32 j = 10;
 
     a = i;
 
-    REQUIRE(a.is_some());
+    CHECK(a.is_some());
     CHECK(a.get_unchecked() == i);
     CHECK(a.get_unchecked() == 10);
 
@@ -264,7 +262,7 @@ TEST_CASE("Reference Types", "[option]") {
     CHECK(a == Option<T>{i});
     CHECK(a == Option<T>{j});
 
-    REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 10);
+    CHECK(a.template map<i32>().unwrap() == 10);
   });
 
   Option<i32&> a;

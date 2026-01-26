@@ -109,6 +109,15 @@ namespace crab::rc {
     static constexpr auto from_owned_unchecked(T* data_ptr, Base::Counter* counter_ptr = new Base::Counter) -> RcMut {
       return RcMut{data_ptr, counter_ptr};
     }
+
+    using Base::get_ref_count;
+    using Base::get_weak_ref_count;
+    using Base::is_unique;
+    using Base::as_ptr;
+    using Base::as_ref;
+    using Base::is_valid;
+    using Base::upcast;
+    using Base::downcast;
   };
 
   template<typename T>
@@ -234,6 +243,26 @@ namespace crab::rc {
     ) -> Rc {
       return Rc{owned_ptr, counter_ptr};
     }
+
+    using Base::get_ref_count;
+
+    using Base::get_weak_ref_count;
+
+    using Base::is_unique;
+
+    using Base::operator->;
+
+    using Base::operator*;
+
+    using Base::as_ptr;
+
+    using Base::as_ref;
+
+    using Base::is_valid;
+
+    using Base::upcast;
+
+    using Base::downcast;
   };
 
   template<ty::non_const T, typename... Args>

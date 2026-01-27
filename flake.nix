@@ -70,6 +70,7 @@
                   ninja
                   cmake
                   unzip
+                  doxygen
                 ];
 
                 buildInputs = with pkgs; [

@@ -7,3 +7,4 @@
 **/*/CMakeFiles
 /.cache
 /compile_commands.json
+/doxygen

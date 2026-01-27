@@ -810,33 +810,20 @@ namespace crab {
       return Err<E>{mem::move(value)};
     }
 
-    template<typename T, typename E>
-    [[nodiscard]] CRAB_INLINE constexpr auto unwrap(
-      Result<T, E>&& result,
-      const SourceLocation loc = SourceLocation::current()
-    ) -> T {
-      return mem::forward<Result<T, E>>(result).unwrap(loc);
-    }
-
-    template<typename T, typename E>
-    [[nodiscard]] CRAB_INLINE constexpr auto unwrap_err(
-      Result<T, E>&& result,
-      const SourceLocation loc = SourceLocation::current()
-    ) -> E {
-      return mem::forward<Result<T, E>>(result).unwrap_err(loc);
-    }
-
   } // namespace result
 
   using result::Ok;
   using result::Err;
   using result::fallible;
-  using result::unwrap_err;
   using result::ok;
   using result::err;
-  using result::unwrap;
+
+  namespace prelude {
+    using result::Result;
+  }
 } // namespace crab
 
-#if CRAB_USE_PRELUDE
-using ::crab::result::Result;
-#endif
+template<fmt::formattable T, fmt::formattable E>
+struct fmt::formatter<Result<T, E>> final {};
+
+CRAB_PRELUDE_GUARD;

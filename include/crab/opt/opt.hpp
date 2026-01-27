@@ -2,8 +2,8 @@
 
 namespace crab::opt {}
 
-#include "./Option.hpp"
-#include "./none.hpp"
-#include "./some.hpp"
-#include "./fallible.hpp"
-#include "./boolean_constructs.hpp"
+#include "crab/opt/Option.hpp"
+#include "crab/opt/none.hpp"
+#include "crab/opt/some.hpp"
+#include "crab/opt/fallible.hpp"
+#include "crab/opt/boolean_constructs.hpp"

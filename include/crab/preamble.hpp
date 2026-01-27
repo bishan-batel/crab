@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "./core.hpp"
+#include "crab/core.hpp"
 
 #include <functional>
 #include <source_location>
@@ -57,7 +57,6 @@ namespace crab {
 
 namespace crab::prelude {
 
-  using ::crab::Func;
   using ::crab::Pair;
 
 #if !CRAB_NO_TYPEDEF_ARRAY

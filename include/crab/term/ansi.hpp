@@ -1,7 +1,7 @@
 #pragma once
 
-#include "./forward.hpp"
-#include "./impl/handle_to_descriptor.hpp"
+#include "crab/term/forward.hpp"
+#include "crab/term/impl/handle_to_descriptor.hpp"
 
 namespace crab::term {
 

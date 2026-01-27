@@ -2,7 +2,7 @@
 
 #include "crab/core/SourceLocation.hpp"
 #include "crab/assertion/fmt.hpp"
-#include "./panic.hpp"
+#include "crab/assertion/panic.hpp"
 
 #define crab_check_with_location(condition, source_location, ...)                                                      \
   if (not static_cast<bool>(condition)) [[unlikely]]                                                                   \

@@ -15,7 +15,7 @@
 
 #include "crab/opt/forward.hpp"
 
-#include "./impl/BoxStorage.hpp"
+#include "crab/boxed/impl/BoxStorage.hpp"
 
 // NOLINTBEGIN(*explicit*)
 

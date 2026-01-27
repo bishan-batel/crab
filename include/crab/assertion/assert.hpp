@@ -3,9 +3,9 @@
 #include "crab/core/discard.hpp"
 #include "crab/core/unreachable.hpp"
 
-#include "./fmt.hpp"
-#include "./forward.hpp"
-#include "./panic.hpp"
+#include "crab/assertion/fmt.hpp"
+#include "crab/assertion/forward.hpp"
+#include "crab/assertion/panic.hpp"
 
 #if CRAB_DEBUG
 

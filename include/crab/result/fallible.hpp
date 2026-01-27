@@ -1,7 +1,7 @@
 #pragma once
 
 #include "crab/result/concepts.hpp"
-#include "./impl/fallible.hpp"
+#include "crab/result/impl/fallible.hpp"
 
 namespace crab::result {
   template<error_type E, std::invocable... F>

@@ -1,9 +1,7 @@
 #pragma once
 
-#include <initializer_list>
 #include <ranges>
-
-#include "crab/type_traits.hpp"
+#include "crab/ty/functor.hpp"
 
 namespace crab::cmp {
 

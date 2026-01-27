@@ -12,7 +12,6 @@
 #include "crab/ref/ref.hpp"
 #include "crab/ref/casts.hpp"
 #include "crab/ref/from_ptr.hpp"
-#include "crab/type_traits.hpp"
 
 #include "crab/opt/forward.hpp"
 
@@ -46,7 +45,7 @@ namespace crab {
     template<typename T>
     class Box;
 
-    template<crab::complete_type T, typename... Args>
+    template<ty::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T>;
   }
@@ -259,7 +258,7 @@ namespace crab {
       }
 
       CRAB_INLINE constexpr auto clone_from(const Box& from) const& -> void
-        requires(complete_type<T> and (ty::copy_assignable<T> or ty::copy_constructible<T>))
+        requires(ty::complete_type<T> and (ty::copy_assignable<T> or ty::copy_constructible<T>))
       {
         if constexpr (ty::copy_assignable<T>) {
           as_mut() = from;
@@ -338,7 +337,7 @@ namespace crab {
     /**
      * @brief Makes a new instance of type T on the heap with given args
      */
-    template<crab::complete_type T, typename... Args>
+    template<ty::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T> {
       return Box<T>::wrap_unchecked(new T{std::forward<Args>(args)...});

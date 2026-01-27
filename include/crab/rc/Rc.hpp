@@ -1,10 +1,9 @@
 // NOLINTBEGIN(*-explicit-constructor)
 #pragma once
 
-#include "crab/opt/Option.hpp"
+#include "crab/boxed/Box.hpp"
 #include "crab/ref/implicit_cast.hpp"
 #include "crab/mem/take.hpp"
-#include "crab/type_traits.hpp"
 
 #include "crab/rc/impl/RcBase.hpp"
 #include "crab/rc/impl/RcStorage.hpp"

@@ -1,7 +1,8 @@
 #pragma once
 
+#include <type_traits>
 #include "crab/core.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/ty/identity.hpp"
 
 namespace crab::ref {
 

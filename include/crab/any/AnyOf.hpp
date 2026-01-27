@@ -7,11 +7,12 @@
 #include "crab/core/discard.hpp"
 #include "crab/mem/forward.hpp"
 #include "crab/core/SourceLocation.hpp"
-#include "crab/type_traits.hpp"
 
 #include "crab/any/impl/AnyOfStorage.hpp"
 #include "crab/any/impl/Buffer.hpp"
 #include "crab/any/impl/visitor.hpp"
+#include "crab/ty/identity.hpp"
+#include "crab/opt/Option.hpp"
 
 namespace crab::any {
 

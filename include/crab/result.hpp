@@ -13,8 +13,8 @@
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
 #include "crab/mem/address_of.hpp"
+#include "crab/result/concepts.hpp"
 #include "crab/str/str.hpp"
-#include "crab/type_traits.hpp"
 #include "crab/mem/forward.hpp"
 #include "crab/opt/Option.hpp"
 
@@ -58,7 +58,7 @@ namespace crab {
     /**
      * @brief Converts a given error to its stringified representation.
      */
-    template<ty::error_type E>
+    template<error_type E>
     [[nodiscard]] constexpr auto error_to_string(const E& err) {
       if constexpr (requires {
                       { err.what() } -> crab::ty::convertible<String>;
@@ -83,7 +83,7 @@ namespace crab {
      */
     template<typename T>
     struct Ok {
-      static_assert(ty::ok_type<T>, "Ok<T> must satisfy ok_type");
+      static_assert(ok_type<T>, "Ok<T> must satisfy ok_type");
 
       using Inner = T;
 
@@ -127,7 +127,7 @@ namespace crab {
      */
     template<typename E>
     struct Err {
-      static_assert(ty::error_type<E>, "Err<E> must satisfy ok_type");
+      static_assert(error_type<E>, "Err<E> must satisfy ok_type");
 
       using Inner = E;
 
@@ -175,7 +175,7 @@ namespace crab {
       /**
        * @brief Whether type T is the 'Ok' wrapper Ok<K>
        */
-      template<ty::ok_type T>
+      template<ok_type T>
       struct is_crab_ok<Ok<T>> final : std::true_type {};
 
       /**
@@ -187,7 +187,7 @@ namespace crab {
       /**
        * @brief Whether type T is the 'Err' wrapper Err<K>
        */
-      template<ty::error_type E>
+      template<error_type E>
       struct is_crab_err<Err<E>> final : std::true_type {};
     }
 
@@ -207,8 +207,8 @@ namespace crab {
 
     template<typename T, typename E>
     class Result final {
-      static_assert(ty::ok_type<T>, "T is not a valid Ok type, must be move constructible.");
-      static_assert(ty::error_type<E>, "E is not a valid Err type.");
+      static_assert(ok_type<T>, "T is not a valid Ok type, must be move constructible.");
+      static_assert(error_type<E>, "E is not a valid Err type.");
 
     public:
 
@@ -583,7 +583,7 @@ namespace crab {
       ) && {
         using R = ty::functor_result<F, T>;
 
-        static_assert(ty::result_type<R>, "and_then functor parameter must return a Result<T,E> type");
+        static_assert(result_type<R>, "and_then functor parameter must return a Result<T,E> type");
 
         static_assert(
           std::same_as<typename R::ErrType, ErrType>,
@@ -697,7 +697,7 @@ namespace crab {
   namespace result {
 
     namespace impl {
-      template<ty::error_type Error>
+      template<error_type Error>
       struct fallible {
 
         template<typename... T>
@@ -706,7 +706,7 @@ namespace crab {
         }
 
         template<typename PrevResults, ty::provider F, ty::provider... Rest>
-        requires ty::result_type<ty::functor_result<F>>
+        requires result_type<ty::functor_result<F>>
         [[nodiscard]] CRAB_INLINE constexpr auto operator()(
           PrevResults tuple /* Tuple<T...>*/,
           F&& function,
@@ -721,7 +721,7 @@ namespace crab {
         }
 
         template<typename PrevResults, std::invocable F, std::invocable... Rest>
-        requires(ty::option_type<std::invoke_result_t<F>> and std::is_default_constructible_v<Error>)
+        requires(opt::option_type<std::invoke_result_t<F>> and std::is_default_constructible_v<Error>)
         [[nodiscard]] CRAB_INLINE constexpr auto operator()(
           PrevResults tuple /* Tuple<T...>*/,
           F&& function,
@@ -738,7 +738,7 @@ namespace crab {
         }
 
         template<typename PrevResults, std::invocable F, std::invocable... Rest>
-        requires(not ty::result_type<std::invoke_result_t<F>>)
+        requires(not result_type<std::invoke_result_t<F>>)
         [[nodiscard]] CRAB_INLINE constexpr auto operator()(
           PrevResults tuple /* Tuple<T...>*/,
           F&& function,
@@ -751,7 +751,7 @@ namespace crab {
         }
 
         template<typename PrevResults, typename V, typename... Rest>
-        requires(not std::invocable<V> and not ty::result_type<V>)
+        requires(not std::invocable<V> and not result_type<V>)
         [[nodiscard]] CRAB_INLINE constexpr auto operator()(
           PrevResults tuple /* Tuple<T...>*/,
           V&& value,
@@ -780,24 +780,24 @@ namespace crab {
       };
     }
 
-    template<ty::error_type E, std::invocable... F>
+    template<error_type E, std::invocable... F>
     [[nodiscard]] CRAB_INLINE constexpr auto fallible(F&&... fallible) {
       return impl::fallible<E>{}(Tuple<>{}, mem::forward<F>(fallible)...);
     }
 
-    template<ty::ok_type T, typename... Args>
+    template<ok_type T, typename... Args>
     [[nodiscard]] CRAB_INLINE constexpr auto ok(Args&&... args) {
       return Ok<T>{T{mem::forward<Args>(args)...}};
     }
 
-    template<ty::error_type E, typename... Args>
+    template<error_type E, typename... Args>
     [[nodiscard]] CRAB_INLINE constexpr auto err(Args&&... args) {
       return Err<E>{E{mem::forward<Args>(args)...}};
     }
 
     template<typename T>
     [[nodiscard]] CRAB_INLINE constexpr auto ok(T value) {
-      static_assert(ty::ok_type<T>, "Value must be a possible 'Ok<T>' type for use in Result<T, E>");
+      static_assert(ok_type<T>, "Value must be a possible 'Ok<T>' type for use in Result<T, E>");
 
       return Ok<T>{mem::move(value)};
     }
@@ -805,7 +805,7 @@ namespace crab {
     template<typename E>
     [[nodiscard]] CRAB_INLINE constexpr auto err(E value) {
 
-      static_assert(ty::ok_type<E>, "Value must be a possible 'Err<E>' type for use in Result<T, E>");
+      static_assert(ok_type<E>, "Value must be a possible 'Err<E>' type for use in Result<T, E>");
 
       return Err<E>{mem::move(value)};
     }

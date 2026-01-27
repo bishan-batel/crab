@@ -1,7 +1,7 @@
 #pragma once
 
 #include <type_traits>
-#include "crab/type_traits.hpp"
+#include "crab/ty/functor.hpp"
 
 namespace crab::any::impl {
 

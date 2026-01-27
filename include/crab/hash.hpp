@@ -1,7 +1,9 @@
 #pragma once
 
+#include <initializer_list>
 #include "crab/core.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/num/integer.hpp"
+#include "crab/ty/construct.hpp"
 
 namespace crab {
 

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "crab/type_traits.hpp"
+#include "crab/core.hpp"
+#include "crab/ty/classify.hpp"
 
 namespace crab::mem {
   /**

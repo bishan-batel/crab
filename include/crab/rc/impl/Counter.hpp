@@ -2,7 +2,7 @@
 
 #include "crab/assertion/check.hpp"
 #include "crab/core/SourceLocation.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/ty/bool_types.hpp"
 
 #include <atomic>
 

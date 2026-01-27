@@ -8,7 +8,6 @@
 
 #include <concepts>
 
-#include "crab/type_traits.hpp"
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
 #include "crab/hash.hpp"
@@ -16,6 +15,12 @@
 
 #include "./impl/GenericStorage.hpp"
 #include "./impl/RefStorage.hpp"
+
+#include "crab/opt/concepts.hpp"
+#include "crab/ref/forward.hpp"
+#include "crab/result/forward.hpp"
+#include "crab/ty/crab_ref_decay.hpp"
+#include "crab/ty/functor.hpp"
 
 namespace crab::opt {
 
@@ -476,7 +481,7 @@ namespace crab::opt {
     template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto flat_map(F&& mapper) && {
       using Returned = ty::functor_result<F, T>;
-      static_assert(ty::option_type<Returned>, "The function passed to flat_map must return an Option");
+      static_assert(option_type<Returned>, "The function passed to flat_map must return an Option");
 
       if (is_some()) {
         return Returned{std::invoke(mapper, mem::move(*this).unwrap())};
@@ -501,7 +506,7 @@ namespace crab::opt {
     [[nodiscard]] CRAB_INLINE constexpr auto or_else(F&& mapper) && {
       using Returned = ty::functor_result<F>;
 
-      static_assert(ty::option_type<Returned>, "The function passed to or_else must return an Option");
+      static_assert(option_type<Returned>, "The function passed to or_else must return an Option");
 
       if (is_some()) {
         return Returned{mem::move(*this).unwrap()};
@@ -523,7 +528,7 @@ namespace crab::opt {
      * If this option is of some type Option<Option<T>>, this will flatten
      * it to a single Option<T>
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto flatten() && -> T requires ty::option_type<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto flatten() && -> T requires option_type<T>
     {
       if (is_none()) {
         return None{};
@@ -536,8 +541,7 @@ namespace crab::opt {
      * If this option is of some type Option<Option<T>>, this will flatten
      * it to a single Option<T>
      */
-    [[nodiscard]] CRAB_INLINE constexpr auto flatten() const& -> T
-      requires ty::option_type<T> and ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto flatten() const& -> T requires option_type<T> and ty::copy_constructible<T>
 
     {
       return copied().flatten();

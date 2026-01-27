@@ -11,7 +11,7 @@ namespace crab::opt::impl {
     }
 
     template<typename PrevResults, ty::provider F, typename... Rest>
-    requires ty::option_type<ty::functor_result<F>>
+    requires option_type<ty::functor_result<F>>
     [[nodiscard]] CRAB_INLINE constexpr auto operator()(
       PrevResults tuple /* Tuple<T...>*/,
       F&& function,
@@ -26,7 +26,7 @@ namespace crab::opt::impl {
     }
 
     template<typename PrevResults, ty::provider F, typename... Rest>
-    requires(not ty::option_type<ty::functor_result<F>>)
+    requires(not option_type<ty::functor_result<F>>)
     [[nodiscard]] CRAB_INLINE constexpr auto operator()(
       PrevResults tuple /* Tuple<T...>*/,
       F&& function,
@@ -39,7 +39,7 @@ namespace crab::opt::impl {
     }
 
     template<typename PrevResults, typename V, typename... Rest>
-    requires(not ty::provider<V> and not ty::option_type<V>)
+    requires(not ty::provider<V> and not option_type<V>)
     [[nodiscard]] CRAB_INLINE constexpr auto operator()(
       PrevResults tuple /* Tuple<T...>*/,
       V&& value,

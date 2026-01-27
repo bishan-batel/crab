@@ -1,9 +1,9 @@
 #pragma once
 
 #include <type_traits>
-#include "crab/type_traits.hpp"
 #include "./move.hpp"
 #include "./address_of.hpp"
+#include "crab/ty/classify.hpp"
 
 namespace crab::mem {
   template<typename T>

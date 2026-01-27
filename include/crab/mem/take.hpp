@@ -1,7 +1,8 @@
 #pragma once
 
-#include "crab/type_traits.hpp"
-#include "./move.hpp"
+#include "crab/mem/move.hpp"
+#include "crab/ty/classify.hpp"
+#include "crab/ty/construct.hpp"
 
 namespace crab::mem {
 

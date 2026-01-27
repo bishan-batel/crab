@@ -5,7 +5,7 @@
 #include "crab/assertion/check.hpp"
 #include "crab/mem/address_of.hpp"
 #include "crab/mem/take.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/opt/Option.hpp"
 
 namespace crab::rc::impl {
   template<typename T, template<typename> class Self>

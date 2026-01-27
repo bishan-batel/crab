@@ -4,6 +4,7 @@
 #include "crab/opt/Option.hpp"
 #include "crab/mem/move.hpp"
 #include "crab/mem/forward.hpp"
+#include "crab/ty/identity.hpp"
 
 namespace crab::opt {
 

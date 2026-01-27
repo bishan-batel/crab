@@ -3,7 +3,7 @@
 #include <functional>
 
 #include "crab/assertion/assert.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/ty/classify.hpp"
 
 // NOLINTBEGIN(*explicit*)
 

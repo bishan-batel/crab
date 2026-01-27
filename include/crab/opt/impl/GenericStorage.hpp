@@ -6,7 +6,7 @@
 #include "crab/mem/forward.hpp"
 #include "crab/mem/size_of.hpp"
 #include "crab/opt/none.hpp"
-#include "crab/type_traits.hpp"
+#include "crab/ty/construct.hpp"
 
 #include <array>
 

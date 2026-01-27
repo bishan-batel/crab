@@ -4,7 +4,6 @@
 #include "crab/mem/forward.hpp"
 #include "crab/mem/move.hpp"
 #include "crab/opt/Option.hpp"
-#include "crab/type_traits.hpp"
 
 namespace crab::opt {
   /**

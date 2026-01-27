@@ -19,8 +19,22 @@ set(DOXYFILE_IN ./Doxyfile.in)
 set(DOXYFILE_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 configure_file(${DOXYFILE_IN} ${DOXYFILE_OUT} @ONLY)
 
+file(GLOB_RECURSE CRAB_DOXYGEN_ALL_SOURCES ${PROJECT_SOURCE_DIR}/include/crab/*.hpp)
+set(CRAB_DOXYGEN_SOURCES "")
+
+foreach(f ${CRAB_DOXYGEN_ALL_SOURCES})
+        if(NOT f MATCHES ".*/impl/.*")
+                list(APPEND CRAB_DOXYGEN_SOURCES ${f})
+        endif()
+endforeach()
+
+
 doxygen_add_docs(
         docs
-        ${PROJECT_SOURCE_DIR}/include/crab
+        ${CRAB_DOXYGEN_SOURCES}
+        ALL
+        COMMENT "Generating Doxygen Output"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        # USE_STAMP_FILE
         ${DOXYFILE_OUT}
 )

@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['end_0',['end',['../classcrab_1_1range_1_1Range.html#a0bb5b9f99002d1a96bd62ef842dbfe2f',1,'crab::range::Range::end()'],['../classcrab_1_1prelude_1_1Range.html#a0bb5b9f99002d1a96bd62ef842dbfe2f',1,'crab::prelude::Range::end()']]],
+  ['ensure_5fvalid_1',['ensure_valid',['../classcrab_1_1result_1_1Result.html#a4c10deba6b65121d6b9324bdaee08e71',1,'crab::result::Result::ensure_valid()'],['../classcrab_1_1prelude_1_1Result.html#a4c10deba6b65121d6b9324bdaee08e71',1,'crab::prelude::Result::ensure_valid()']]],
+  ['err_2',['err',['../classcrab_1_1result_1_1Result.html#a16190c4df83a09065179d28f544348ae',1,'crab::result::Result::err(const SourceLocation loc=SourceLocation::current()) &amp;&amp;-&gt; opt::Option&lt; E &gt;'],['../classcrab_1_1result_1_1Result.html#a2128d7b1762b1a79b68a4cd67910bfd1',1,'crab::result::Result::err(const SourceLocation loc=SourceLocation::current()) const &amp;-&gt; opt::Option&lt; E &gt;'],['../classcrab_1_1prelude_1_1Result.html#a16190c4df83a09065179d28f544348ae',1,'crab::prelude::Result::err(const SourceLocation loc=SourceLocation::current()) &amp;&amp;-&gt; opt::Option&lt; E &gt;'],['../classcrab_1_1prelude_1_1Result.html#a2128d7b1762b1a79b68a4cd67910bfd1',1,'crab::prelude::Result::err(const SourceLocation loc=SourceLocation::current()) const &amp;-&gt; opt::Option&lt; E &gt;']]]
+];

@@ -1,0 +1,48 @@
+var namespacecrab =
+[
+    [ "any", "namespacecrab_1_1any.html", null ],
+    [ "boxed", "namespacecrab_1_1boxed.html", "namespacecrab_1_1boxed" ],
+    [ "mem", "namespacecrab_1_1mem.html", "namespacecrab_1_1mem" ],
+    [ "ops", "namespacecrab_1_1ops.html", "namespacecrab_1_1ops" ],
+    [ "rc", "namespacecrab_1_1rc.html", "namespacecrab_1_1rc" ],
+    [ "term", "namespacecrab_1_1term.html", [
+      [ "Handle", "namespacecrab_1_1term.html#ade2e0fb1a0dc0884fa79e26b581d19fc", [
+        [ "Out", "namespacecrab_1_1term.html#ade2e0fb1a0dc0884fa79e26b581d19fca7c147cda9e49590f6abe83d118b7353b", null ],
+        [ "Error", "namespacecrab_1_1term.html#ade2e0fb1a0dc0884fa79e26b581d19fca902b0d55fddef6f8d651fe1035b7d4bd", null ],
+        [ "Input", "namespacecrab_1_1term.html#ade2e0fb1a0dc0884fa79e26b581d19fca324118a6721dd6b8a9b9f4e327df2bf5", null ]
+      ] ]
+    ] ],
+    [ "cases", "structcrab_1_1cases.html", null ],
+    [ "Err", "structcrab_1_1Err.html", null ],
+    [ "Error", "classcrab_1_1Error.html", "classcrab_1_1Error" ],
+    [ "Ok", "structcrab_1_1Ok.html", null ],
+    [ "unit", "structcrab_1_1unit.html", "structcrab_1_1unit" ],
+    [ "into_hash_code", "conceptcrab_1_1into__hash__code.html", null ],
+    [ "Dictionary", "namespacecrab.html#a464db68fc2d1e4ca61815793726f7674", null ],
+    [ "Func", "namespacecrab.html#a446b4e5f093d488ef0d55e43c0736f51", null ],
+    [ "hash_code", "namespacecrab.html#a65ead1c2bd0728e07b20e8b6c843b0aa", null ],
+    [ "InStringStream", "namespacecrab.html#a4c8692a5fda15b9b5cf7d9cd78f52806", null ],
+    [ "OutStringStream", "namespacecrab.html#afbe677b189a53e80b8218c9c4c9fa564", null ],
+    [ "Pair", "namespacecrab.html#a35750fd8bc2ddb9242180f4969595af2", null ],
+    [ "Set", "namespacecrab.html#a65986f529218d4d0214eba34518d5d2a", null ],
+    [ "SizedArray", "namespacecrab.html#a61cddf44fce3cadb8711f6737c08c8d4", null ],
+    [ "SourceLocation", "namespacecrab.html#af2eac98f50d89da93b0e8d20245479de", null ],
+    [ "Span", "namespacecrab.html#ae748f37e7c306294bb4b39d6c2d2f216", null ],
+    [ "String", "namespacecrab.html#a2a24e330d12bcf0d832aeb83ed0b8769", null ],
+    [ "StringStream", "namespacecrab.html#a4564c106afa8bd1d639610cda0222413", null ],
+    [ "StringView", "namespacecrab.html#a89add1f5bfc6b023426a419ba3bcdba8", null ],
+    [ "Tuple", "namespacecrab.html#a39d498ff8b991cad225fa74cdc8b2aea", null ],
+    [ "Vec", "namespacecrab.html#aaa3ba808af5950c7b469d103b5bcbd12", null ],
+    [ "widechar", "namespacecrab.html#aa9888d477dbb8ea97e210df590b2319a", null ],
+    [ "WideString", "namespacecrab.html#a9fcc98917f6ecbde97036452377154c2", null ],
+    [ "WideStringStream", "namespacecrab.html#a04bb57ef8054e33e14b1212222b8c9b3", null ],
+    [ "WideStringView", "namespacecrab.html#a353dd0aad1745a3d4f951eb8418afd2a", null ],
+    [ "discard", "namespacecrab.html#a76e77acae4267338001f6cbfd3636a57", null ],
+    [ "implicit_cast", "namespacecrab.html#af0fe7a8af2b862b0ca7b11ca66dc99d1", null ],
+    [ "is_exact", "namespacecrab.html#aafee25dba1636983099db50d95490aef", null ],
+    [ "move", "namespacecrab.html#a1a30db6f5226807c6ff6a31eb26f3114", null ],
+    [ "some", "namespacecrab.html#ac92e710dd0ef7e47a066edc8717c1810", null ],
+    [ "then", "namespacecrab.html#ab5f803b5de4832a0cbc44dda59613018", null ],
+    [ "unless", "namespacecrab.html#a427446e6090b13dc5991678f49a40a59", null ],
+    [ "unreachable", "namespacecrab.html#aec863eb47bbcc3d57ee9440a43d14f92", null ]
+];

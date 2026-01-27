@@ -1,0 +1,6 @@
+var searchData=
+[
+  ['discard_0',['discard',['../namespacecrab.html#a76e77acae4267338001f6cbfd3636a57',1,'crab']]],
+  ['downcast_1',['downcast',['../classcrab_1_1boxed_1_1Box.html#a20d86c6972e3c5b37ab98278b01c9e93',1,'crab::boxed::Box::downcast(const SourceLocation loc=SourceLocation::current()) const -&gt; opt::Option&lt; const Derived &amp; &gt;'],['../classcrab_1_1boxed_1_1Box.html#ae7ea2819374eb4f4554ac867888bb14e',1,'crab::boxed::Box::downcast(const SourceLocation loc=SourceLocation::current()) -&gt; opt::Option&lt; Derived &amp; &gt;'],['../classcrab_1_1prelude_1_1Box.html#a20d86c6972e3c5b37ab98278b01c9e93',1,'crab::prelude::Box::downcast(const SourceLocation loc=SourceLocation::current()) const -&gt; opt::Option&lt; const Derived &amp; &gt;'],['../classcrab_1_1prelude_1_1Box.html#ae7ea2819374eb4f4554ac867888bb14e',1,'crab::prelude::Box::downcast(const SourceLocation loc=SourceLocation::current()) -&gt; opt::Option&lt; Derived &amp; &gt;']]],
+  ['downcast_5flossy_2',['downcast_lossy',['../classcrab_1_1boxed_1_1Box.html#a154a3522875bad6128ad3af55e9a8d02',1,'crab::boxed::Box::downcast_lossy()'],['../classcrab_1_1prelude_1_1Box.html#a154a3522875bad6128ad3af55e9a8d02',1,'crab::prelude::Box::downcast_lossy()']]]
+];

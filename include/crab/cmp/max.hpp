@@ -1,7 +1,6 @@
 #pragma once
 
 #include <algorithm>
-#include <initializer_list>
 
 #include <ranges>
 #include "crab/ty/functor.hpp"

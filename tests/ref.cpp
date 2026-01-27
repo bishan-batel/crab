@@ -1,5 +1,4 @@
 #include <crab/ref/ref.hpp>
-#include <crab/type_traits.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
@@ -8,11 +7,11 @@ struct IncompleteType;
 
 TEST_CASE("Type Traits") {
 
-  STATIC_REQUIRE(not crab::complete_type<IncompleteType>);
+  STATIC_REQUIRE(not crab::ty::complete_type<IncompleteType>);
 
 
   asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
-    STATIC_REQUIRE(crab::complete_type<String>);
+    STATIC_REQUIRE(crab::ty::complete_type<String>);
   });
 }
 

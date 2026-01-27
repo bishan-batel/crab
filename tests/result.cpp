@@ -5,7 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 
 #include "crab/preamble.hpp"
-#include "crab/result.hpp"
+#include "crab/result/unwrap.hpp"
+#include "crab/result/fallible.hpp"
+#include "crab/result/Result.hpp"
 
 class Error final : public crab::Error {
 public:

@@ -11,7 +11,7 @@ namespace crab::rc::impl {
 
   public:
 
-    explicit CRAB_INLINE Counter(usize strong_count = 1, usize weak_count = 0):
+    explicit CRAB_INLINE Counter(const usize strong_count = 1, const usize weak_count = 0):
         strong{strong_count}, weak{weak_count} {}
 
     constexpr CRAB_INLINE auto increment_strong() -> void {

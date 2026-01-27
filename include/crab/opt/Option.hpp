@@ -10,12 +10,12 @@
 
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
-#include "crab/hash.hpp"
 #include "./none.hpp"
 
 #include "./impl/GenericStorage.hpp"
 #include "./impl/RefStorage.hpp"
 
+#include "crab/hash/hash.hpp"
 #include "crab/opt/concepts.hpp"
 #include "crab/ref/forward.hpp"
 #include "crab/result/forward.hpp"

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <initializer_list>
 #include "crab/core.hpp"
 #include "crab/num/integer.hpp"
@@ -18,19 +19,22 @@ namespace crab {
   template<typename T>
   concept into_hash_code = ty::convertible<T, hash_code>;
 
+  template<typename T>
+  using Hasher = std::hash<T>;
+
   namespace ty {
     /**
      * @brief Is the given type hashable
      */
     template<typename T>
     concept hashable = requires(const T& v) {
-      { std::hash<T>{}(v) } -> ty::convertible<hash_code>;
+      { Hasher<T>{}(v) } -> ty::convertible<hash_code>;
     };
   }
 
   template<ty::hashable T>
   [[nodiscard]] CRAB_INLINE constexpr auto hash(const T& value) -> hash_code {
-    return static_cast<hash_code>(std::hash<T>{}(value));
+    return static_cast<hash_code>(Hasher<T>{}(value));
   }
 
   [[nodiscard]] CRAB_INLINE constexpr auto hash_code_mix(const hash_code seed, const hash_code next) -> hash_code {

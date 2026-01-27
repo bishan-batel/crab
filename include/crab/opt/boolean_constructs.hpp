@@ -11,7 +11,7 @@ namespace crab::opt {
    */
   template<ty::provider F>
   [[nodiscard]] CRAB_INLINE constexpr auto then(const bool cond, F&& func) {
-    using Return = Option<crab::ty::functor_result<F>>;
+    using Return = Option<ty::functor_result<F>>;
 
     if (not cond) {
       return Return{};

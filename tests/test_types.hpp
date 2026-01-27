@@ -180,7 +180,7 @@ struct Base {
   }
 };
 
-struct Derived : public Base {
+struct Derived final : public Base {
   [[nodiscard]] auto name() const -> StringView override {
     return "Derived";
   }

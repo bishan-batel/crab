@@ -6,7 +6,6 @@
 #include "crab/core/discard.hpp"
 #include "crab/preamble.hpp"
 #include "crab/any/AnyOf.hpp"
-#include "crab/type_traits.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
 

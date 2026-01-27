@@ -32,16 +32,16 @@ namespace crab::ref {
    *
    * ```
    *
-   * @tparam Derived
+   * @tparam T
    * @param obj
    * @return
    */
   template<typename T>
-  [[nodiscard]] CRAB_INLINE constexpr auto is_exact(const auto& obj) noexcept -> bool {
+  [[nodiscard]] CRAB_INLINE constexpr auto is_exact([[maybe_unused]] const auto& obj) noexcept -> bool {
     return typeid(obj) == typeid(T);
   }
 }
 
 namespace crab {
-  using crab::ref::is_exact;
+  using ref::is_exact;
 }

@@ -4,11 +4,10 @@
 #include <concepts>
 #include <crab/preamble.hpp>
 #include <utility>
-#include "crab/type_traits.hpp"
 
 namespace asserts {
 
-  template<typename... T>
+  template<typename...>
   struct typelist_t {};
 
   template<typename... T>

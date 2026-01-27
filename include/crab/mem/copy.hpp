@@ -2,7 +2,6 @@
 
 #include "crab/assertion/check.hpp"
 #include "size_of.hpp"
-#include "crab/type_traits.hpp"
 
 #include <cstring>
 
@@ -61,11 +60,11 @@ namespace crab::mem {
 
     // double check that the ranges dont overlap
     {
-      uptr source_begin{static_cast<uptr>(&source[0])};
-      uptr source_end{static_cast<uptr>(&source[count - 1])};
+      const uptr source_begin{static_cast<uptr>(&source[0])};
+      const uptr source_end{static_cast<uptr>(&source[count - 1])};
 
-      uptr dest_begin{static_cast<uptr>(&destination[0])};
-      uptr dest_end{static_cast<uptr>(&destination[count - 1])};
+      const uptr dest_begin{static_cast<uptr>(&destination[0])};
+      const uptr dest_end{static_cast<uptr>(&destination[count - 1])};
 
       crab_dbg_check(
         not(source_begin <= dest_end and dest_begin >= source_end),

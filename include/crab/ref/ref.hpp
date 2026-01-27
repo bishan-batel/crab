@@ -1,3 +1,5 @@
+// ReSharper disable CppNonExplicitConversionOperator
+// ReSharper disable CppNonExplicitConvertingConstructor
 #pragma once
 
 #include <functional>
@@ -19,7 +21,7 @@ namespace crab::ref {
 
     static_assert(ty::non_reference<T>, "Cannot have a Ref<T> to another reference type T");
 
-    CRAB_INLINE constexpr explicit Ref(const T* const pointer, SourceLocation loc = SourceLocation::current()):
+    CRAB_INLINE constexpr explicit Ref(const T* const pointer, const SourceLocation loc = SourceLocation::current()):
         pointer(pointer) {
       debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL Ref object");
     }
@@ -98,7 +100,7 @@ namespace crab::ref {
 
     static_assert(ty::non_reference<T>, "Cannot have a Ref<T> to another reference type T");
 
-    CRAB_INLINE constexpr explicit RefMut(T* const pointer, SourceLocation loc = SourceLocation::current()):
+    CRAB_INLINE constexpr explicit RefMut(T* const pointer, const SourceLocation loc = SourceLocation::current()):
         pointer(pointer) {
       debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL RefMut object");
     }

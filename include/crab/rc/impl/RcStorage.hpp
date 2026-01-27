@@ -26,7 +26,7 @@ namespace crab {
         CRAB_INLINE constexpr RcStorage(const RcStorage& storage):
             inner{storage.in_use() ? storage.inner : RefCounted::from_owned_unchecked(nullptr, nullptr)} {}
 
-        CRAB_INLINE constexpr RcStorage(RcStorage&& storage):
+        CRAB_INLINE constexpr RcStorage(RcStorage&& storage) noexcept:
             inner{storage.in_use() ? storage.inner : RefCounted::from_owned_unchecked(nullptr, nullptr)} {}
 
         CRAB_INLINE constexpr auto operator=(const RcStorage& value) -> RcStorage& {
@@ -43,7 +43,7 @@ namespace crab {
           return *this;
         }
 
-        CRAB_INLINE constexpr auto operator=(RcStorage&& value) -> RcStorage& {
+        CRAB_INLINE constexpr auto operator=(RcStorage&& value) noexcept -> RcStorage& {
           if (&value == this) [[unlikely]] {
             return *this;
           }

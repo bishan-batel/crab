@@ -7,7 +7,7 @@
 namespace crab::opt {
   template<typename... F>
   [[nodiscard]] CRAB_INLINE constexpr auto fallible(F&&... fallible) {
-    return impl::fallible{}(std::tuple<>{}, mem::forward<F>(fallible)...);
+    return impl::fallible{}(std::tuple{}, mem::forward<F>(fallible)...);
   }
 }
 

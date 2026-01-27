@@ -5,8 +5,8 @@
 
 #include "crab/core.hpp"
 #include "crab/num/integer.hpp"
-#include "crab/type_traits.hpp"
 #include "crab/assertion/assert.hpp"
+#include "crab/ty/identity.hpp"
 
 namespace crab::range {
   template<std::integral T = usize>

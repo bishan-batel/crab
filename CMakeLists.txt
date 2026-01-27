@@ -22,6 +22,7 @@ endif()
 option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
 option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
 option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
+option(CRAB_DOCS "Whether to include crab documentation" OFF)
 
 if (CRAB_USE_STD_FORMAT AND CRAB_USE_FMT)
         message(FATAL_ERROR "CRAB_USE_STD_FORMAT and CRAB_USE_FMT are mutually exclusive, choose whether crab should use std::format vs fmt::format")
@@ -137,6 +138,11 @@ install(
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
         DESTINATION "${conf_install_dir}"
 )
+
+# Docs 
+if (CRAB_DOCS)
+        add_subdirectory(docs)
+endif()
 
 # Tests
 

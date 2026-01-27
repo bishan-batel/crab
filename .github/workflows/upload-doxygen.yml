@@ -1,6 +1,6 @@
 # This starter workflow is for a CMake project running on multiple platforms. There is a different starter workflow if you just want a single platform.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-single-platform.yml
-name: CMake on multiple platforms
+name: Build & Upload Doxygen
 
 on:
   push:
@@ -21,7 +21,9 @@ jobs:
       uses: egor-tensin/setup-clang@v1
       with:
         version: 17
-
+    - uses: ssciwr/doxygen-install@v1
+      with:
+        version: "1.14.0"
     - name: Setup CMake
       run: 
         cmake -DCRAB_DOCS=ON -S ${{ github.workspace }}

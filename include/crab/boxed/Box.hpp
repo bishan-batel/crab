@@ -51,12 +51,8 @@ namespace crab {
   }
 
   namespace opt {
-
-    template<typename T>
-    struct Storage;
-
     /**
-     * @brief Storage type
+     * @brief Storage type specialization for Box<T>
      */
     template<typename T>
     struct Storage<::crab::boxed::Box<T>> final {
@@ -126,12 +122,25 @@ namespace crab {
         return mem::take(box.raw_ptr(loc));
       }
 
+      /**
+       * @brief A box cannot be empty.
+       */
       Box() = delete;
 
+      /**
+       * @brief A box cannot be trivially copied
+       */
       Box(const Box&) = delete;
 
+      /**
+       * @brief Move construction from box, leaves 'from' in an invalid state, after it is only safe to destroy or
+       * reassign.
+       */
       CRAB_INLINE constexpr Box(Box&& from) noexcept: obj{mem::take(from.obj)} {}
 
+      /**
+       * @brief Conversion constructor of Box<Derived> to downcast to Box<Base>
+       */
       template<std::derived_from<T> Derived>
       CRAB_INLINE constexpr Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
           Box{Box<Derived>::unwrap(std::move(from))} {
@@ -159,36 +168,60 @@ namespace crab {
         return as_ref();
       }
 
+      /**
+       * Implicit downcast conversion
+       */
       template<std::derived_from<T> Base>
       CRAB_INLINE constexpr operator Base&() {
         return as_ref();
       }
 
+      /**
+       * Implicit downcast conversion
+       */
       template<std::derived_from<T> Base>
       CRAB_INLINE constexpr operator const Base&() const {
         return as_ref();
       }
 
+      /**
+       * Implicit ref conversion
+       */
       CRAB_INLINE constexpr operator ref::Ref<T>() const {
         return as_ref();
       }
 
+      /**
+       * Implicit ref conversion
+       */
       CRAB_INLINE constexpr operator ref::RefMut<T>() {
         return as_ref();
       }
 
+      /**
+       * Implicit ref conversion
+       */
       template<std::derived_from<T> Base>
       CRAB_INLINE constexpr operator ref::Ref<Base>() const {
         return as_ref();
       }
 
+      /**
+       * Implicit ref conversion
+       */
       template<std::derived_from<T> Base>
       CRAB_INLINE constexpr operator ref::RefMut<Base>() {
         return as_mut();
       }
 
+      /**
+       * You cannot copy a box.
+       */
       auto operator=(const Box&) -> void = delete;
 
+      /**
+       * Standard move assignment
+       */
       CRAB_INLINE constexpr auto operator=(Box&& rhs) noexcept -> Box& {
         if (rhs.obj == obj) {
           return *this;
@@ -200,6 +233,9 @@ namespace crab {
         return *this;
       }
 
+      /**
+       * Move assignment from a Box of a derived type, this will perform the required upcast
+       */
       template<std::derived_from<T> Derived>
       CRAB_INLINE constexpr auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
         if (obj == static_cast<T*>(rhs.as_ptr())) {
@@ -212,52 +248,87 @@ namespace crab {
         return *this;
       }
 
+      /**
+       * Pointer access to contained type
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto operator->() -> T* {
         return as_ptr_mut();
       }
 
+      /**
+       * Pointer access to contained type
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto operator->() const -> const T* {
         return as_ptr();
       }
 
+      /**
+       * Dereference of a Box<T> leads to the inner T
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto operator*() -> T& {
         return as_mut();
       }
 
+      /**
+       * Dereference of a Box<T> leads to the inner T
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto operator*() const -> const T& {
         return as_ref();
       }
 
+      /**
+       * Stream formatter, only valid if *rhs is able to be streamed.
+       */
       CRAB_INLINE constexpr friend auto operator<<(std::ostream& os, const Box& rhs) -> std::ostream& {
         return os << *rhs;
       }
 
+      /**
+       * Gets the inner value as a mutable pointer
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto as_ptr_mut(const SourceLocation loc = SourceLocation::current()) -> T* {
         crab_check_with_location(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
 
+      /**
+       * Gets the inner value as a pointer
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto as_ptr(const SourceLocation loc = SourceLocation::current()) const
         -> const T* {
         crab_check_with_location(obj != nullptr, loc, "Invalid Use of Moved Box<T>.");
         return obj;
       }
 
+      /**
+       * Gets the inner value as a mutable reference
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto as_mut(const SourceLocation loc = SourceLocation::current()) -> T& {
         return *as_ptr_mut(loc);
       }
 
+      /**
+       * Gets the inner value as a reference
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto as_ref(const SourceLocation loc = SourceLocation::current()) const
         -> const T& {
         return *as_ptr(loc);
       }
 
+      /**
+       * Performs a deep copy of the value inside, this is only possible if it valid to copy construct an instance of T
+       */
       [[nodiscard]] CRAB_INLINE constexpr auto clone() const& -> Box requires ty::copy_constructible<T>
       {
         return boxed::make_box<T, const T&>(as_ref());
       }
 
-      CRAB_INLINE constexpr auto clone_from(const Box& from) const& -> void
+      /**
+       * Performs a deep copy of the value inside, this is only possible if it valid to copy construct an instance of T.
+       *
+       * This will reuse the existing allocation this box contains.
+       */
+      CRAB_INLINE constexpr auto clone_from(const Box& from) & -> void
         requires(ty::complete_type<T> and (ty::copy_assignable<T> or ty::copy_constructible<T>))
       {
         if constexpr (ty::copy_assignable<T>) {

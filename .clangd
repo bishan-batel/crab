@@ -1,2 +1,8 @@
 CompileFlags:
-  CompilationDatabase: build/debug
+  CompilationDatabase: ./build/debug
+  # CompilationDatabase: ./build/_GCC_Debug/
+  # CompilationDatabase: ./build/_GCC_Release/
+  # CompilationDatabase: ./build/_Clang_Debug/
+  # CompilationDatabase: ./build/_Clang_Release/
+
+

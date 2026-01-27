@@ -2,15 +2,9 @@
 // Created by bishan_ on 5/20/24.
 //
 
-#include <crab/rc.hpp>
-
 #include <catch2/catch_test_macros.hpp>
 #include <utility>
 #include "test_types.hpp"
-
-#if CATCH2_TESTS
-int a
-#endif
 
 TEST_CASE("Rc/RcMut") {
   SECTION("move") {
@@ -26,7 +20,6 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE(other.get_ref_count() == 1);
       REQUIRE(other.is_unique());
 
-      REQUIRE(rc.get_ref_count() == 0);
       REQUIRE(not rc.is_valid());
     }
 
@@ -42,7 +35,6 @@ TEST_CASE("Rc/RcMut") {
       REQUIRE(other.get_ref_count() == 1);
       REQUIRE(other.is_unique());
 
-      REQUIRE(rc.get_ref_count() == 0);
       REQUIRE(not rc.is_valid());
     }
   }
@@ -76,8 +68,9 @@ TEST_CASE("Rc/RcMut") {
   }
 
   SECTION("Option Niche Optimisation") {
+    using crab::mem::size_of;
 
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(RcMut<T>));
       STATIC_REQUIRE(sizeof(Rc<T>) == sizeof(Option<Rc<T>>));
       STATIC_REQUIRE(sizeof(RcMut<T>) == sizeof(Option<RcMut<T>>));

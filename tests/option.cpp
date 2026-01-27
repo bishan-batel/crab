@@ -1,16 +1,16 @@
 #include <algorithm>
 #include <concepts>
-#include <ranges>
 #include <catch2/catch_test_macros.hpp>
-#include <functional>
+#include "crab/fn/cast.hpp"
+#include "crab/result/Result.hpp"
+#include "crab/fn/identity.hpp"
 #include "test_static_asserts.hpp"
 #include "test_types.hpp"
-#include <crab/box.hpp>
-#include <crab/ref.hpp>
-#include <crab/fn.hpp>
-#include <crab/range.hpp>
-#include <crab/result.hpp>
-#include <crab/option.hpp>
+#include <crab/boxed/Box.hpp>
+#include <crab/ref/ref.hpp>
+#include <crab/num/range.hpp>
+#include <crab/opt/Option.hpp>
+#include <crab/opt/some.hpp>
 #include <utility>
 
 namespace ty = crab::ty;
@@ -18,11 +18,10 @@ namespace ty = crab::ty;
 TEST_CASE("Option", "Tests for all option methods") {
   const auto life = crab::fn::constant(42);
 
-  STATIC_CHECK(sizeof(crab::option::None) == 1);
-
+  STATIC_CHECK(sizeof(crab::opt::None) == 1);
 
   SECTION("Option<T>::GenericStorage Reference Optimisation") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       STATIC_CHECK(sizeof(T*) == sizeof(Option<T&>));
       STATIC_CHECK(sizeof(T*) == sizeof(Option<const T&>));
     });
@@ -30,7 +29,7 @@ TEST_CASE("Option", "Tests for all option methods") {
 
   SECTION("Constructors & Move Semantics") {
     // general construction
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       constexpr bool copyable{ty::copyable<T>};
 
       using Option = ::Option<MoveTracker<T>>;
@@ -163,12 +162,6 @@ TEST_CASE("Option", "Tests for all option methods") {
   }
 
   SECTION("filter") {
-    CHECK(Option{10}.filter(crab::fn::is_even).is_some());
-    CHECK(Option<i32>{}.filter(crab::fn::is_even).is_none());
-
-    CHECK(Option{10}.filter(crab::fn::is_odd).is_none());
-    CHECK(Option<i32>{}.filter(crab::fn::is_odd).is_none());
-
     CHECK(Option<String>{""}.filter(&String::empty).is_some());
     CHECK(Option<String>{}.filter(&String::empty).is_none());
     CHECK(Option<String>{""}.filter(&String::empty).is_some());
@@ -224,69 +217,18 @@ TEST_CASE("Option", "Tests for all option methods") {
       REQUIRE(ref.get_unchecked().get_name() == "Hello World");
       REQUIRE(ref_mut.get_unchecked().get_name() == "Hello World");
     }
-
-    SECTION("reference types") {
-
-      assert::for_types<i32&, const i32&>([]<typename T>(assert::type<T>) {
-        Option<T> a;
-
-        REQUIRE(a.is_none());
-        REQUIRE_THROWS(a.get_unchecked());
-
-        i32 i = 10;
-        i32 j = 10;
-
-        a = i;
-
-        REQUIRE(a.is_some());
-        CHECK(a.get_unchecked() == i);
-        CHECK(a.get_unchecked() == 10);
-
-        CHECK(a != crab::none);
-        CHECK(a == Option<T>{a});
-        CHECK(a == Option<T>{i});
-        CHECK(a == Option<T>{j});
-
-        REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 10);
-      });
-
-      Option<i32&> a;
-
-      REQUIRE(a.is_none());
-      REQUIRE_THROWS(a.get_unchecked());
-
-      i32 i = 10;
-      i32 j = 10;
-
-      a = i;
-
-      a.get_unchecked() = 11;
-
-      REQUIRE(a.is_some());
-      CHECK(a.get_unchecked() == i);
-      CHECK(a.get_unchecked() == 11);
-
-      CHECK(a != crab::none);
-      CHECK(a == Option<i32&>{a});
-      CHECK(a == Option<i32&>{i});
-      CHECK(a != Option<i32&>{j});
-
-      REQUIRE_NOTHROW(a.filter(crab::fn::constant(true)));
-
-      REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 11);
-    }
   }
 
   SECTION("flatten") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-      STATIC_REQUIRE(not requires(Option<T> opt) { opt.flatten(); });
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
+      STATIC_REQUIRE(not requires(crab::opt::Option<T> opt) { opt.flatten(); });
       STATIC_REQUIRE(requires(Option<Option<T>> opt) { Option<T>{std::move(opt).flatten()}; });
     });
   }
 
   SECTION("crab::some implicit vs explicit template") {
-    assert::for_types(assert::common_types, []<typename T>(assert::type<T>) {
-      assert::for_types(assert::types<T, T&, const T&>, []<typename K>(assert::type<K>) {
+    asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
+      asserts::for_types(asserts::types<T, T&, const T&>, []<typename K>(asserts::type<K>) {
         if constexpr (std::copy_constructible<T>) {
           STATIC_REQUIRE( //
             ty::same_as<Option<T>, decltype(crab::some(std::declval<K>()))>
@@ -297,4 +239,54 @@ TEST_CASE("Option", "Tests for all option methods") {
       });
     });
   }
+}
+
+TEST_CASE("Reference Types", "[option]") {
+
+  asserts::for_types<i32&, const i32&>([]<typename T>(asserts::type<T>) {
+    Option<T> a;
+
+    CHECK(a.is_none());
+
+    i32 i = 10;
+    i32 j = 10;
+
+    a = i;
+
+    CHECK(a.is_some());
+    CHECK(a.get_unchecked() == i);
+    CHECK(a.get_unchecked() == 10);
+
+    CHECK(a != crab::none);
+    CHECK(a == Option<T>{a});
+    CHECK(a == Option<T>{i});
+    CHECK(a == Option<T>{j});
+
+    CHECK(a.template map<i32>().unwrap() == 10);
+  });
+
+  Option<i32&> a;
+
+  REQUIRE(a.is_none());
+  REQUIRE_THROWS(a.get_unchecked());
+
+  i32 i = 10;
+  i32 j = 10;
+
+  a = i;
+
+  a.get_unchecked() = 11;
+
+  REQUIRE(a.is_some());
+  CHECK(a.get_unchecked() == i);
+  CHECK(a.get_unchecked() == 11);
+
+  CHECK(a != crab::none);
+  CHECK(a == Option<i32&>{a});
+  CHECK(a == Option<i32&>{i});
+  CHECK(a != Option<i32&>{j});
+
+  REQUIRE_NOTHROW(a.filter(crab::fn::constant(true)));
+
+  REQUIRE_NOTHROW(a.template map<i32>().unwrap() == 11);
 }

@@ -1,0 +1,21 @@
+
+#pragma once
+
+namespace crab::ty {
+
+  namespace impl {
+    template<typename T>
+    struct identity final {
+      using type = T;
+    };
+  }
+
+  /**
+   * @brief Identity metafunction, is equal to the input.
+   *
+   * This can be used for special cases when metatemplate programming, or when
+   * you are making a templated function and you want to
+   */
+  template<typename T>
+  using identity = typename impl::identity<T>::type;
+}

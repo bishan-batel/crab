@@ -35,11 +35,6 @@
                 false
                 true
               ];
-
-              useFmtLib = [
-                false
-                true
-              ];
             };
           in
           builtins.listToAttrs (
@@ -48,15 +43,13 @@
                 {
                   stdenv,
                   useDebug,
-                  useFmtLib,
                 }:
                 [
                   {
-                    name = "stdenv-${stdenv.name}_fmt-${pkgs.lib.boolToString useFmtLib}_debug-${pkgs.lib.boolToString useDebug}";
+                    name = "stdenv-${stdenv.name}_fmt_debug-${pkgs.lib.boolToString useDebug}";
                     value = crab {
                       inherit stdenv;
                       inherit useDebug;
-                      inherit useFmtLib;
                       doCheck = true;
                     };
                   }

@@ -6,7 +6,9 @@
 
 #include "crab/config.hpp"
 
+#ifndef CRAB_USE_PRELUDE
 #define CRAB_USE_PRELUDE true
+#endif
 
 #if NDEBUG
 #define CRAB_DEBUG   0
@@ -14,6 +16,30 @@
 #else
 #define CRAB_DEBUG   1
 #define CRAB_RELEASE 0
+#endif
+
+#if defined(__APPLE__) && __APPLE__
+#define CRAB_OSX __APPLE__
+#else
+#define CRAB_OSX 0
+#endif
+
+#if defined(_WIN32) && _WIN32
+#define CRAB_WIN32 _WIN32
+#else
+#define CRAB_WIN32 0
+#endif
+
+#if defined(__linux__) && __linux__
+#define CRAB_LINUX __linux__
+#else
+#define CRAB_LINUX 0
+#endif
+
+#if CRAB_LINUX || CRAB_OSX
+#define CRAB_UNIX 1
+#else
+#define CRAB_UNIX 0
 #endif
 
 /// ===================================================================================================================
@@ -32,7 +58,7 @@
 #define CRAB_GCC_VERSION 0
 #endif
 
-#ifdef _MSVC_VER
+#ifdef _MSC_VER
 #define CRAB_MSVC_VERSION _MSC_VER
 #else
 #define CRAB_MSVC_VERSION 0
@@ -47,7 +73,7 @@
 #ifdef __has_feature
 #define CRAB_HAS_FEATURE(x) __has_feature(x)
 #else
-#define CRABCRAB_HAS_FEATURE(x) false
+#define CRAB_HAS_FEATURE(x) false
 #endif
 
 #ifdef __has_include
@@ -85,40 +111,30 @@
 #define CRAB_INLINE inline
 #endif
 
-#if CRAB_HAS_ATTRIBUTE(noreturn)
-#define CRAB_NORETURN [[noreturn]]
-#else
-#define CRAB_NORETURN
-#endif
-
-#if CRAB_HAS_ATTRIBUTE(nodiscard)
-#define CRAB_NODISCARD       [[nodiscard]]
-#define CRAB_NODISCARDF(msg) [[nodiscard(msg)]]
-#else
-#define CRAB_NODISCARD
-#define CRAB_NODISCARDF(msg)
-#endif
-
-#if CRAB_HAS_ATTRIBUTE(maybe_unused)
-#define CRAB_MAYBE_UNUSED [[maybe_unused]]
-#else
-#define CRAB_MAYBE_UNUSED
-#endif
-
 #if CRAB_HAS_ATTRIBUTE(gnu::may_alias)
 #define CRAB_MAY_ALIAS [[gnu::may_alias]]
 #else
 #define CRAB_MAY_ALIAS
 #endif
 
-#define CRAB_CONSTEXPR constexpr
+#if CRAB_HAS_ATTRIBUTE(likely)
+#define CRAB_LIKELY [[likely]]
+#else
+#define CRAB_LIKELY
+#endif
+
+#if CRAB_HAS_ATTRIBUTE(unlikely)
+#define CRAB_UNLIKELY [[unlikely]]
+#else
+#define CRAB_UNLIKELY
+#endif
 
 #if ((CRAB_GCC_VERSION >= 1000 || CRAB_CLANG_VERSION >= 1101)                                                          \
      && (!defined(__apple_build_version__) || __apple_build_version__ >= 14000029L) && CRAB_CPLUSPLUS >= 202002L)      \
   || (defined(__cpp_consteval) && (!CRAB_MSVC_VERSION || CRAB_MSVC_VERSION >= 1929))
 #define CRAB_CONSTEVAL consteval
 #else
-#define CRAB_CONSTEVAL CRAB_CONSTEXPR
+#define CRAB_CONSTEVAL constexpr
 #endif
 
 #if CRAB_GCC_VERSION || CRAB_CLANG_VERSION
@@ -127,13 +143,11 @@
 #define CRAB_RETURNS_NONNULL
 #endif
 
-#define CRAB_INLINE_CONSTEXPR      CRAB_INLINE CRAB_CONSTEXPR
-
-#define CRAB_PURE_INLINE_CONSTEXPR CRAB_NODISCARD CRAB_INLINE CRAB_CONSTEXPR
-
-#define CRAB_PURE_CONSTEVAL        CRAB_NODISCARD CRAB_CONSTEVAL
-
-#define CRAB_PURE_CONSTEXPR        CRAB_NODISCARD CRAB_CONSTEXPR
+#if CRAB_HAS_ATTRIBUTE(pure)
+#define CRAB_PURE [[nodiscard]] __attribute__((pure))
+#else
+#define CRAB_PURE [[nodiscard]]
+#endif
 
 /// ===================================================================================================================
 ///                                                 Optimisation Controls
@@ -154,7 +168,9 @@
 
 #if CRAB_HAS_ATTRIBUTE(assume)
 #define CRAB_ASSUME(condition)                                                                                         \
-  do { __attribute__((assume(static_cast<bool>(condition))))} while(false)
+  do {                                                                                                                 \
+    __attribute__((assume(static_cast<bool>(condition))));                                                             \
+  } while (false)
 #else
 #define CRAB_ASSUME(condition)                                                                                         \
   do {                                                                                                                 \
@@ -175,28 +191,19 @@
 
 #endif
 
-namespace crab {
+#define CRAB_EVAL0(...) __VA_ARGS__
+#define CRAB_EVAL1(...) CRAB_EVAL0(CRAB_EVAL0(CRAB_EVAL0(__VA_ARGS__)))
+#define CRAB_EVAL2(...) CRAB_EVAL1(CRAB_EVAL1(CRAB_EVAL1(__VA_ARGS__)))
+#define CRAB_EVAL3(...) CRAB_EVAL2(CRAB_EVAL2(CRAB_EVAL2(__VA_ARGS__)))
+#define CRAB_EVAL4(...) CRAB_EVAL3(CRAB_EVAL3(CRAB_EVAL3(__VA_ARGS__)))
+#define CRAB_EVAL(...)  CRAB_EVAL4(CRAB_EVAL4(CRAB_EVAL4(__VA_ARGS__)))
 
-  /**
-   * @brief Denotes unreachable paths
-   * This should be used for optimisation purposes only.
-   */
-  CRAB_NORETURN CRAB_INLINE auto unreachable() -> void {
-#if CRAB_HAS_UNREACHABLE
-    std::unreachable();
-#elif CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
-    CRAB_ASSUME(false);
-#elif CRAB_CLANG_VERSION || CRAB_GCC_VERSION
-    __builtin_unreachable();
+#if CRAB_USE_PRELUDE
+#define CRAB_PRELUDE_GUARD using namespace crab::prelude
 #else
-    CRAB_ASSUME(false);
-    while (true);
-  }
+#define CRAB_PRELUDE_GUARD
 #endif
-  }
 
-  /**
-   * Used to discard / explicitly ignore certain outputs
-   */
-  CRAB_INLINE_CONSTEXPR auto discard(CRAB_MAYBE_UNUSED auto&&...) -> void {}
-}
+namespace crab::prelude {}
+
+CRAB_PRELUDE_GUARD;

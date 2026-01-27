@@ -1,0 +1,21 @@
+@import url("https://fonts.googleapis.com/css?family=JetBrains Mono");
+
+html.dark-mode,
+html.light-mode {
+  --na-font: 'JetBrains Mono', 'Consolas', monospace;
+
+  --font-family-monospace: var(--na-font) !important;
+  --font-family-normal: var(--na-font) !important;
+  --font-family-nav: var(--na-font) !important;
+  --font-family-title: var(--na-font) !important;
+  --font-family-toc: var(--na-font) !important;
+  --font-family-search: var(--na-font) !important;
+  --font-family-icon: var(--na-font) !important;
+  --font-family-tooltip: var(--na-font) !important;
+
+  font-family: var(--na-font) !important;
+  --font-family: var(--na-font) !important;
+}
+
+html {
+}

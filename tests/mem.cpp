@@ -1,0 +1,133 @@
+#include <catch2/catch_test_macros.hpp>
+#include "crab/mem/move.hpp"
+#include "crab/mem/size_of.hpp"
+#include "crab/mem/swap.hpp"
+#include "test_static_asserts.hpp"
+#include "test_types.hpp"
+
+namespace mem = crab::mem;
+namespace ty = crab::ty;
+
+TEST_CASE("mem::move") {
+
+  STATIC_CHECK(requires(Copyable copyable) {
+    { mem::move(copyable) } -> ty::same_as<Copyable&&>;
+  });
+}
+
+TEST_CASE("mem::address_of") {
+  asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
+    using crab::implicit_cast;
+
+    T v1{};
+    const T v2{};
+
+    // STATIC_CHECK(std::addressof<T>(v1) == mem::address_of<T>(v1));
+    // STATIC_CHECK(
+    //   std::addressof<const T>(implicit_cast<const T&>(v2)) == mem::address_of<const T>(implicit_cast<const T&>(v2))
+    // );
+    CHECK(std::addressof<T>(implicit_cast<T&>(v1)) == mem::address_of<T>(implicit_cast<T&>(v1)));
+    CHECK(
+      std::addressof<const T>(implicit_cast<const T&>(v1)) == mem::address_of<const T>(implicit_cast<const T&>(v1))
+    );
+    CHECK(
+      std::addressof<const T>(implicit_cast<const T&>(v2)) == mem::address_of<const T>(implicit_cast<const T&>(v2))
+    );
+    CHECK(std::addressof<T>(v1) == mem::address_of<T>(v1));
+    CHECK(std::addressof<const T>(v2) == mem::address_of<const T>(v2));
+  });
+}
+
+TEST_CASE("mem::size_of") {
+
+  asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
+    INFO(typeid(T).name());
+    STATIC_CHECK(sizeof(T) == mem::size_of<T>());
+  });
+}
+
+TEST_CASE("mem::swap") {
+
+  SECTION("integers") {
+    i32 a = 1;
+    i32 b = 2;
+
+    mem::swap<i32>(a, a);
+    mem::swap<i32>(b, b);
+
+    CHECK(a == 1);
+    CHECK(b == 2);
+
+    mem::swap(a, b);
+
+    CHECK(a == 2);
+    CHECK(b == 1);
+
+    mem::swap<i32>(a, b);
+
+    CHECK(a == 1);
+    CHECK(b == 2);
+  }
+
+  SECTION("string") {
+    String s1{"one"}, s2{"two"};
+
+    mem::swap(s1, s1);
+
+    CHECK(s1 == "one");
+    CHECK(s2 == "two");
+
+    mem::swap(s1, s2);
+
+    CHECK(s1 == "two");
+    CHECK(s2 == "one");
+
+    mem::swap(s1, s2);
+
+    CHECK(s1 == "one");
+    CHECK(s2 == "two");
+  }
+
+  SECTION("move tracking") {
+    MoveCount e1{}, e2{};
+    RcMut<MoveCount> c1{crab::make_rc_mut<MoveCount>()}, c2{crab::make_rc_mut<MoveCount>()};
+
+    MoveTracker<Copyable> m1{MoveTracker<Copyable>::from(c1)};
+    m1.inner().set_name("one");
+
+    MoveTracker<Copyable> m2{MoveTracker<Copyable>::from(c2)};
+    m2.inner().set_name("two");
+
+    c1->valid(e1);
+    c2->valid(e2);
+
+    m1.operator=(m1);
+    m2.operator=(m2);
+
+    c1->valid(e1);
+    c2->valid(e2);
+
+    CHECK(m1.inner().get_name() == "one");
+    CHECK(m2.inner().get_name() == "two");
+
+    mem::swap(m1, m2);
+
+    CHECK(m1.inner().get_name() == "two");
+    CHECK(m2.inner().get_name() == "one");
+
+    e1.moves += 2;
+    e2.moves += 1;
+
+    c1->valid(e1);
+    c2->valid(e2);
+
+    mem::swap(m1, m2);
+
+    CHECK(m1.inner().get_name() == "one");
+    CHECK(m2.inner().get_name() == "two");
+    e1.moves += 1;
+    e2.moves += 2;
+    c1->valid(e1);
+    c2->valid(e2);
+  }
+}

@@ -19,11 +19,10 @@ endif()
 #                                     Options
 #===============================================================================
 
-option(CRAB_USE_FMT "Should crab use fmtlib for formatting?" ON)
-option(CRAB_USE_STD_FORMAT "Should crab use std::format for formatting?" OFF)
 option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
 option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
 option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
+option(CRAB_DOCS "Whether to include crab documentation" OFF)
 
 if (CRAB_USE_STD_FORMAT AND CRAB_USE_FMT)
         message(FATAL_ERROR "CRAB_USE_STD_FORMAT and CRAB_USE_FMT are mutually exclusive, choose whether crab should use std::format vs fmt::format")
@@ -42,16 +41,15 @@ include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
 # fmtlib is optional
-if(CRAB_USE_FMT)
-        message(STATUS "Adding fmtlib")
-        set(FMT_INSTALL ON)
-        CPMAddPackage(
-                NAME fmt
-                GITHUB_REPOSITORY "fmtlib/fmt"
-                GIT_TAG "7.1.3"
-                VERSION_MIN "7.0.0"
-        )
-endif()
+message(STATUS "Adding fmtlib")
+set(FMT_INSTALL ON)
+
+CPMAddPackage(
+        NAME fmt
+        GITHUB_REPOSITORY "fmtlib/fmt"
+        GIT_TAG "9.0.0"
+        VERSION_MIN "7.1.3"
+)
 
 #===============================================================================
 #                                     Library
@@ -65,38 +63,17 @@ configure_file(
         @ONLY
 )
 
+
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
-add_library(${PROJECT_NAME} INTERFACE
-        "${CRAB_CONFIG_HEADER}"
-        "${CRAB_INCLUDE_DIR}/preamble.hpp"
-        "${CRAB_INCLUDE_DIR}/box.hpp"
-        "${CRAB_INCLUDE_DIR}/casts.hpp"
-        "${CRAB_INCLUDE_DIR}/core.hpp"
-        "${CRAB_INCLUDE_DIR}/debug.hpp"
-        "${CRAB_INCLUDE_DIR}/fmt.hpp"
-        "${CRAB_INCLUDE_DIR}/fn.hpp"
-        "${CRAB_INCLUDE_DIR}/hash.hpp"
-        "${CRAB_INCLUDE_DIR}/option.hpp"
-        "${CRAB_INCLUDE_DIR}/range.hpp"
-        "${CRAB_INCLUDE_DIR}/rc.hpp"
-        "${CRAB_INCLUDE_DIR}/ref.hpp"
-        "${CRAB_INCLUDE_DIR}/result.hpp"
-        "${CRAB_INCLUDE_DIR}/todo.hpp"
-        "${CRAB_INCLUDE_DIR}/type_traits.hpp"
-)
+
+file(GLOB_RECURSE CRAB_SOURCES "include/*.hpp")
+add_library(${PROJECT_NAME} INTERFACE ${CRAB_SOURCES})
 
 # crab only supports C++20 and above
 # target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
-if(CRAB_USE_STD_FORMAT)
-        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=0")
-elseif(CRAB_USE_FMT)
-        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=1")
-        target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
-else()
-        target_compile_definitions(${PROJECT_NAME} INTERFACE "CRAB_FMT_USAGE=2")
-endif()
+target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
 
 target_include_directories(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -161,6 +138,11 @@ install(
         DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
         DESTINATION "${conf_install_dir}"
 )
+
+# Docs 
+if (CRAB_DOCS)
+        add_subdirectory(docs)
+endif()
 
 # Tests
 

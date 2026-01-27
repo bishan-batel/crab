@@ -2,9 +2,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <crab/preamble.hpp>
-#include <crab/box.hpp>
+#include <crab/boxed/Box.hpp>
 #include <utility>
-#include "crab/type_traits.hpp"
+#include "crab/opt/none.hpp"
 #include "test_types.hpp"
 
 struct SelfReferential;
@@ -62,7 +62,7 @@ TEST_CASE("Box", "[box]") {
 
   SECTION("Releasing Single") {
     Box<u32> single = crab::make_box<u32>(420);
-    u32* raw_ptr = single.as_ptr();
+    u32* raw_ptr = single.as_ptr_mut();
     REQUIRE(raw_ptr != nullptr);
     REQUIRE(*raw_ptr == 420);
 

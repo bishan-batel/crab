@@ -3,10 +3,11 @@
 #include <catch2/catch_test_macros.hpp>
 #include <concepts>
 #include <crab/preamble.hpp>
+#include <utility>
 
-namespace assert {
+namespace asserts {
 
-  template<typename... T>
+  template<typename...>
   struct typelist_t {};
 
   template<typename... T>
@@ -19,7 +20,7 @@ namespace assert {
   void for_types(const typelist_t<Types...>&, auto func) {
     std::ignore = std::make_tuple([&]() {
       func(type<Types>{});
-      return unit{};
+      return crab::unit{};
     }()...);
   }
 

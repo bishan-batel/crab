@@ -27,6 +27,8 @@ add_executable(crab-tests
         fn.cpp
         ref.cpp
         fallible.cpp
+        mem.cpp
+        any_of.cpp
 )
 
 target_link_libraries(crab-tests PRIVATE crab Catch2::Catch2WithMain)
@@ -47,4 +49,4 @@ else()
     )
 endif()
 
-target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>")
+target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>" "CRAB_THROW_ON_DEFAULT_PANIC=1")

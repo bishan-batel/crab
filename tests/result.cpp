@@ -4,7 +4,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 
-#include <crab/result.hpp>
+#include "crab/preamble.hpp"
+#include "crab/result/unwrap.hpp"
+#include "crab/result/fallible.hpp"
+#include "crab/result/Result.hpp"
 
 class Error final : public crab::Error {
 public:
@@ -53,9 +56,10 @@ TEST_CASE("Result", "[result]") {
     REQUIRE(Result<unit, Error>{unit{}}.is_ok());
   }
 
-  SECTION("std::visit") {
+  SECTION("map") {
     Result<i32, Error> huh{10};
     huh = std::move(huh).map([](const i32 a) { return a * 2; });
+    REQUIRE(huh.get_unchecked() == 20);
     REQUIRE(huh.get_unchecked() == 20);
 
     std::ignore = std::move(huh).map([](const i32 a) { return a * 2; });

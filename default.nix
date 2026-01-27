@@ -6,13 +6,9 @@
   catch2_3,
   debugBuild ? false,
   doCheck ? true,
-  useFmtLib ? true,
-  useStdFormat ? !useFmtLib,
   ...
 }:
 
-assert lib.asserts.assertMsg (useFmtLib -> !useStdFormat)
-  "useFmtLib and useStdFormat cannot both be able, either disable both or enable only one to use/test crab's compatability-mode.";
 
 stdenv.mkDerivation {
   pname = "crab";
@@ -22,22 +18,19 @@ stdenv.mkDerivation {
   nativeBuildInputs =
     [
       cmake
+      fmt
     ]
-    ++ lib.optional doCheck catch2_3
-    ++ lib.optional useFmtLib fmt;
+    ++ lib.optional doCheck catch2_3;
 
   buildInputs =
     [
     ]
-    ++ lib.optional doCheck catch2_3
-    ++ lib.optional useFmtLib fmt;
+    ++ lib.optional doCheck catch2_3;
 
   checkTarget = "crab-tests";
 
   cmakeFlags = [
     "-DCRAB_TESTS=${if doCheck then "ON" else "OFF"}"
-    "-DCRAB_USE_FMT=${if useFmtLib then "ON" else "OFF"}"
-    "-DCRAB_USE_STD_FORMAT=${if useStdFormat then "ON" else "OFF"}"
     "-DCMAKE_INSTALL_LIBDIR=lib"
   ];
 

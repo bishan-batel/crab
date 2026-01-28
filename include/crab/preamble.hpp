@@ -1,5 +1,7 @@
 /**
- * Created by Kishan Patel (bishan.batel@protonmail.com) on 3/3/2024
+ * @file preamble.hpp
+ * @brief Convenience header used by users of crab that imports common headers & alias.
+ * Note that this header will NEVER be included by another crab header.
  */
 
 #pragma once

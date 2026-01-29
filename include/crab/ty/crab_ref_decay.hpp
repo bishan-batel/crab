@@ -1,5 +1,5 @@
 /// @file crab_ref_decay.hpp
-/// @ingroup crab::ty
+/// @ingroup ty
 /// Crab-meta metatemplate constraints relating to crab::ref::Ref and crab::ref::RefMut.
 
 #pragma once

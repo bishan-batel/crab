@@ -1,5 +1,5 @@
 /// @file compare.hpp
-/// @ingroup crab::ty
+/// @ingroup ty
 /// crab::ty helpers for comparisons between type, like 'same_as', 'different_than', 'either', etc
 
 #pragma once

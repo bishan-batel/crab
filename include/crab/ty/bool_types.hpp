@@ -1,6 +1,6 @@
 /// @file bool_types.hpp
 /// @brief Boolean related metatemplate types.
-/// @ingroup crab::ty
+/// @ingroup ty
 
 #pragma once
 

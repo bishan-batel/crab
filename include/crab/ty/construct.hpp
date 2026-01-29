@@ -1,5 +1,5 @@
 /// @file construct.hpp
-/// @ingroup crab::ty
+/// @ingroup ty
 /// Type constraints related to construction of types & move semantics.
 #pragma once
 

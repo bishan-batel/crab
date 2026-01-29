@@ -1,5 +1,5 @@
 /// @file classify.hpp
-/// @ingroup crab::ty
+/// @ingroup ty
 /// crab::ty metatemplate types for general classification of types (not_void, complete type, cvref qualifications).
 
 #pragma once

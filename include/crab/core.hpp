@@ -173,7 +173,8 @@
 #endif
 
 /// @def CRAB_MAY_ALIAS
-/// Annotation for fields to hint at aliasing, this is GNU specific.
+/// Annotation for fields to hint at aliasing. This is GNU specific.
+///
 /// Full Documentation on
 /// [GCC's Website](https://gcc.gnu.org/onlinedocs/gcc-4.6.3/gcc/Type-Attributes.html#i386%20Type%20Attributes)
 #if CRAB_HAS_ATTRIBUTE(gnu::may_alias)
@@ -259,36 +260,27 @@
 
 #endif
 
-/// @internal
-///
-/// @def CRAB_EVAL0(...)
 /// Helper to defer preprocessor evaluation when doing macro jank.
-///
-/// @def CRAB_EVAL1(...)
-/// Helper to defer preprocessor evaluation when doing macro jank.
-///
-/// @def CRAB_EVAL2(...)
-/// Helper to defer preprocessor evaluation when doing macro jank.
-///
-/// @def CRAB_EVAL3(...)
-/// Helper to defer preprocessor evaluation when doing macro jank.
-///
-/// @def CRAB_EVAL4(...)
-/// Helper to defer preprocessor evaluation when doing macro jank.
-
-/// @def CRAB_EVAL(...)
-/// Helper to defer preprocessor evaluation when doing macro jank.
-
 #define CRAB_EVAL0(...) __VA_ARGS__
+
+/// Helper to defer preprocessor evaluation when doing macro jank.
 #define CRAB_EVAL1(...) CRAB_EVAL0(CRAB_EVAL0(CRAB_EVAL0(__VA_ARGS__)))
+
+/// Helper to defer preprocessor evaluation when doing macro jank.
 #define CRAB_EVAL2(...) CRAB_EVAL1(CRAB_EVAL1(CRAB_EVAL1(__VA_ARGS__)))
+
+/// Helper to defer preprocessor evaluation when doing macro jank.
 #define CRAB_EVAL3(...) CRAB_EVAL2(CRAB_EVAL2(CRAB_EVAL2(__VA_ARGS__)))
+
+/// Helper to defer preprocessor evaluation when doing macro jank.
 #define CRAB_EVAL4(...) CRAB_EVAL3(CRAB_EVAL3(CRAB_EVAL3(__VA_ARGS__)))
-#define CRAB_EVAL(...)  CRAB_EVAL4(CRAB_EVAL4(CRAB_EVAL4(__VA_ARGS__)))
+
+/// Helper to defer preprocessor evaluation when doing macro jank.
+#define CRAB_EVAL(...) CRAB_EVAL4(CRAB_EVAL4(CRAB_EVAL4(__VA_ARGS__)))
 
 /// @internal
 /// @def CRAB_PRELUDE_GUARD
-/// Helper expansion for using the crab::prelude if the settings apply.
+/// Crab-internal helper expansion for using the crab::prelude if the settings apply.
 
 #if CRAB_USE_PRELUDE
 #define CRAB_PRELUDE_GUARD using namespace crab::prelude
@@ -297,7 +289,7 @@
 #endif
 
 /// @namespace crab::prelude
-/// @brief Namespace that includes the default things crab puts in the global namespace. 
+/// @brief Namespace that includes the default things crab puts in the global namespace.
 ///
 /// This includes things like Option<T>, Box<T>, Rc<T>, etc.
 /// If you want to disable this behavior, explicitly define CRAB_USE_PRELUDE to false.

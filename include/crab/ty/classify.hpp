@@ -85,6 +85,7 @@ namespace crab::ty {
   template<typename T>
   concept non_reference = not is_reference<T>;
 
+  /// Requirement that the given type is a native array type
   template<typename T>
   concept array = std::is_array_v<T>;
 }

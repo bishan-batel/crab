@@ -8,6 +8,9 @@
 #include "crab/ref/forward.hpp"
 #include "crab/ty/bool_types.hpp"
 
+/// @addtogroup ty
+/// @{
+
 namespace crab::ty {
   namespace impl {
 
@@ -75,3 +78,5 @@ namespace crab::ty {
   template<typename T>
   concept any_crab_ref = crab_ref<T> or crab_ref_mut<T>;
 }
+
+/// }@

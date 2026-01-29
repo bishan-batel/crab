@@ -8,6 +8,9 @@
 #include "crab/ty/bool_types.hpp"
 #include "crab/ty/compare.hpp"
 
+/// @addtogroup ty
+/// @{
+
 namespace crab::ty {
 
   /// True if the given type is a complete type.
@@ -90,3 +93,5 @@ namespace crab::ty {
   template<typename T>
   concept array = std::is_array_v<T>;
 }
+
+/// }@

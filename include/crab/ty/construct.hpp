@@ -5,6 +5,9 @@
 
 #include <concepts>
 
+/// @addtogroup ty
+/// @{
+
 namespace crab::ty {
   /// Requirement for the type T to be copy constructible and assignable
   template<typename T>
@@ -35,3 +38,5 @@ namespace crab::ty {
   concept default_constructible = std::is_default_constructible_v<T>;
 
 }
+
+/// }@

@@ -6,6 +6,9 @@
 
 #include <type_traits>
 
+/// @addtogroup ty
+/// @{
+
 namespace crab::ty {
   /// A type with a constant 'value' set to true.
   /// This is the same as std::true_type, std::bool_constant<true>, or std::integral_constant<bool,true>
@@ -32,3 +35,5 @@ namespace crab::ty {
   using conditional = std::conditional_t<Condition, IfTrue, IfFalse>;
 
 }
+
+/// }@

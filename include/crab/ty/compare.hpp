@@ -9,6 +9,9 @@
 #include <concepts>
 #include <tuple>
 
+/// @addtogroup ty
+/// @{
+
 namespace crab::ty {
   /// 'indexes' into a variadic pack to get the nth type
   ///
@@ -33,3 +36,5 @@ namespace crab::ty {
   concept either = (std::same_as<T, Cases> || ...);
 
 }
+
+/// }@

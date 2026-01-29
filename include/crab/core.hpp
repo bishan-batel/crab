@@ -296,6 +296,11 @@
 #define CRAB_PRELUDE_GUARD
 #endif
 
+/// @namespace crab::prelude
+/// @brief Namespace that includes the default things crab puts in the global namespace. 
+///
+/// This includes things like Option<T>, Box<T>, Rc<T>, etc.
+/// If you want to disable this behavior, explicitly define CRAB_USE_PRELUDE to false.
 namespace crab::prelude {}
 
 CRAB_PRELUDE_GUARD;

@@ -1,22 +1,15 @@
-/**
- * Created by Kishan Patel (bishan.batel@protonmail.com) on 3/3/2024
- */
+/// @file preamble.hpp
+/// Convenience header used by users of crab that imports common headers & alias.
+/// Note that this header will NEVER be included by another crab header.
 
 #pragma once
 
 #include "crab/core.hpp"
 
-#include <functional>
-#include <source_location>
-#include <sstream>
-#include <string>
 #include <utility>
 #include <array>
 #include <span>
 #include <ranges>
-#include <vector>
-#include <unordered_set>
-#include <unordered_map>
 
 #include "crab/core/cases.hpp"
 #include "crab/core/unit.hpp"
@@ -31,25 +24,17 @@
 #include "crab/fn/Func.hpp"
 
 namespace crab {
-  /**
-   * @brief std::pair<T, S> alias.
-   */
+  /// Alias for std::pair.
   template<typename A, typename B>
   using Pair = std::pair<A, B>;
 
-  /**
-   * @brief Alias for std::array
-   *
-   * Statically Sized list of packed objects
-   *
-   * @tparam T
-   */
+  /// Alias for std::array.
+  /// Statically Sized list of packed objects
   template<typename T, usize length>
   using SizedArray = std::array<T, length>;
 
-  /**
-   * @brief Abstraction over any contiguous sequence of elements
-   */
+  /// Alias for std::span.
+  /// This is an abstraction over any contiguous sequence of elements / slice.
   template<typename T, usize length = std::dynamic_extent>
   using Span = std::span<T, length>;
 
@@ -67,14 +52,10 @@ namespace crab::prelude {
   using ::crab::Span;
 #endif
 
-  /**
-   * std::ranges
-   */
+  /// std::ranges Alias
   namespace ranges = ::std::ranges;
 
-  /**
-   * std::ranges::views
-   */
+  /// std::ranges::views Alias
   namespace views = ::std::ranges::views;
 }
 

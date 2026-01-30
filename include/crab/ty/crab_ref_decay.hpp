@@ -1,4 +1,4 @@
-/// @file crab_ref_decay.hpp
+/// @file crab/ty/crab_ref_decay.hpp
 /// @ingroup ty
 /// Crab-meta metatemplate constraints relating to crab::ref::Ref and crab::ref::RefMut.
 

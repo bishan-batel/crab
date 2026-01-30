@@ -1,4 +1,4 @@
-/// @file functor.hpp
+/// @file crab/ty/functor.hpp
 /// @ingroup ty
 /// Crab type constraints for functors
 

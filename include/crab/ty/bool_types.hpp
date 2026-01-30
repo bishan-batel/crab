@@ -1,4 +1,4 @@
-/// @file bool_types.hpp
+/// @file crab/ty/bool_types.hpp
 /// @brief Boolean related metatemplate types.
 /// @ingroup ty
 

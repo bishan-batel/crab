@@ -1,4 +1,4 @@
-/// @file ty.hpp
+/// @file crab/ty/ty.hpp
 /// crab::ty's namespace documentation.
 
 #pragma once

@@ -1,4 +1,4 @@
-/// @file core.hpp
+/// @file crab/core.hpp
 /// @brief Crab's core macros used in every other header.
 /// This mainly includes compiler-related macros as well as the basis for options (such as CRAB_USE_PRELUDE)
 

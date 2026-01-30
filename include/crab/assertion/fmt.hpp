@@ -58,5 +58,9 @@ namespace crab {
     }
   }
 
+  [[nodiscard]] constexpr auto format() -> String {
+    return {};
+  }
+
   using fmt::format;
 }

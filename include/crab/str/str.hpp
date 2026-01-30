@@ -1,3 +1,5 @@
+/// @file crab/str/str.hpp
+
 #pragma once
 
 #include <string>
@@ -5,51 +7,33 @@
 
 namespace crab {
 
-  /**
-   * @brief std::string, fat pointer to a heap allocated string
-   */
+  /// std::string alias. Heap allocated, owned string
   using String = std::string;
 
-  /**
-   * @brief UTF Encoded Character
-   */
+  /// UTF Encoded Character
   using widechar = wchar_t;
 
-  /**
-   * @brief std::wstring, fat pointer to a heap allocated unicode string
-   */
+  /// std::wstring alias. Heap allocated, wide string.
   using WideString = std::wstring;
 
-  /**
-   * @brief Abstraction over any contiguous sequence of characters, always prefer
-   * this over const String&
-   */
+  /// Span over sequence of characters. You should almost always prefer this over passing values by
+  /// const String / reference.
   using StringView = std::string_view;
 
-  /**
-   * @brief Abstraction over any contiguous sequence of unicode characters, always
-   * prefer this over const WideString&
-   */
+  /// Span over sequence of unicode characters. You should almost always prefer this over
+  /// passing values by / const String / reference.
   using WideStringView = std::wstring_view;
 
-  /**
-   * @brief std::stringstream
-   */
+  /// Alias to std::stringstream
   using StringStream = std::stringstream;
 
-  /**
-   * @brief std::stringstream
-   */
+  /// Alias to std::ostringstream
   using OutStringStream = std::ostringstream;
 
-  /**
-   * @brief std::stringstream
-   */
+  /// Alias to std::istringstream
   using InStringStream = std::istringstream;
 
-  /**
-   * @brief std::wstringstream
-   */
+  /// Alias to std::wstringstream
   using WideStringStream = std::wstringstream;
 
 }

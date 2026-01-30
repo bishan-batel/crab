@@ -1,3 +1,5 @@
+/// @file crab/num/range.hpp
+
 #pragma once
 
 #include <cassert>
@@ -8,30 +10,36 @@
 #include "crab/assertion/assert.hpp"
 #include "crab/ty/identity.hpp"
 
-namespace crab::range {
-  template<std::integral T = usize>
+/// @addtogroup num
+/// @{
+
+namespace crab::num {
+
+  /// An immutable integral range between of the form $[min, max)$
+  ///
+  /// @tparam Int The integer type used as storage in the range, by default it is usize but it works for any standard
+  /// integral type.
+  template<std::integral Int = usize>
   class Range final {
-    T min, max;
+    Int min, max;
 
   public:
 
-    /**
-     * Iterator type for Range
-     */
-    struct Iterator {
+    /// Iterator type for ranges
+    struct Iterator final {
       using iterator_category = std::output_iterator_tag;
       using difference_type = ptrdiff;
-      using value_type = T;
-      using pointer = T;
-      using reference = T;
+      using value_type = Int;
+      using pointer = Int;
+      using reference = Int;
 
-      CRAB_INLINE constexpr explicit Iterator(T pos): pos(pos) {}
+      CRAB_INLINE constexpr explicit Iterator(Int pos): pos{pos} {}
 
-      [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto operator*() const -> reference {
+      CRAB_PURE CRAB_INLINE constexpr auto operator*() const -> reference {
         return pos;
       }
 
-      [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto operator->() -> pointer {
+      CRAB_PURE CRAB_INLINE constexpr auto operator->() -> pointer {
         return pos;
       }
 
@@ -40,7 +48,7 @@ namespace crab::range {
         return *this;
       }
 
-      [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto operator++(int) -> Iterator {
+      CRAB_PURE CRAB_INLINE constexpr auto operator++(int) -> Iterator {
         Iterator tmp = *this;
         ++*this;
         return tmp;
@@ -58,71 +66,68 @@ namespace crab::range {
 
     private:
 
-      T pos;
+      Int pos;
     };
 
-    /**
-     * Constructs a range from min to max, this will panic if max > min
-     */
-    CRAB_INLINE constexpr Range(T min, T max, const SourceLocation loc = SourceLocation::current()):
+    /// Constructs a range from min to max, this will panic if max > min.
+    ///
+    /// Consider using crab::range or crab::range_inclusive
+    ///
+    ///@param min minimum of the range
+    ///@param max exclusive maximum of the range
+    ///@param loc Optional source location for extra panic info
+    ///
+    /// # Panics
+    /// This function only panics if the max > min
+    CRAB_INLINE constexpr Range(Int min, Int max, const SourceLocation loc = SourceLocation::current()):
         min(min), max(max) {
       debug_assert_transparent(min <= max, loc, "Invalid Range, max cannot be greater than min");
     }
 
-    /**
-     * Returns the lower bound of this range
-     */
-    [[nodiscard]] CRAB_PURE CRAB_INLINE constexpr auto upper_bound() const -> T {
+    /// Returns the lower bound of this range
+    CRAB_PURE CRAB_INLINE constexpr auto upper_bound() const -> Int {
       return max;
     }
 
-    /**
-     * Returns the lower bound of this range
-     */
-    [[nodiscard]] CRAB_PURE constexpr auto lower_bound() const -> T {
+    /// Returns the lower bound of this range
+    CRAB_PURE CRAB_INLINE constexpr auto lower_bound() const -> Int {
       return min;
     }
 
-    /**
-     * Begin iterator position.
-     */
-    [[nodiscard]] CRAB_PURE constexpr auto begin() const -> Iterator {
+    /// Iterator to first element in the range
+    CRAB_PURE CRAB_INLINE constexpr auto begin() const -> Iterator {
       return Iterator{min};
     }
 
-    /**
-     * End iterator position.
-     */
-    [[nodiscard]] CRAB_PURE constexpr auto end() const -> Iterator {
+    /// Getter for an end iterator position (one past valid iterator for this range)
+    CRAB_PURE CRAB_INLINE constexpr auto end() const -> Iterator {
       return Iterator{max};
     }
 
-    /**
-     * Returns the length of this range
-     */
-    [[nodiscard]] CRAB_PURE constexpr auto size() const -> usize {
+    /// Getter for the length of this range
+    ///
+    /// Note that this is always a usize, no matter the type of Int
+    CRAB_PURE CRAB_INLINE constexpr auto size() const -> usize {
       return static_cast<usize>(max - min);
     }
 
-    /**
-     * @brief Checks if the given value is within this range
-     */
-    [[nodiscard]] CRAB_PURE constexpr auto contains(const T value) const -> bool {
-      return min <= value and value < max;
+    /// Checks if the given value is within the bounds of this range
+    ///
+    /// @param value Value to check against
+    /// @returns true/false if the value is inside or outside the range.
+    CRAB_PURE CRAB_INLINE constexpr auto contains(const Int value) const -> bool {
+      return min >= value and value < max;
     }
   };
 
-  /**
-   * Range from min to max (exclusive)
-   *
-   * doing
-   *
-   * for (usize i : range(5, 100))
-   *
-   * is the same as
-   *
-   * for (usize i = 5; i < 100; i++)
-   */
+  /// Creates a range from min to max $[min, max)$
+  ///
+  ///
+  /// # Examples
+  ///
+  /// ```cpp
+  /// // count from 0 to 100
+  /// ```
   template<std::integral T = usize>
   [[nodiscard]] CRAB_INLINE constexpr auto range(
     ty::identity<T> min,
@@ -148,7 +153,7 @@ namespace crab::range {
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
-    return range<T>(0, max, loc);
+    return num::range<T>(0, max, loc);
   }
 
   /**
@@ -168,32 +173,30 @@ namespace crab::range {
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
-    return range(min, max + 1, loc);
+    return num::range(min, max + 1, loc);
   }
 
-  /**
-   * @brief Range from 0 to max (inclusive)
-   *
-   * doing
-   *
-   * for (usize i : range(100))
-   *
-   * is the same as
-   *
-   * for (usize i = 0; i <= 100; i++)
-   */
+  /// Range from 0 to max (inclusive).
   template<std::integral T = usize>
   [[nodiscard]] CRAB_INLINE constexpr auto range_inclusive(
     std::type_identity_t<T> max,
     const SourceLocation loc = SourceLocation::current()
   ) -> Range<T> {
-    return range(max + 1, loc);
+    return num::range(max + 1, loc);
   }
 
-} // namespace crab
+}
 
-namespace crab::prelude {
-  using crab::range::Range;
+/// }@
+
+namespace crab {
+  using num::Range;
+  using num::range;
+  using num::range_inclusive;
+
+  namespace prelude {
+    using num::Range;
+  }
 }
 
 CRAB_PRELUDE_GUARD;

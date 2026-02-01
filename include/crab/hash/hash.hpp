@@ -10,6 +10,12 @@
 #include "crab/ty/construct.hpp"
 #include "crab/assertion/check.hpp"
 
+/// @defgroup hash Hash
+/// A collection of simple hash utilities, this is not a primary focus
+/// of crab - but these are here for simple 'it just works' API that is
+/// a bit more readable than the use of std::hash directly.
+/// @{
+
 namespace crab {
 
   /// A hash code value
@@ -91,3 +97,5 @@ namespace crab {
     return crab::hash_code_mix({crab::hash(items)...});
   }
 }
+
+/// }@

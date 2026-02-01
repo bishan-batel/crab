@@ -47,7 +47,7 @@
 #define crab_cond_check(dbg_only, cond, ...)                                                                           \
   if constexpr (dbg_only) {                                                                                            \
     crab_dbg_check(cond, __VA_ARGS__);                                                                                 \
-    ::crab::discard(cond);                                                                                             \
+    ::crab::discard(cond); /* required to supress warnings of identical branches */                                                                                        \
   } else {                                                                                                             \
     crab_check(cond, __VA_ARGS__);                                                                                     \
   }

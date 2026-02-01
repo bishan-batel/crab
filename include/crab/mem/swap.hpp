@@ -32,7 +32,7 @@ namespace crab::mem {
     std::is_nothrow_move_assignable_v<T> and std::is_nothrow_move_constructible_v<T>
   ) -> void {
 
-    if constexpr (not trivially_reloctable<T> or std::is_constant_evaluated()) {
+    if constexpr (not trivially_reloctable<T>) {
       impl::swap_non_trivial(lhs, rhs);
       return;
     }

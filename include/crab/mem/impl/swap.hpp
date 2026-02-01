@@ -28,13 +28,13 @@ namespace crab::mem::impl {
     std::array<u8, mem::size_of<T>()> temp;
 
     // copy bytes of lhs to temp
-    mem::copy(unsafe, mem::address_of(lhs), temp.data(), 1);
+    mem::copy(unsafe, mem::address_of(lhs), reinterpret_cast<T*>(temp.data()), 1);
 
     // copy bytes of rhs to lhs
     mem::copy(unsafe, mem::address_of(rhs), mem::address_of(lhs), 1);
 
     // copy temp back into rhs
-    mem::copy(unsafe, temp, mem::address_of(rhs), 1);
+    mem::copy(unsafe, reinterpret_cast<T*>(temp.data()), mem::address_of(rhs), 1);
   }
 
 };

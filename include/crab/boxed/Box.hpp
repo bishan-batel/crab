@@ -350,9 +350,8 @@ namespace crab {
 
   using boxed::make_box;
 
+  /// }@
 } // namespace crab
-
-/// }@
 
 namespace crab {}
 

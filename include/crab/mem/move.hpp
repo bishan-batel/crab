@@ -3,7 +3,11 @@
 #include <utility>
 #include "crab/core.hpp"
 
+/// @addtogroup mem
+/// @{
+
 namespace crab::mem {
+
   /// Equivalent to `std::move` with the added constraint of not being able to move from const,
   /// which is almost always a bug.
   template<typename T>
@@ -11,6 +15,8 @@ namespace crab::mem {
 
   using std::move;
 }
+
+/// }@
 
 namespace crab {
   using crab::mem::move;

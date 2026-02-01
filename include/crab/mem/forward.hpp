@@ -3,14 +3,19 @@
 #include "crab/core.hpp"
 #include "crab/ty/manipulate.hpp"
 
+/// @addtogroup mem 
+/// @{
+
 namespace crab {
   namespace mem {
 
+    /// Utility in templated contexts for perfect forwarding with restrictions for rvalue to lvalue conversions
     template<typename T>
     [[nodiscard]] CRAB_INLINE constexpr auto forward(ty::remove_reference<T>& value) -> T&& {
       return static_cast<T&&>(value);
     }
 
+    /// Utility in templated contexts for perfect forwarding with restrictions for rvalue to lvalue conversions
     template<typename T>
     [[nodiscard]] CRAB_INLINE constexpr auto forward(ty::remove_reference<T>&& value) -> T&& {
       static_assert(
@@ -24,3 +29,5 @@ namespace crab {
 
   using mem::forward;
 }
+
+/// }@

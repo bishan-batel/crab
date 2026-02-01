@@ -20,7 +20,7 @@ void box() {
   // Derived* raw_ptr = Box<Derived>::unwrap(derived);
 
   // this would not compile, you need to move / transfer ownership
-  Derived* raw_ptr = Box<Derived>::unwrap(std::move(derived));
+  Derived* raw_ptr = std::move(derived).into_raw();
 
   delete raw_ptr;
 }
@@ -67,7 +67,7 @@ TEST_CASE("Box", "[box]") {
     REQUIRE(*raw_ptr == 420);
 
     u32* b;
-    REQUIRE_NOTHROW(b = Box<u32>::unwrap(std::move(single)));
+    REQUIRE_NOTHROW(b = std::move(single).into_raw());
 
     REQUIRE(b == raw_ptr);
 
@@ -75,7 +75,7 @@ TEST_CASE("Box", "[box]") {
 
     REQUIRE(*b == 420);
 
-    REQUIRE_THROWS(Box<u32>::unwrap(std::move(single)));
+    REQUIRE_THROWS(std::move(single).into_raw());
 
     // Generics<G>
     delete b;

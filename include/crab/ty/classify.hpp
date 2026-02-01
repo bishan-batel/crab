@@ -92,6 +92,14 @@ namespace crab::ty {
   /// Requirement that the given type is a native array type
   template<typename T>
   concept array = std::is_array_v<T>;
+
+  /// Requirement for a type to be both nothrow move constructible and nothrow move assignable
+  template<typename T>
+  concept nothrow_moveable = std::is_nothrow_move_constructible_v<T> and std::is_nothrow_move_constructible_v<T>;
+
+  /// Requirement for a type to be both nothrow copy constructible and nothrow copy assignable
+  template<typename T>
+  concept nothrow_copyable = std::is_nothrow_copy_assignable_v<T> and std::is_nothrow_copy_constructible_v<T>;
 }
 
 /// }@

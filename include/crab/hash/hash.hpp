@@ -4,9 +4,11 @@
 
 #include <functional>
 #include <initializer_list>
+
 #include "crab/core.hpp"
 #include "crab/num/integer.hpp"
 #include "crab/ty/construct.hpp"
+#include "crab/assertion/check.hpp"
 
 namespace crab {
 

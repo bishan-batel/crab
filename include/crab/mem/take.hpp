@@ -4,6 +4,9 @@
 #include "crab/ty/classify.hpp"
 #include "crab/ty/construct.hpp"
 
+/// @addtogroup mem 
+/// @{
+
 namespace crab::mem {
 
   namespace impl {
@@ -15,11 +18,12 @@ namespace crab::mem {
                         and std::is_nothrow_default_constructible_v<T>;
   }
 
-  /**
-   * Moves the given value and returns, reassigning its default value.
-   *
-   * Analogous to `mem::replace<T>(value, T())`
-   */
+  /// Moves the given value and returns, reassigning its default value.
+  ///
+  /// Analogous to `mem::replace<T>(value, T())`
+  ///
+  /// @param value Value to take
+  /// @returns the original value of 'value'
   template<ty::movable T>
   requires std::is_default_constructible_v<T>
   [[nodiscard]] CRAB_INLINE constexpr auto take(T& value) noexcept(impl::take_noexcept<T>) -> T {
@@ -29,3 +33,5 @@ namespace crab::mem {
   }
 
 }
+
+/// }@

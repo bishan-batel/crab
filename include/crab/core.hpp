@@ -194,6 +194,37 @@
 #define CRAB_CONSTEVAL constexpr
 #endif
 
+/// @def crab_if_consteval
+/// Macro for branching depending on if operating in a constant evaluated context or not. This is used if you are
+/// writing in a space that may or may not be in C++23 with 'if consteval'.
+///
+/// # Examples
+/// ```cpp
+/// template<typename T>
+/// constexpr auto copy(const T& from, T& to) {
+///   crab_if_consteval() {
+///     to = from;
+///     return;
+///   }
+///
+///   if constexpr (std::is_trivially_copy_assignable_v<T>) {
+//      memcpy(crab::mem::address_of(to), crab::mem::address_of(from), sizeof(T));
+//      return;
+///   }
+///
+///   to = from;
+///
+/// }
+///
+/// ```
+
+#if __cpp_if_consteval
+#define crab_if_consteval if consteval
+#else
+#include <type_traits>
+#define crab_if_consteval if (::std::is_constant_evaluated())
+#endif
+
 /// @def CRAB_RETURNS_NONNULL
 /// GCC Annotation for a Function to indicate that its return type is never null.
 /// This macro has no effect on platforms that do not support `returns_nonnull`

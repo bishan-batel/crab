@@ -341,6 +341,7 @@ namespace crab {
     };
 
     /// Makes a new instance of type T on the heap with given args
+    /// The values passed will be forwarded into the constructor of T
     template<ty::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T> {

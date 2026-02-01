@@ -33,7 +33,7 @@ namespace crab::ty {
 
   /// Requirement for the given to be any one of the other types listed
   template<typename T, typename... Cases>
-  concept either = (std::same_as<T, Cases> || ...);
+  concept either = (std::same_as<T, Cases> or ...);
 
 }
 

@@ -1,3 +1,5 @@
+/// @file crab/mem/size_of.hpp
+
 #pragma once
 
 #include "crab/core.hpp"

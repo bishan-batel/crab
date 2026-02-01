@@ -13,6 +13,7 @@
 #include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
 #include "crab/mem/take.hpp"
+#include "crab/ref/implicit_cast.hpp"
 #include "crab/ref/ref.hpp"
 #include "crab/ref/casts.hpp"
 #include "crab/ref/from_ptr.hpp"
@@ -205,12 +206,12 @@ namespace crab {
       /// Move assignment from a Box of a derived type, this will perform the required upcast
       template<std::derived_from<T> Derived>
       CRAB_INLINE constexpr auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
-        if (obj == static_cast<T*>(rhs.as_ptr())) {
+        if (obj == ref::implicit_cast<T*>(rhs.as_ptr())) {
           return *this;
         }
 
         drop();
-        obj = static_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
+        obj = ref::implicit_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
 
         return *this;
       }

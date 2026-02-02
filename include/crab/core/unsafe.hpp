@@ -13,7 +13,7 @@ namespace crab {
 
   /// Constant  meant to be passed to functions marked as 'unsafe' with the tag 'unsafe_t'.
   /// @ingroup core
-  static constexpr unsafe_fn unsafe{};
+  inline static constexpr unsafe_fn unsafe{};
 
 }
 

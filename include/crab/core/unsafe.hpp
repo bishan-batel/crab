@@ -1,5 +1,7 @@
 /// @file crab/core/unsafe.hpp
 
+#pragma once
+
 #include <array>
 #include <bit>
 #include "crab/num/integer.hpp"

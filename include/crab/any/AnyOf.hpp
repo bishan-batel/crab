@@ -20,7 +20,38 @@
 
 namespace crab::any {
 
-  /// A heterogeneuous sum type loosely equivalent to std::variant
+  /// A heterogeneuous sum type loosely equivalent to std::variant.
+  ///
+  /// Like the rest of crab's types, the defining difference in *behavior* is the added invariant of always containing a
+  /// value. When a value of type AnyOf<Ts...> is *moved* (or with an *rvalue qualified* method called), then after it
+  /// is only safe to destroy or reassign.
+  ///
+  /// The use case of AnyOf is to be able to store a value that could be *one of* a set of finite types.
+  ///
+  /// # Example
+  ///
+  /// ```cpp
+  ///
+  /// void print(AnyOf<i32, String> value) {
+  ///   if (value.is<i32>()) {
+  ///     fmt::println("{}", value.as<i32>());
+  ///   } else if (value.is<String>()) {
+  ///     fmt::println("{}", value.as<String>());
+  ///   }
+  /// }
+  ///
+  /// int main() {
+  ///   AnyOf<i32, String> value = 10;
+  ///
+  ///   print(crab::move(value));
+  ///
+  ///   // you should no longer use value as it is in a moved-from state.
+  /// }
+  ///
+  /// ```
+  ///
+  /// @ingroup any
+  /// @ingroup prelude
   template<typename... Ts>
   class AnyOf final : private impl::AnyOfConstructor<Ts>... {
     /// AnyOf would be significantly more complex to support non-moveable types, a case that is not worth it in my
@@ -378,9 +409,7 @@ namespace crab::any {
       return opt::Option<T>{as_unchecked<T>(unsafe)};
     }
 
-    ///
     /// Returns the reference type requested if the current value is of that type.
-    ///
     template<ty::either<Ts...> T>
     requires ty::is_reference<T>
     [[nodiscard]] constexpr auto as() const& -> opt::Option<T> {
@@ -542,7 +571,7 @@ namespace crab::any {
     }
 
     template<impl::VisitorForTypes<const Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, const Ts&...>>
-    constexpr auto visit(Visitor&& visitor) const& -> R {
+    [[nodiscard]] constexpr CRAB_INLINE auto visit(Visitor&& visitor) const& -> R {
 
       // ensure visitor has a call overload that can accept any type contained in this AnyOf
 
@@ -573,7 +602,7 @@ namespace crab::any {
     }
 
     template<impl::VisitorForTypes<Ts&...> Visitor, typename R = impl::VisitorResultType<Visitor, Ts&...>>
-    constexpr auto visit(Visitor&& visitor) & -> R {
+    [[nodiscard]] constexpr CRAB_INLINE auto visit(Visitor&& visitor) & -> R {
 
       // ensure visitor has a call overload that can accept any type contained in this AnyOf
 
@@ -603,8 +632,11 @@ namespace crab::any {
       }
     }
 
+    /// R-value qualified version of visit. For more information see the other overload's documentation. The major
+    /// difference of this overload is that performing this will leave the AnyOf invalid, as this will move the current
+    /// value into the visitor.
     template<impl::VisitorForTypes<Ts&&...> Visitor, typename R = impl::VisitorResultType<Visitor, Ts&&...>>
-    constexpr auto visit(Visitor&& visitor) && -> R {
+    [[nodiscard]] constexpr CRAB_INLINE auto visit(Visitor&& visitor) && -> R {
 
       // ensure visitor has a call overload that can accept any type contained in this AnyOf
 
@@ -637,13 +669,24 @@ namespace crab::any {
     }
 
     template<ty::either<Ts...> T>
-    [[nodiscard]] constexpr auto is() const -> bool {
+    [[nodiscard]] constexpr CRAB_INLINE auto is() const -> bool {
       return get_index() == IndexOf<T>;
     }
 
-    [[nodiscard]] constexpr auto get_index() const -> usize {
+    /// Gets the index of the currently held type. This function may not be used on a moved-from AnyOf
+    ///
+    /// # Panics
+    /// This will only panic if called on an AnyOf who has been moved.
+    ///
+    /// ```cpp
+    /// AnyOf<u32> a = 10;
+    ///
+    /// crab::discard(a);
+    /// ```
+    ///
+    /// # Examples
+    [[nodiscard]] constexpr CRAB_INLINE auto get_index() const -> usize {
       crab_check(is_valid(), "Invalid use of a moved-from AnyOf");
-      CRAB_ASSUME(index < NumTypes);
       return index;
     }
 

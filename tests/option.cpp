@@ -266,7 +266,7 @@ TEST_CASE("Reference Types", "[option]") {
   Option<i32&> a;
 
   REQUIRE(a.is_none());
-  REQUIRE_THROWS(a.get_unchecked());
+  CHECK_THROWS(a.get_unchecked());
 
   i32 i = 10;
   i32 j = 10;

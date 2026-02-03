@@ -36,5 +36,5 @@ doxygen_add_docs(
         COMMENT "Generating Doxygen Output"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
         # USE_STAMP_FILE
-        ${DOXYFILE_OUT}
+        CONFIG_FILE ${DOXYFILE_OUT}
 )

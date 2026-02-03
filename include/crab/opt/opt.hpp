@@ -1,9 +1,9 @@
+/// @file crab/opt/opt.hpp
 #pragma once
 
-namespace crab::opt {}
+/// @defgroup opt Option
+/// The most fleshed out / primary utility of Crab is most definitely the Option type. Formally, this type is a
+/// discriminated union between some type T and a 'None' state.
 
-#include "crab/opt/Option.hpp"
-#include "crab/opt/none.hpp"
-#include "crab/opt/some.hpp"
-#include "crab/opt/fallible.hpp"
-#include "crab/opt/boolean_constructs.hpp"
+/// @namespace crab::opt
+namespace crab::opt {}

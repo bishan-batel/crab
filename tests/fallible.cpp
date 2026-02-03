@@ -1,9 +1,12 @@
+#include "crab/opt/fallible.hpp"
 #include <crab/preamble.hpp>
 
 #include <crab/opt/opt.hpp>
 
 #include <catch2/catch_test_macros.hpp>
 #include "crab/fn/identity.hpp"
+#include "crab/opt/Option.hpp"
+#include "crab/opt/some.hpp"
 
 [[nodiscard]] auto non_zero(u8 x) -> Option<u8> {
   return crab::some(x).filter([](u8 x) { return x != 0; });

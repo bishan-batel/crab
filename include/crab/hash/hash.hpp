@@ -52,7 +52,6 @@ namespace crab {
   /// ```
   template<ty::hashable T>
   [[nodiscard]] CRAB_INLINE constexpr auto hash(const T& value) -> hash_code {
-    crab_check(true);
     return static_cast<hash_code>(Hasher<T>{}(value));
   }
 

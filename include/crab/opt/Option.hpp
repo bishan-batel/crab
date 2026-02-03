@@ -8,7 +8,6 @@
 #pragma once
 
 #include <concepts>
-#include <fmt/base.h>
 
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
@@ -767,7 +766,7 @@ namespace crab::opt {
 /// Formatter specialization for Option<T>, this specialization is only valid if the inner type of T is formattable
 /// itself.
 /// @ingroup opt
-template<fmt::formattable T, typename Char>
+template<typename T, typename Char>
 struct fmt::formatter<::crab::opt::Option<T>, Char> : fmt::formatter<fmt::string_view> {
 
   /// Formats option into context

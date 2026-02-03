@@ -55,9 +55,9 @@ def cmake_test [build_type: string, compiler: record] {
 	alias crab_tests = ./($builddir)/tests/crab-tests
 
 	if $build_type == "Release" {
-		crab_tests -e
+		crab_tests -e -s
 	} else {
-		crab_tests
+		crab_tests -s
 	}
 }
 

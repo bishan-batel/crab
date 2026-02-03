@@ -75,12 +75,11 @@ namespace crab::result {
 
     CRAB_INLINE constexpr Result(Result&& from) noexcept: storage{mem::move(from.storage)} {}
 
-    CRAB_INLINE constexpr Result(const Result& res): storage{res.storage} {
-      static_assert(is_copyable, "Cannot copy a result with a non-copyable Err or Ok type");
-    }
+    CRAB_INLINE constexpr Result(const Result& res) requires is_copyable
+        : storage{res.storage} {}
 
-    CRAB_INLINE constexpr auto operator=(const Result& res) -> Result& {
-      static_assert(is_copyable, "cannot copy a result with a non-copyable err or ok type");
+    CRAB_INLINE constexpr auto operator=(const Result& res) -> Result& requires is_copyable
+    {
       if (&res == this) {
         return *this;
       }
@@ -181,7 +180,19 @@ namespace crab::result {
       -> E& {
       ensure_valid(loc);
 
-      crab_check_with_location(is_err(), loc, "Called unwrap with Ok value");
+      if (not static_cast<bool>(is_err())) [[unlikely]] {
+        do {
+          ::crab ::assertion ::panic(
+            ::crab ::format(
+              "{} (Check \""
+              "is_err()"
+              "\" Failed)",
+              ::crab ::format("Called unwrap with Ok value")
+            ),
+            loc
+          );
+        } while (false);
+      }
 
       return storage.template as<Err>().unwrap().get();
     }
@@ -313,7 +324,7 @@ namespace crab::result {
       ensure_valid(loc);
 
       if (is_ok()) {
-        return Result<R, E>{result::Ok<R>{std::invoke(functor, mem::move(*this).unwrap(loc))}};
+        return Result<R, E>{result::Ok<R>{std::invoke(mem::forward<F>(functor), mem::move(*this).unwrap(loc))}};
       }
 
       return Result<R, E>{result::Err<E>{mem::move(*this).unwrap_err(loc)}};

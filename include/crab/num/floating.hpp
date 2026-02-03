@@ -5,18 +5,17 @@
 
 #include "crab/core.hpp"
 
-/// @addtogroup num
-/// @{
-
 namespace crab::num {
   /// 32 Bit Floating Point Number
+  /// @ingroup num
+  /// @ingroup prelude
   using f32 = float;
 
   /// 64 Bit Floating Point Number
+  /// @ingroup num
+  /// @ingroup prelude
   using f64 = long double;
 }
-
-/// }@
 
 namespace crab {
   using namespace crab::num;

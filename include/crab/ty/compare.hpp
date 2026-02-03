@@ -9,10 +9,10 @@
 #include <concepts>
 #include <tuple>
 
-/// @addtogroup ty
-/// @{
-
 namespace crab::ty {
+  /// @addtogroup ty
+  /// @{
+
   /// 'indexes' into a variadic pack to get the nth type
   ///
   /// TODO: move nth_type to a more suitable header
@@ -35,6 +35,5 @@ namespace crab::ty {
   template<typename T, typename... Cases>
   concept either = (std::same_as<T, Cases> or ...);
 
+  /// }@
 }
-
-/// }@

@@ -10,15 +10,15 @@
 #include "crab/assertion/assert.hpp"
 #include "crab/ty/identity.hpp"
 
-/// @addtogroup num
-/// @{
-
 namespace crab::num {
+  /// @addtogroup num
+  /// @{
 
   /// An immutable integral range between of the form $[min, max)$
   ///
   /// @tparam Int The integer type used as storage in the range, by default it is usize but it works for any standard
   /// integral type.
+  /// @ingroup prelude
   template<std::integral Int = usize>
   class Range final {
     Int min, max;
@@ -185,9 +185,8 @@ namespace crab::num {
     return num::range(max + 1, loc);
   }
 
+  /// }@
 }
-
-/// }@
 
 namespace crab {
   using num::Range;

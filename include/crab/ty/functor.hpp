@@ -2,9 +2,6 @@
 /// @ingroup ty
 /// Crab type constraints for functors
 
-/// @addtogroup ty
-/// @{
-
 #pragma once
 
 #include <functional>
@@ -13,6 +10,8 @@
 #include "crab/ty/construct.hpp"
 
 namespace crab::ty {
+  /// @addtogroup ty
+  /// @{
 
   /// Trait for any type that is callable with the argument types 'Args'
   /// and returns the type 'ReturnType'.
@@ -89,6 +88,6 @@ namespace crab::ty {
   /// @tparam Other Additional arguments you want the predicate to be required to take.
   template<typename F, typename Arg, typename... Other>
   concept predicate = functor<F, bool, Arg, Other...>;
-}
 
-/// }@
+  /// }@
+}

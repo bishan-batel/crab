@@ -5,10 +5,10 @@
 #include "crab/core.hpp"
 #include "crab/ty/classify.hpp"
 
-/// @addtogroup mem
-/// @{
-
 namespace crab::mem {
+  /// @addtogroup mem
+  /// @{
+
   /// Crab version of sizeof(T) that disallows reference types, using reference types with sizeof is almost always a
   /// bug
   template<ty::non_reference T>
@@ -23,6 +23,5 @@ namespace crab::mem {
     return size_of<T>();
   }
 
+  /// }@
 }
-
-/// }@

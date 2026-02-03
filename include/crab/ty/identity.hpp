@@ -5,10 +5,9 @@
 
 #pragma once
 
-/// @addtogroup ty
-/// @{
-
 namespace crab::ty {
+  /// @addtogroup ty
+  /// @{
 
   namespace impl {
 
@@ -26,6 +25,6 @@ namespace crab::ty {
   /// you are making a templated function and you want to
   template<typename T>
   using identity = typename impl::identity<T>::type;
-}
 
-/// }@
+  /// }@
+}

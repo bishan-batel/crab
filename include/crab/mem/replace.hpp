@@ -8,9 +8,6 @@
 #include "crab/ty/classify.hpp"
 #include "crab/ty/construct.hpp"
 
-/// @addtogroup mem
-/// @{
-
 namespace crab::mem {
   /// This function will replace 'dest' with the given value and return the original value of 'dest'.
   ///
@@ -19,6 +16,7 @@ namespace crab::mem {
   /// @param dest Value to take and replace with 'value'
   /// @param value The value to put into 'dest' after taking it
   /// @returns the original value of 'dest'
+  /// @ingroup mem
   template<ty::non_const T, ty::convertible<T> U>
   [[nodiscard]] CRAB_INLINE constexpr auto replace(T& dest, U&& value) -> T {
     T original{mem::move(dest)};
@@ -35,5 +33,3 @@ namespace crab::mem {
   }
 
 }
-
-/// }@

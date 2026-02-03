@@ -5,11 +5,10 @@
 #include "crab/core.hpp"
 #include "crab/ty/manipulate.hpp"
 
-/// @addtogroup mem 
-/// @{
-
 namespace crab {
   namespace mem {
+    /// @addtogroup mem
+    /// @{
 
     /// Utility in templated contexts for perfect forwarding with restrictions for rvalue to lvalue conversions
     template<typename T>
@@ -27,9 +26,9 @@ namespace crab {
 
       return static_cast<T&&>(value);
     }
+
+    /// }@
   }
 
   using mem::forward;
 }
-
-/// }@

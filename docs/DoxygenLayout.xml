@@ -88,6 +88,7 @@
       <inlineclasses visible="yes" title=""/>
       <typedefs visible="yes" title=""/>
       <enums visible="yes" title=""/>
+      <variables visible="yes" title=""/>
       <services visible="yes" title=""/>
       <interfaces visible="yes" title=""/>
       <constructors visible="yes" title=""/>
@@ -189,11 +190,11 @@
   <group>
     <briefdescription visible="no"/>
     <detaileddescription visible="yes" title=""/>
-    <groupgraph visible="yes"/>
+    <groupgraph visible="no"/>
     <memberdecl>
       <nestedgroups visible="yes" title=""/>
       <modules visible="yes" title=""/>
-      <dirs visible="no" title=""/>
+      <dirs visible="yes" title=""/>
       <namespaces visible="yes" title=""/>
       <concepts visible="yes" title=""/>
       <defines visible="yes" title="Macros"/>

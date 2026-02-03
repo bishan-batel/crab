@@ -32,6 +32,7 @@ namespace crab {
 
   namespace ty {
     /// Type constraint that T must be a hashable type (via std::hash / Hasher)
+    /// @ingroup ty
     template<typename T>
     concept hashable = requires(const T& v) {
       { Hasher<T>{}(v) } -> into_hash_code;

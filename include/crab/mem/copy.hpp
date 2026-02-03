@@ -1,3 +1,5 @@
+/// @file crab/mem/copy.hpp
+
 #pragma once
 
 #include <type_traits>
@@ -7,10 +9,9 @@
 
 #include <cstring>
 
-/// @addtogroup mem
-/// @{
-
 namespace crab::mem {
+  /// @addtogroup mem
+  /// @{
 
   /// Perform a *bitwise* copy of *count* items from source to destination.
   /// The given pointers may be overlapping in ranges.
@@ -147,6 +148,5 @@ namespace crab::mem {
     }
   }
 
+  /// }@
 }
-
-/// }@

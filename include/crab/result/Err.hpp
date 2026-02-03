@@ -55,7 +55,7 @@ namespace crab {
 
     template<error_type E, typename... Args>
     [[nodiscard]] CRAB_INLINE constexpr auto err(Args&&... args) {
-      return Err<E>{E{mem::forward<Args>(args)...}};
+      return Err<E>{E(mem::forward<Args>(args)...)};
     }
 
     template<typename E>

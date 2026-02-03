@@ -4,7 +4,6 @@
 #pragma once
 
 /// @defgroup ty Metatemplate Helpers & Constraints
-/// @{
 
 /// @namespace crab::ty
 /// @ingroup ty
@@ -16,5 +15,3 @@
 /// helper structs rather than the jank helper structs themselves. Many STL concepts exist but many have yet to be
 /// created (like std::is_array_v/std::is_array).
 namespace crab::ty {}
-
-/// }@

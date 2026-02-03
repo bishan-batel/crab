@@ -12,6 +12,12 @@
 
 namespace crab {
 
+  /// @defgroup hash Hash
+  /// A collection of simple hash utilities, this is not a primary focus
+  /// of crab - but these are here for simple 'it just works' API that is
+  /// a bit more readable than the use of std::hash directly.
+  /// @{
+
   /// A hash code value
   using hash_code = usize;
 
@@ -26,6 +32,7 @@ namespace crab {
 
   namespace ty {
     /// Type constraint that T must be a hashable type (via std::hash / Hasher)
+    /// @ingroup ty
     template<typename T>
     concept hashable = requires(const T& v) {
       { Hasher<T>{}(v) } -> into_hash_code;
@@ -45,7 +52,6 @@ namespace crab {
   /// ```
   template<ty::hashable T>
   [[nodiscard]] CRAB_INLINE constexpr auto hash(const T& value) -> hash_code {
-    crab_check(true);
     return static_cast<hash_code>(Hasher<T>{}(value));
   }
 
@@ -90,4 +96,6 @@ namespace crab {
   [[nodiscard]] constexpr auto hash_together(const T&... items) -> hash_code {
     return crab::hash_code_mix({crab::hash(items)...});
   }
+
+  /// }@
 }

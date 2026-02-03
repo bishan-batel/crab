@@ -44,10 +44,11 @@
 
 /// Macro for conditionally calling crab_dbg_check vs crab_check based off of a constexpr bool. If dbg_only is true,
 /// then this will perform a crab_dbg_check, else this will expand to crab_check
+/// @hideinitializer
 #define crab_cond_check(dbg_only, cond, ...)                                                                           \
   if constexpr (dbg_only) {                                                                                            \
     crab_dbg_check(cond, __VA_ARGS__);                                                                                 \
-    ::crab::discard(cond); /* required to supress warnings of identical branches */                                                                                        \
+    ::crab::discard(cond); /* required to supress warnings of identical branches */                                    \
   } else {                                                                                                             \
     crab_check(cond, __VA_ARGS__);                                                                                     \
   }

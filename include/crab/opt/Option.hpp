@@ -246,7 +246,7 @@ namespace crab::opt {
     [[nodiscard]] CRAB_INLINE constexpr auto take_or_default() && -> T requires ty::default_constructible<T>
     {
       if (is_none()) {
-        return T{};
+        return T();
       }
 
       return mem::move(*this).unwrap();

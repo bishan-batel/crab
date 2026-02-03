@@ -58,10 +58,10 @@ namespace crab::result {
   public:
 
     CRAB_INLINE constexpr Result(const T& from) requires(not is_same and std::copyable<T>)
-        : Result{T{from}} {}
+        : Result{T(from)} {}
 
     CRAB_INLINE constexpr Result(const E& from) requires(not is_same and std::copyable<E>)
-        : Result{E{from}} {}
+        : Result{E(from)} {}
 
     CRAB_INLINE constexpr Result(T&& from) requires(not is_same)
         : Result{Ok{mem::forward<T>(from)}} {}

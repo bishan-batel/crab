@@ -74,7 +74,7 @@ PROJECT_ICON           =
 # entered, it will be relative to the location where Doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = 
+OUTPUT_DIRECTORY       = @CMAKE_CURRENT_BINARY_DIR@
 
 # If the CREATE_SUBDIRS tag is set to YES then Doxygen will create up to 4096
 # sub-directories (in 2 levels) under the output directory of each output format
@@ -650,7 +650,7 @@ HIDE_IN_BODY_DOCS      = YES
 # will be excluded. Set it to YES to include the internal documentation.
 # The default value is: NO.
 
-INTERNAL_DOCS          = YES
+INTERNAL_DOCS          = NO
 
 # With the correct setting of option CASE_SENSE_NAMES Doxygen will better be
 # able to match the capabilities of the underlying filesystem. In case the
@@ -815,7 +815,7 @@ MAX_INITIALIZER_LINES  = 30
 # list will mention the files that were used to generate the documentation.
 # The default value is: YES.
 
-SHOW_USED_FILES        = YES
+SHOW_USED_FILES        = NO
 
 # Set the SHOW_FILES tag to NO to disable the generation of the Files page. This
 # will remove the Files entry from the Quick Index and from the Folder Tree View
@@ -1389,7 +1389,7 @@ HTML_FILE_EXTENSION    = .html
 # of the possible markers and block names see the documentation.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_HEADER            = ./docs/header.html
+HTML_HEADER            =  ./docs/header.html
 
 # The HTML_FOOTER tag can be used to specify a user-defined HTML footer for each
 # generated HTML page. If the tag is left blank Doxygen will generate a standard
@@ -1454,7 +1454,7 @@ HTML_EXTRA_FILES       =
 # The default value is: AUTO_LIGHT.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_COLORSTYLE        = TOGGLE
+HTML_COLORSTYLE        = DARK
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen
 # will adjust the colors in the style sheet and background images according to
@@ -1484,7 +1484,7 @@ HTML_COLORSTYLE_SAT    = 255
 # Minimum value: 40, maximum value: 240, default value: 80.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_COLORSTYLE_GAMMA  = 80
+HTML_COLORSTYLE_GAMMA  = 133
 
 # If the HTML_DYNAMIC_MENUS tag is set to YES then the generated HTML
 # documentation will contain a main index with vertical navigation menus that
@@ -1530,7 +1530,7 @@ HTML_COPY_CLIPBOARD    = YES
 # be stored separately.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_PROJECT_COOKIE    =
+HTML_PROJECT_COOKIE    = YES
 
 # With HTML_INDEX_NUM_ENTRIES one can control the preferred number of entries
 # shown in the various tree structured indices initially; the user can expand
@@ -1803,7 +1803,7 @@ PAGE_OUTLINE_PANEL     = YES
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-FULL_SIDEBAR           = YES
+FULL_SIDEBAR           = NO
 
 # The ENUM_VALUES_PER_LINE tag can be used to set the number of enum values that
 # Doxygen will group on one line in the generated HTML documentation.

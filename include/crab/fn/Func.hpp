@@ -1,3 +1,5 @@
+/// @file crab/fn/Func.hpp
+
 #pragma once
 
 #include "crab/core.hpp"
@@ -6,9 +8,8 @@
 
 namespace crab {
 
-  /**
-   * (Alias) Functor wrapper 
-   */
+  /// Alias functor wrapper (std::functor)
+  /// @ingroup fn
   template<typename F = void()>
   using Func = std::function<F>;
 

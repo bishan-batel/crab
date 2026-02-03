@@ -8,10 +8,11 @@
 #include "crab/num/floating.hpp"
 #include "crab/num/integer.hpp"
 
-/// @addtogroup num
-/// @{
-
 namespace crab::num::suffixes {
+  /// @addtogroup prelude
+  /// @addtogroup num
+  /// @{
+
   /// Literal for converting a degree literal -> radians
   CRAB_PURE CRAB_INLINE constexpr f32 operator""_deg(const f64 literal) {
     return static_cast<f32>(literal * std::numbers::pi / 180.f);
@@ -91,9 +92,9 @@ namespace crab::num::suffixes {
   CRAB_PURE CRAB_INLINE constexpr uptr operator""_uptr(const unsigned long long literal) {
     return static_cast<uptr>(literal);
   }
-}
 
-/// }@
+  /// }@
+}
 
 namespace crab::prelude {
   using namespace crab::num::suffixes;

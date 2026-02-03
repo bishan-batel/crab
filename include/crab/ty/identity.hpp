@@ -5,10 +5,9 @@
 
 #pragma once
 
-/// @addtogroup ty
-/// @{
-
 namespace crab::ty {
+  /// @addtogroup ty
+  /// @{
 
   namespace impl {
 
@@ -22,10 +21,13 @@ namespace crab::ty {
 
   /// Identity metafunction, is equal to the input.
   ///
+  /// Writing identity<T> is the as writing just T.
+  ///
   /// This can be used for special cases when metatemplate programming, or when
   /// you are making a templated function and you want to
+  /// @hideinitializer
   template<typename T>
   using identity = typename impl::identity<T>::type;
-}
 
-/// }@
+  /// }@
+}

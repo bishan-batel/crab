@@ -1,3 +1,4 @@
+/// @file crab/fn/cast.hpp
 
 #pragma once
 
@@ -8,6 +9,8 @@
 
 namespace crab::fn {
 
+  /// Functor type for use with crab::fn::cast
+  /// @ingroup fn
   template<typename Derived>
   struct cast_s final {
 
@@ -53,14 +56,15 @@ namespace crab::fn {
     }
   };
 
-  /**
-   * @brief Function Object that is basically the same thing as
-   * crab::ref::cast<T>
-   *
-   * The only use of this versus the former is when in use of Function
-   * Programming, such as with std::ranges, for when you need to pass
-   * functions around as objects
-   */
+  /// Function Object that is basically the same thing as crab::ref::cast<T>
+  ///
+  /// The only use of this versus the former is when in use of Function
+  /// Programming, such as with std::ranges, for when you need to pass
+  /// functions around as objects.
+  ///
+  /// For more information, refer to `crab::ref::cast`
+  ///
+  /// @ingroup fn
   template<typename Derived>
   inline static constexpr cast_s<Derived> cast{};
 }

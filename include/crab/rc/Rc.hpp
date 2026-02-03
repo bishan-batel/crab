@@ -267,7 +267,7 @@ namespace crab::rc {
   template<ty::non_const T, typename... Args>
   [[nodiscard]] constexpr auto make_rc(Args&&... args) -> Rc<T> {
     static_assert(std::constructible_from<T, Args...>, "Cannot construct type from the given arguments");
-    return Rc<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
+    return Rc<T>::from_owned_unchecked(new T(std::forward<Args>(args)...));
   }
 
   template<ty::non_const T, typename... Args>
@@ -275,7 +275,7 @@ namespace crab::rc {
   [[nodiscard]] constexpr auto make_rc_mut(Args&&... args) -> RcMut<T> {
     static_assert(std::constructible_from<T, Args...>, "Cannot construct type from the given arguments");
 
-    return RcMut<T>::from_owned_unchecked(new T{std::forward<Args>(args)...});
+    return RcMut<T>::from_owned_unchecked(new T(std::forward<Args>(args)...));
   }
 
 }

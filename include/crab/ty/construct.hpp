@@ -5,10 +5,10 @@
 
 #include <concepts>
 
-/// @addtogroup ty
-/// @{
-
 namespace crab::ty {
+  /// @addtogroup ty
+  /// @{
+
   /// Requirement for the type T to be copy constructible and assignable
   template<typename T>
   concept copyable = std::copyable<T>;
@@ -37,6 +37,5 @@ namespace crab::ty {
   template<typename T>
   concept default_constructible = std::is_default_constructible_v<T>;
 
+  /// }@
 }
-
-/// }@

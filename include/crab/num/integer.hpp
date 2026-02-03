@@ -8,10 +8,11 @@
 
 #include "crab/core.hpp"
 
-/// @addtogroup num
-/// @{
+namespace crab::num {
+  /// @addtogroup num
+  /// @addtogroup prelude
+  /// @{
 
-  namespace crab::num {
   /// Fix Sized Unsigned 8 Bit Integer (cannot be negative)
   using u8 = std::uint8_t;
 
@@ -77,9 +78,9 @@
   /// UTF-32 Encoded Character
   using char32 = u32;
 #endif
-}
 
-/// }@
+  /// }@
+}
 
 namespace crab {
   using namespace crab::num;

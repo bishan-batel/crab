@@ -1,3 +1,5 @@
+/// @file crab/mem/swap.hpp
+
 #pragma once
 
 #include <type_traits>
@@ -6,10 +8,9 @@
 #include "crab/mem/impl/swap.hpp"
 #include "crab/ty/classify.hpp"
 
-/// @addtogroup mem
-/// @{
-
 namespace crab::mem {
+  /// @addtogroup mem
+  /// @{
 
   /// Whether or not a type can be trivially relocatable
   /// TODO: find a way reliably detect relocatability
@@ -17,8 +18,6 @@ namespace crab::mem {
   concept trivially_reloctable = std::is_trivially_destructible_v<T>    //
                              and std::is_trivially_move_assignable_v<T> //
                              and std::is_trivially_move_constructible_v<T>;
-
-  // clang-format on
 
   /// Swaps the given values template<ty::non_const T>. The difference between this and std::swap is this function will
   /// perform bitwise relocation if applicable for the given type, rather than call move assignment or constructors.
@@ -48,6 +47,6 @@ namespace crab::mem {
       return;
     }
   }
-}
 
-/// }@
+  /// }@
+}

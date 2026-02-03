@@ -56,7 +56,7 @@ namespace crab {
 
     template<ok_type T, typename... Args>
     [[nodiscard]] CRAB_INLINE constexpr auto ok(Args&&... args) {
-      return Ok<T>{T{mem::forward<Args>(args)...}};
+      return Ok<T>{T(mem::forward<Args>(args)...)};
     }
 
     template<typename T>

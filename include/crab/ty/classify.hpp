@@ -8,10 +8,9 @@
 #include "crab/ty/bool_types.hpp"
 #include "crab/ty/compare.hpp"
 
-/// @addtogroup ty
-/// @{
-
 namespace crab::ty {
+  /// @addtogroup ty
+  /// @{
 
   /// True if the given type is a complete type.
   /// ex. not a forward declaration and can be used fully
@@ -100,6 +99,6 @@ namespace crab::ty {
   /// Requirement for a type to be both nothrow copy constructible and nothrow copy assignable
   template<typename T>
   concept nothrow_copyable = std::is_nothrow_copy_assignable_v<T> and std::is_nothrow_copy_constructible_v<T>;
-}
 
-/// }@
+  /// }@
+}

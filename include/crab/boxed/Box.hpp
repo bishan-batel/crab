@@ -13,6 +13,7 @@
 #include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
 #include "crab/mem/take.hpp"
+#include "crab/ref/implicit_cast.hpp"
 #include "crab/ref/ref.hpp"
 #include "crab/ref/casts.hpp"
 #include "crab/ref/from_ptr.hpp"
@@ -24,14 +25,14 @@
 
 // NOLINTBEGIN(*explicit*)
 
-/// @addtogroup boxed
-/// @{
-
 namespace crab {
+  /// @addtogroup boxed
+  /// @{
 
   /// Storage type specialization for Box<T>
   template<typename T>
   struct opt::Storage<::crab::boxed::Box<T>> final {
+    /// @hideinitializer
     using type = boxed::impl::BoxStorage<T>;
   };
 
@@ -205,12 +206,12 @@ namespace crab {
       /// Move assignment from a Box of a derived type, this will perform the required upcast
       template<std::derived_from<T> Derived>
       CRAB_INLINE constexpr auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
-        if (obj == static_cast<T*>(rhs.as_ptr())) {
+        if (obj == ref::implicit_cast<T*>(rhs.as_ptr())) {
           return *this;
         }
 
         drop();
-        obj = static_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
+        obj = ref::implicit_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
 
         return *this;
       }
@@ -341,19 +342,19 @@ namespace crab {
     };
 
     /// Makes a new instance of type T on the heap with given args
+    /// The values passed will be forwarded into the constructor of T
     template<ty::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T> {
       return Box<T>::from_raw(unsafe, new T(std::forward<Args>(args)...));
     }
+
+    /// }@
   }
 
   using boxed::make_box;
 
-  /// }@
-} // namespace crab
-
-namespace crab {}
+}
 
 namespace crab::prelude {
   using boxed::Box;

@@ -1,13 +1,14 @@
+/// @file crab/mem/take.hpp
+
 #pragma once
 
 #include "crab/mem/move.hpp"
 #include "crab/ty/classify.hpp"
 #include "crab/ty/construct.hpp"
 
-/// @addtogroup mem 
-/// @{
-
 namespace crab::mem {
+  /// @addtogroup mem
+  /// @{
 
   namespace impl {
     template<typename T>
@@ -32,6 +33,5 @@ namespace crab::mem {
     return temp;
   }
 
+  /// }@
 }
-
-/// }@

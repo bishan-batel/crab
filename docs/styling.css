@@ -1,0 +1,59 @@
+@import url("https://fonts.googleapis.com/css?family=JetBrains Mono");
+
+html,
+html.dark-mode,
+html.light-mode,
+body {
+  --na-font: 'JetBrains Mono', 'Consolas', monospace;
+
+  --font-family-monospace: var(--na-font) !important;
+  --font-family-normal: var(--na-font) !important;
+  --font-family-nav: var(--na-font) !important;
+  --font-family-title: var(--na-font) !important;
+  --font-family-toc: var(--na-font) !important;
+  --font-family-search: var(--na-font) !important;
+  --font-family-icon: var(--na-font) !important;
+  --font-family-tooltip: var(--na-font) !important;
+
+  font-family: var(--na-font) !important;
+  --font-family: var(--na-font) !important;
+
+
+  /* Doxygen Awesome Variables */
+  --primary-color: #cba6f7;
+  --primary-dark-color: #fab387;
+  --primary-light-color: #89b4fa;
+  --page-background-color: #1e1e2e;
+  --page-foreground-color: #cdd6f4;
+  --page-secondary-foreground-color: #a6adc8;
+  --fragment-background: #181825;
+  --fragment-foreground: #bac2de;
+
+  --separator-color: #11111b;
+
+  --border-radius-small: 5px;
+  --border-radius-medium: 10px;
+  --border-radius-large: 15px;
+
+  --warning-color: #faf3d8;
+  --warning-color-dark: #f3a600;
+  --warning-color-darker: #5f4204;
+  --note-color: #e4f3ff;
+  --note-color-dark: #1879C4;
+  --note-color-darker: #274a5c;
+  --todo-color: #e4dafd;
+  --todo-color-dark: #5b2bdd;
+  --todo-color-darker: #2a0d72;
+  --deprecated-color: #ecf0f3;
+  --deprecated-color-dark: #5b6269;
+  --deprecated-color-darker: #43454a;
+  --bug-color: #f8d1cc;
+  --bug-color-dark: #b61825;
+  --bug-color-darker: #75070f;
+  --invariant-color: #d8f1e3;
+  --invariant-color-dark: #44b86f;
+  --invariant-color-darker: #265532;
+
+  --side-nav-background: #11111b;
+  --searchbar-background: #313244;
+}

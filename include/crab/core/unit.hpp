@@ -2,7 +2,7 @@
 
 #include "crab/core.hpp"
 
-#include <ostream>
+#include <iostream>
 
 namespace crab {
 

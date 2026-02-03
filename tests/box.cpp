@@ -1,10 +1,9 @@
-
 #include <catch2/catch_test_macros.hpp>
 #include <memory>
 #include <crab/preamble.hpp>
-#include <crab/boxed/Box.hpp>
 #include <utility>
-#include "crab/opt/none.hpp"
+#include <crab/opt/Option.hpp>
+#include <crab/boxed/Box.hpp>
 #include "test_types.hpp"
 
 struct SelfReferential;

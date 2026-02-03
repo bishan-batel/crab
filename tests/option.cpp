@@ -230,9 +230,7 @@ TEST_CASE("Option", "Tests for all option methods") {
     asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       asserts::for_types(asserts::types<T, T&, const T&>, []<typename K>(asserts::type<K>) {
         if constexpr (std::copy_constructible<T>) {
-          STATIC_REQUIRE( //
-            ty::same_as<Option<T>, decltype(crab::some(std::declval<K>()))>
-          );
+          STATIC_REQUIRE(ty::same_as<Option<T>, decltype(crab::some(std::declval<K>()))>);
         }
 
         STATIC_REQUIRE(ty::same_as<Option<K>, decltype(crab::some<K>(std::declval<K>()))>);
@@ -268,7 +266,7 @@ TEST_CASE("Reference Types", "[option]") {
   Option<i32&> a;
 
   REQUIRE(a.is_none());
-  REQUIRE_THROWS(a.get_unchecked());
+  CHECK_THROWS(a.get_unchecked());
 
   i32 i = 10;
   i32 j = 10;

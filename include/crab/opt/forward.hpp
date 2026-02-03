@@ -1,3 +1,6 @@
+/// @file crab/opt/forward.hpp
+/// @ingroup opt
+
 #pragma once
 
 namespace crab::opt {

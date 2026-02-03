@@ -1,7 +1,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <crab/preamble.hpp>
 #include "crab/fn/identity.hpp"
+#include "crab/opt/boolean_constructs.hpp"
 #include "crab/opt/opt.hpp"
+#include "crab/opt/some.hpp"
 #include "test_types.hpp"
 
 consteval auto consteval_test() -> void {

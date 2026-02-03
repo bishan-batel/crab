@@ -14,7 +14,7 @@ namespace crab::num {
   /// @addtogroup num
   /// @{
 
-  /// An immutable integral range between of the form $[min, max)$
+  /// An immutable integral range between of the form \f$[min, max)\f$
   ///
   /// @tparam Int The integer type used as storage in the range, by default it is usize but it works for any standard
   /// integral type.
@@ -120,7 +120,7 @@ namespace crab::num {
     }
   };
 
-  /// Creates a range from min to max $[min, max)$
+  /// Creates a range from min to max \f$[min, max)\f$
   ///
   ///
   /// # Examples

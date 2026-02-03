@@ -31,6 +31,8 @@ body {
 
   --separator-color: #11111b;
 
+  --link-color: #89b4fa;
+
   --border-radius-small: 5px;
   --border-radius-medium: 10px;
   --border-radius-large: 15px;
@@ -56,4 +58,75 @@ body {
 
   --side-nav-background: #11111b;
   --searchbar-background: #313244;
+}
+
+em {
+  color: var(--primary-color);
+}
+
+h2.memtitle {
+  color: #89b4fa;
+
+  a.permalink {
+    color: #cdd6f4;
+  }
+}
+
+.memitem {
+  .memproto {
+    .memtemplate {
+      color: #cba6f7;
+    }
+
+    .memname {
+      /* color: #89b4fa; */
+
+      a {
+        color: #cba6f7;
+      }
+
+      a.el[content~="CRAB_INLINE"] {
+        color: #cba6f7;
+      }
+
+      a.el[content~="CRAB_PURE"] {
+        color: #cba6f7;
+      }
+
+      a.el[content~="CRAB_NORETURN"] {
+        color: #cba6f7;
+      }
+    }
+  }
+}
+
+table.memberdecls {
+  tr {
+    .memItemLeft {
+      color: #cba6f7;
+    }
+
+    .memItemRight {
+      color: #f9e2af;
+    }
+  }
+}
+
+div.fragment {
+  div.line {
+
+    .keywordflow,
+    .keyword {
+      color: #cba6f7;
+    }
+
+    a.hl_class {
+      color: #f9e2af !important;
+    }
+
+    a.hl_function {
+      color: #89b4fa !important;
+    }
+
+  }
 }

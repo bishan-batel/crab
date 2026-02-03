@@ -25,10 +25,9 @@
 
 // NOLINTBEGIN(*explicit*)
 
-/// @addtogroup boxed
-/// @{
-
 namespace crab {
+  /// @addtogroup boxed
+  /// @{
 
   /// Storage type specialization for Box<T>
   template<typename T>
@@ -348,14 +347,13 @@ namespace crab {
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T> {
       return Box<T>::from_raw(unsafe, new T(std::forward<Args>(args)...));
     }
+
+    /// }@
   }
 
   using boxed::make_box;
 
-  /// }@
-} // namespace crab
-
-namespace crab {}
+}
 
 namespace crab::prelude {
   using boxed::Box;

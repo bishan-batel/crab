@@ -9,9 +9,8 @@
 #include "crab/core.hpp"
 
 namespace crab::num {
-  /// @addtogroup prelude
-  /// @{
   /// @addtogroup num
+  /// @addtogroup prelude
   /// @{
 
   /// Fix Sized Unsigned 8 Bit Integer (cannot be negative)
@@ -80,7 +79,6 @@ namespace crab::num {
   using char32 = u32;
 #endif
 
-  /// }@
   /// }@
 }
 

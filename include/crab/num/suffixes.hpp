@@ -10,7 +10,6 @@
 
 namespace crab::num::suffixes {
   /// @addtogroup prelude
-  /// @{
   /// @addtogroup num
   /// @{
 
@@ -94,7 +93,6 @@ namespace crab::num::suffixes {
     return static_cast<uptr>(literal);
   }
 
-  /// }@
   /// }@
 }
 

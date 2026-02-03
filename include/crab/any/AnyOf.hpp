@@ -85,15 +85,18 @@ namespace crab::any {
   public:
 
     /// The total number of different types
+    /// @hideinitializer
     static constexpr auto NumTypes{sizeof...(Ts)};
 
     /// AnyOf<> would always be invalid, therefore not allowed.
     static_assert(NumTypes > 0, "Cannot create an AnyOf with novariants");
 
     /// The minimum sized storage buffer required for storage
+    /// @hideinitializer
     static constexpr usize DataSize{impl::ByteSize<Ts...>};
 
     /// The minimum alignment required for storage
+    /// @hideinitializer
     static constexpr usize Alignment{impl::AlignOf<Ts...>};
 
   private:
@@ -126,6 +129,7 @@ namespace crab::any {
     /// // ill-formed
     /// // typeid(A::NthType<2>);
     /// ```
+    /// @hideinitializer
     template<usize I>
     using NthType = ty::nth_type<I, Ts...>;
 
@@ -143,6 +147,7 @@ namespace crab::any {
     /// // ill-formed
     /// // typeid(A::NthType<2>);
     /// ```
+    /// @hideinitializer
     template<ty::either<Ts...> T>
     static constexpr usize IndexOf = []() {
       usize i = 0;

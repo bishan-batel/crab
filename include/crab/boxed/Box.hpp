@@ -32,6 +32,7 @@ namespace crab {
   /// Storage type specialization for Box<T>
   template<typename T>
   struct opt::Storage<::crab::boxed::Box<T>> final {
+    /// @hideinitializer
     using type = boxed::impl::BoxStorage<T>;
   };
 

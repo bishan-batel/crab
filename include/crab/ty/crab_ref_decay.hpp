@@ -60,16 +60,19 @@ namespace crab::ty {
   /// Type function that will turn the given type of for Ref<T>/RefMut<T>
   /// into const T& / T&. If the given type is not a crab reference wrapper, then
   /// this will simply be aliased to T
+  /// @hideinitializer
   template<typename T>
   using crab_ref_decay = impl::crab_ref_decay<T>::type;
 
   /// Type predicate for whether or not the given type T is a crab
   /// immutable reference, eg. of the form crab::ref::Ref<T>
+  /// @hideinitializer
   template<typename T>
   concept crab_ref = impl::is_crab_ref<T>::value;
 
   /// Type predicate for whether or not the given type T is a crab
   /// mutable reference, eg. of the form crab::ref::RefMut<T>
+  /// @hideinitializer
   template<typename T>
   concept crab_ref_mut = impl::is_crab_ref_mut<T>::value;
 

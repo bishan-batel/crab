@@ -21,6 +21,7 @@ namespace crab::ty {
   /// @tparam F Funcor
   /// @tparam ReturnType Type that F(Args...) should ignore
   /// @tparam Args arguments the functor needs to be able to take
+  /// @hideinitializer
   template<typename F, typename ReturnType, typename... Args>
   concept functor = requires(F&& function, Args&&... args) {
     { std::invoke<F, Args...>(std::forward<F>(function), std::forward<Args>(args)...) } -> convertible<ReturnType>;
@@ -32,6 +33,7 @@ namespace crab::ty {
   ///
   /// @tparam Functor to check against
   /// @tparam Args arguments the functor needs to be able to take
+  /// @hideinitializer
   template<typename F, typename... Args>
   concept consumer = requires(F&& function, Args&&... args) {
     std::invoke<F, Args...>(std::forward<F>(function), std::forward<Args>(args)...);
@@ -43,6 +45,7 @@ namespace crab::ty {
   ///
   /// @tparam F Functor to check against
   /// @tparam Args Arguments the functor needs to be able to take
+  /// @hideinitializer
   template<typename F, typename... Args>
   requires consumer<F, Args...>
   using functor_result = std::invoke_result_t<F, Args...>;
@@ -67,6 +70,7 @@ namespace crab::ty {
   ///
   /// @tparam f functor to check against
   /// @tparam Return the type that this function should generate, if not specified then this will allow any nonvoid type
+  /// @hideinitializer
   template<typename F, typename Return = impl::generator_default>
   concept generator = (same_as<Return, impl::generator_default> ? consumer<F> : functor<F, Return>)
                   and not_void<functor_result<F>> and not_void<Return>;
@@ -77,6 +81,7 @@ namespace crab::ty {
   ///
   /// @tparam F functor to check against
   /// @tparam Return the type that this function should generate, if not specified then this will allow any nonvoid type
+  /// @hideinitializer
   template<typename F, typename Return = impl::generator_default>
   concept provider = generator<F, Return>;
 

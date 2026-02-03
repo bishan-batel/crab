@@ -22,10 +22,12 @@
 #endif
 
 /// @def CRAB_DEBUG
+/// @hideinitializer
 /// @brief Defined to be 1 or 0 depending on whether this is a debug build or not
 /// Alias for '!NDEBUG', note that CRAB_DEBUG=1 means that CRAB_RELEASE=0 (and vice versa)
 
 /// @def CRAB_RELEASE
+/// @hideinitializer
 /// @brief Defined to be 1 or 0 depending on whether this is a release build or not
 /// Alias for 'NDEBUG', note that CRAB_RELEASE=1 means that CRAB_DEBUG=0 (and vice versa)
 
@@ -38,6 +40,7 @@
 #endif
 
 /// @def CRAB_OSX
+/// @hideinitializer
 /// @brief Defined when compiling for apple (mac/ios) targets
 
 #if defined(__APPLE__) && __APPLE__
@@ -47,6 +50,7 @@
 #endif
 
 /// @def CRAB_WIN32
+/// @hideinitializer
 /// @brief Defined when compiling for Windows targets
 
 #if defined(_WIN32) && _WIN32
@@ -56,6 +60,7 @@
 #endif
 
 /// @def CRAB_LINUX
+/// @hideinitializer
 /// @brief Defined when compiling for linux targets
 
 #if defined(__linux__) && __linux__
@@ -65,6 +70,7 @@
 #endif
 
 /// @def CRAB_UNIX
+/// @hideinitializer
 /// @brief Defined when compiling for unix-compatible targets (eg. linux OR apple)
 
 #if CRAB_LINUX || CRAB_OSX
@@ -74,6 +80,7 @@
 #endif
 
 /// @def CRAB_CLANG_VERSION
+/// @hideinitializer
 /// @brief Numeric representation of the clang version being compiled with (0 if not being compiled with clang)
 
 #if defined(__clang__)
@@ -83,6 +90,7 @@
 #endif
 
 /// @def CRAB_GCC_VERSION
+/// @hideinitializer
 /// @brief Numeric representation of the GCC version being compiled with (0 if not being compiled with GCC)
 
 #if defined(__GNUC__) && !defined(__clang__)
@@ -92,6 +100,7 @@
 #endif
 
 /// @def CRAB_MSVC_VERSION
+/// @hideinitializer
 /// @brief Numeric representation of the MSVC version being compiled with (0 if not being compiled with MSVC)
 
 #ifdef _MSC_VER
@@ -101,6 +110,7 @@
 #endif
 
 /// @def CRAB_CPP_VERSION
+/// @hideinitializer
 /// @brief Numeric representation (standardized) of the current C++ version being compiled for
 
 #ifdef _MSVC_LANG
@@ -110,6 +120,7 @@
 #endif
 
 /// @def CRAB_HAS_FEATURE(feature)
+/// @hideinitializer
 /// @brief Evalutes to whether the current compiler & standard supports a given feature
 /// Alias of __has_feature unless that macro is not valid
 
@@ -120,6 +131,7 @@
 #endif
 
 /// @def CRAB_HAS_INCLUDE(include_path)
+/// @hideinitializer
 /// @brief Evaluates to whether or not the path given would be a valid include path
 
 #ifdef __has_include
@@ -129,6 +141,7 @@
 #endif
 
 /// @def CRAB_HAS_ATTRIBUTE(attr_name)
+/// @hideinitializer
 /// @brief Evaluates to whether or not the given C++ attribute is recognized by the current compiler.
 ///
 /// For example, [[likely]] can be checked to exist by CRAB_HAS_ATTRIBUTE(likely)
@@ -145,6 +158,7 @@
 
 /// Helper macro for invoking _Pragma with a non-stringified source.
 /// This macro will stringify all inputs and pass it into _Pragma
+/// @hideinitializer
 #define CRAB_PRAGMA(...) CRAB_PRAGMA_(__VA_ARGS__)
 
 /// Helper macro that simply stringifies the input.
@@ -155,6 +169,7 @@
 #define CRAB_DEFER(macro, ...) macro(__VA_ARGS__)
 
 /// @def CRAB_WARNING(msg)
+/// @hideinitializer
 /// Function-Like (#pragma) macro for emitting a compiler warning.
 
 #if CRAB_CLANG_VERSION || CRAB_GCC_VERSION
@@ -164,6 +179,7 @@
 #endif
 
 /// @def CRAB_INLINE
+/// @hideinitializer
 /// Annotation for functions to force compilers to inline.
 
 #if CRAB_GCC_VERSION || CRAB_CLANG_VERSION
@@ -173,6 +189,7 @@
 #endif
 
 /// @def CRAB_MAY_ALIAS
+/// @hideinitializer
 /// Annotation for fields to hint at aliasing. This is GNU specific.
 ///
 /// Full Documentation on
@@ -184,6 +201,7 @@
 #endif
 
 /// @def CRAB_CONSTEVAL
+/// @hideinitializer
 /// Alias for 'consteval'. However, this will default to constexpr on compilers that do not support consteval.
 
 #if ((CRAB_GCC_VERSION >= 1000 || CRAB_CLANG_VERSION >= 1101)                                                          \
@@ -226,6 +244,7 @@
 #endif
 
 /// @def CRAB_RETURNS_NONNULL
+/// @hideinitializer
 /// GCC Annotation for a Function to indicate that its return type is never null.
 /// This macro has no effect on platforms that do not support `returns_nonnull`
 
@@ -236,6 +255,7 @@
 #endif
 
 /// @def CRAB_PURE
+/// @hideinitializer
 /// Annotation for a function to indicate it is 'pure'.
 /// A pure function is one that does not depend on global state nor modifies global state. Note this macro will also add
 /// the `[[nodiscard]]` annotation, as a pure function with no return value is meaningless.
@@ -247,6 +267,7 @@
 #endif
 
 /// @internal
+/// @hideinitializer
 /// @def CRAB_HAS_UNREACHABLE
 /// Internal annotation for crab to check if std::unreachable is valid or not
 
@@ -258,6 +279,7 @@
 #endif
 
 /// @def CRAB_ASSUME(condition)
+/// @hideinitializer
 /// Macro to tell the compiler an assumption it can make about the current state.
 
 #if CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION

@@ -213,6 +213,8 @@
 #endif
 
 /// @def crab_if_consteval
+/// @hideinitializer
+///
 /// Macro for branching depending on if operating in a constant evaluated context or not. This is used if you are
 /// writing in a space that may or may not be in C++23 with 'if consteval'.
 ///

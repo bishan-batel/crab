@@ -1,4 +1,5 @@
 /// @file crab/ref/.is.hpp
+/// @ingroup ref
 
 #pragma once
 
@@ -8,9 +9,10 @@
 
 namespace crab::ref {
 
-  /// Checks if the given (polymorphic) object is an instance of some type.
+  /// Checks if the given polymorphic object is an instance of some type.
   ///
   /// @tparam Derived What type to check
+  /// @tparam Base Type of object input
   /// @param obj Object to check
   /// @returns whether or not the object is of the given type
   /// @ingroup ref

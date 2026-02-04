@@ -31,7 +31,6 @@ namespace crab::any {
   /// # Example
   ///
   /// ```cpp
-  ///
   /// void print(AnyOf<i32, String> value) {
   ///   if (value.is<i32>()) {
   ///     fmt::println("{}", value.as<i32>());
@@ -47,7 +46,6 @@ namespace crab::any {
   ///
   ///   // you should no longer use value as it is in a moved-from state.
   /// }
-  ///
   /// ```
   ///
   /// @ingroup any
@@ -183,7 +181,7 @@ namespace crab::any {
   public:
 
     /// Factory method for an AnyOf allowing explicit specification of the variant to emplace, useful if you have
-    /// an AnyOf<Ts...> where multiple types could be convertible to one another like references or scalars.
+    /// an AnyOf where multiple types could be convertible to one another like references or scalars.
     ///
     /// @tparam T The exact type this AnyOf must be constructed as
     /// @param value The value to place into the AnyOf being constructed
@@ -196,9 +194,9 @@ namespace crab::any {
       };
     }
 
-    /// Factory method for an AnyOf with explicit specification for the type by index (AnyOf<T0,T1,T2,...>)
+    /// Factory method for an AnyOf with explicit specification for the type by index (`AnyOf<T0,T1,T2,...>`)
     ///
-    /// @tparam N The index of the specific type being constructed (see NthType<I>).
+    /// @tparam N The index of the specific type being constructed (see NthType).
     /// @param value The value to place into the AnyOf being constructed
     /// @returns a value of AnyOf with the given value wrapped
     template<usize N>

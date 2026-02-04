@@ -39,7 +39,7 @@ namespace crab::opt {
   };
 
   /// Tagged union type between T and unit, alternative to std::optional<T>. For more details, read topic
-  /// @ref opt @endref.
+  /// @ref opt.
   ///
   /// Note that unlike most types in crab, a moved-from option is valid to be used - as it is guarenteed that an option
   /// that is moved results in an empty option.

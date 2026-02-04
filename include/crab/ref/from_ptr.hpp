@@ -1,4 +1,5 @@
 /// @file crab/ref/from_ptr.hpp
+/// @ingroup ref
 
 #pragma once
 

@@ -40,8 +40,8 @@ namespace crab::ref {
 
     /// Internal construction from a raw pointer
     /// @internal
-    CRAB_INLINE constexpr explicit Ref(
-      CRAB_NONNULL const T* const pointer,
+    CRAB_INLINE CRAB_NONNULL constexpr explicit Ref(
+      const T* const pointer,
       const SourceLocation loc = SourceLocation::current()
     ):
         pointer(pointer) {
@@ -54,7 +54,7 @@ namespace crab::ref {
     ///
     /// # Panics
     /// This will panic if the given pointer is null.
-    [[nodiscard]] CRAB_INLINE constexpr static Ref from_raw(CRAB_NONNULL const T* const pointer) {
+    [[nodiscard]] CRAB_INLINE CRAB_NONNULL constexpr static Ref from_raw(const T* const pointer) {
       return Ref{pointer};
     }
 
@@ -142,8 +142,8 @@ namespace crab::ref {
 
     /// Internal construction from a raw pointer
     /// @internal
-    CRAB_INLINE constexpr explicit RefMut(
-      CRAB_NONNULL T* const pointer,
+    CRAB_INLINE CRAB_NONNULL constexpr explicit RefMut(
+      T* const pointer,
       const SourceLocation loc = SourceLocation::current()
     ):
         pointer(pointer) {
@@ -156,7 +156,7 @@ namespace crab::ref {
     ///
     /// # Panics
     /// This will panic if the given pointer is null.
-    [[nodiscard]] CRAB_INLINE constexpr static RefMut from_raw(CRAB_NONNULL T* const pointer) {
+    [[nodiscard]] CRAB_INLINE CRAB_NONNULL constexpr static RefMut from_raw(T* const pointer) {
       return RefMut{pointer};
     }
 

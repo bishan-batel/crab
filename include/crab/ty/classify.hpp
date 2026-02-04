@@ -30,17 +30,16 @@ namespace crab::ty {
     /// @internal
     /// Helper for crab::ty::is_const
     template<typename T>
-    struct is_const : false_type {};
+    constexpr bool is_const = false;
 
     /// @internal
-    /// Helper for crab::ty::is_const
     template<typename T>
-    struct is_const<const T> : true_type {};
+    constexpr bool is_const<const T> = true;
   }
 
   /// Requirement for the type to be 'const' (const T, const T&)
   template<typename T>
-  concept is_const = impl::is_const<T>::value;
+  concept is_const = impl::is_const<T>;
 
   /// Requirement for the type to not be 'const' (T, T&).
   template<typename T>

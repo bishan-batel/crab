@@ -1,3 +1,6 @@
+/// @file crab/ref/is_exact.hpp
+/// @ingroup ref
+
 #pragma once
 
 #include <typeinfo>
@@ -5,37 +8,32 @@
 
 namespace crab::ref {
 
-  /**
-   * @brief Is this given parameter *exactly* this type.
-   *
-   * This will not perform a recursive check like dynamic_cast
-   *
-   * ```cpp
-   *
-   * class A {};
-   *
-   * class B: public A {};
-   *
-   * class C: public B {};
-   *
-   * i32 main() {
-   *   A a;
-   *   B b;
-   *
-   *   debug_assert(crab::ref::is_exact<A>(a),"");
-   *   debug_assert(crab::ref::is_exact<B>(b),"");
-   *
-   *   debug_assert(crab::ref::is<A>(c),"");
-   *   debug_assert(not crab::ref::is_exact<A>(c),"");
-   * }
-   *
-   *
-   * ```
-   *
-   * @tparam T
-   * @param obj
-   * @return
-   */
+  /// @ingroup ref
+  ///
+  /// Is this given parameter *exactly* this type.
+  ///
+  /// This will not perform a recursive check like dynamic_cast. This symbol is also exposed as simply crab::is_exact
+  ///
+  /// # Examples
+  ///
+  /// ```cpp
+  /// class A {};
+  ///
+  /// class B: public A {};
+  ///
+  /// class C: public B {};
+  ///
+  /// i32 main() {
+  ///   A a;
+  ///   B b;
+  ///
+  ///   crab_check(crab::ref::is_exact<A>(a));
+  ///   crab_check(crab::ref::is_exact<B>(b));
+  ///
+  ///   crab_check(crab::ref::is<A>(c));
+  ///   crab_check(not crab::ref::is_exact<A>(c));
+  /// }
+  /// ```
   template<typename T>
   [[nodiscard]] CRAB_INLINE constexpr auto is_exact([[maybe_unused]] const auto& obj) noexcept -> bool {
     return typeid(obj) == typeid(T);

@@ -256,6 +256,17 @@
 #define CRAB_RETURNS_NONNULL
 #endif
 
+/// @def CRAB_NONNULL
+/// @hideinitializer
+/// GCC annotation for a pointer type (typically in a function prototype) to let the compiler know that this will (or
+/// should) never be null, and to optimise accordingly.
+
+#if CRAB_HAS_ATTRIBUTE(nonnull)
+#define CRAB_NONNULL __attribute__((nonnull))
+#else
+#define CRAB_NONNULL
+#endif
+
 /// @def CRAB_PURE
 /// @hideinitializer
 /// Annotation for a function to indicate it is 'pure'.

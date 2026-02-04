@@ -1,3 +1,5 @@
+/// @file crab/ref/implicit_cast.hpp
+
 #pragma once
 
 #include <type_traits>
@@ -6,10 +8,9 @@
 
 namespace crab::ref {
 
-  /**
-   * Explicit way of coercing a value to implicitly cast to a type rather than
-   * using static_cast
-   */
+  /// Explicit way of coercing a value to implicitly cast to a type rather than
+  /// using static_cast. This symbol is also exposed as simply crab::implicit_cast
+  /// @ingroup ref
   template<typename T>
   [[nodiscard]] CRAB_INLINE constexpr auto implicit_cast(
     ty::identity<T> type

@@ -1,86 +1,114 @@
-// ReSharper disable CppNonExplicitConversionOperator
-// ReSharper disable CppNonExplicitConvertingConstructor
+/// @file crab/ref/ref.hpp
+/// @ingroup ref
+
 #pragma once
 
 #include <functional>
 
-#include "crab/assertion/assert.hpp"
+#include "crab/assertion/check.hpp"
 #include "crab/ty/classify.hpp"
+#include "crab/hash/hash.hpp"
 
+// ReSharper disable CppNonExplicitConversionOperator
+// ReSharper disable CppNonExplicitConvertingConstructor
 // NOLINTBEGIN(*explicit*)
 
+/// @defgroup ref Reference Utilities
+/// This group pertains to crab's reference wrappers (Ref and RefMut), as well as general reference utilities, such
+/// as construction from a pointer into a raw value, implicit_cast, dynamic casts, etc.
+
+/// @namespace crab::ref
+/// @ingroup ref
+/// This namespace contains reference utilities and alike, see the @ref ref group for more information.
 namespace crab::ref {
 
-  /**
-   * Reference to some type T that is always NON NULL, use in place of 'const T&'
-   * when applicable (for ex. inside template parameters)
-   */
+  /// Immutable Reference to some type T that is always non-null, use in place of 'const T&'
+  /// when applicable (for ex. inside template parameters of STL types).
+  ///
+  /// This type is (by default) exposed in crab's prelude, so you do not need to fully qualify its name.
+  ///
+  /// Note that if you wish to have a *mutable* reference, see @ref RefMut
+  ///
+  /// @invariant A Ref will *never* be null.
+  /// @ingroup ref
+  /// @ingroup prelude
   template<typename T>
   class Ref final {
     static_assert(ty::non_const<T>, "Cannot have a Ref<T> of a const T, Ref<T> always represents a constant reference");
 
     static_assert(ty::non_reference<T>, "Cannot have a Ref<T> to another reference type T");
 
-    CRAB_INLINE constexpr explicit Ref(const T* const pointer, const SourceLocation loc = SourceLocation::current()):
+    /// Internal construction from a raw pointer
+    /// @internal
+    CRAB_INLINE constexpr explicit Ref(
+      CRAB_NONNULL const T* const pointer,
+      const SourceLocation loc = SourceLocation::current()
+    ):
         pointer(pointer) {
-      debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL Ref object");
+      crab_dbg_check_with_location(pointer, loc, "Invalid State: Cannot create a NULL Ref object");
     }
 
   public:
 
-    [[nodiscard]] CRAB_INLINE constexpr static Ref from_unchecked(const T* const pointer) {
-      return Ref(pointer);
+    /// Constructs a reference from the given pointer
+    ///
+    /// # Panics
+    /// This will panic if the given pointer is null.
+    [[nodiscard]] CRAB_INLINE constexpr static Ref from_raw(CRAB_NONNULL const T* const pointer) {
+      return Ref{pointer};
     }
 
-    CRAB_INLINE constexpr Ref(const T& ref): Ref(&ref) {}
+    /// Construction from a const ref
+    ///
+    /// # Panics
+    /// This will panic if the given reference is nullptr, note that this panic may be optimised out by compilers as it
+    /// is *clear undefined behavior* if the reference given is null.
+    ///
+    /// This means that if you try to construct a ref from nullptr
+    CRAB_INLINE constexpr Ref(const T& ref): Ref{&ref} {}
 
-    /**
-     * You cannot construct a reference to a xalue
-     */
+    /// Deleted construction, you *cannot* construct a reference to a xalue
     Ref(T&& ref) = delete;
 
-    /**
-     * You cannot construct a reference to an rvalue
-     */
+    /// Deleted construction, you *cannot* construct a reference to a rvalue
     Ref(const T&& ref) = delete;
 
+    /// Implicit conversion from Ref<T> into a const T&
     [[nodiscard]] CRAB_INLINE constexpr operator const T&() const {
       return get_ref();
     };
 
+    /// Iplicit conversion from Ref<T> into a const T*
     [[nodiscard]] CRAB_INLINE constexpr operator const T*() const {
       return as_ptr();
     };
 
+    /// Derefernces a Ref will lead into a C++ reference to the inner value
     [[nodiscard]] CRAB_INLINE constexpr const T& operator*() const {
       return get_ref();
     }
 
+    /// Arrow operator overload for access to the inner value this is referencing.
     [[nodiscard]] CRAB_INLINE constexpr const T* operator->() const {
       return as_ptr();
     }
 
-    /**
-     * Spaceship operator between two refs is the same as the operator between the underlying *pointers*
-     */
+    /// Spaceship operator between two refs is the same as the operator between the underlying *pointers*
     [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Ref& other) -> decltype(auto) {
       return as_ptr() <=> other.as_ptr();
     }
 
-    /**
-     * Gets underlying pointer, this pointer is always non null
-     */
+    /// Gets underlying pointer, this pointer is always non null
     [[nodiscard]] CRAB_INLINE constexpr const T* as_ptr() const {
       return pointer;
     }
 
-    /**
-     * Gets a C++ reference to underlying data
-     */
+    /// Gets a C++ reference to underlying data
     [[nodiscard]] CRAB_INLINE constexpr const T& get_ref() const {
       return *pointer;
     }
 
+    /// Pipe operator to a ostream
     friend CRAB_INLINE constexpr auto operator<<(std::ostream& os, const Ref& val) -> std::ostream& {
       if constexpr (requires(const T& val) { os << val; }) {
         return os << *val;
@@ -91,84 +119,108 @@ namespace crab::ref {
 
   private:
 
+    /// Underlying pointer
+    /// @internal
     const T* pointer;
   };
 
+  /// Mutable Reference to some type T that is always non-null, use in place of 'T&'
+  /// when applicable (for ex. inside template parameters of STL types).
+  ///
+  /// This type is (by default) exposed in crab's prelude, so you do not need to fully qualify its name.
+  ///
+  /// Note that if you wish to have a *immutable* reference, see @ref Ref.
+  /// However, it is recomended to prefer immutability when possible.
+  ///
+  /// @invariant A RefMut will *never* be null.
+  /// @ingroup ref
   template<typename T>
   class RefMut final {
     static_assert(ty::non_const<T>, "Cannot have a Ref<T> of a const T, Ref<T> always represents a constant reference");
 
     static_assert(ty::non_reference<T>, "Cannot have a Ref<T> to another reference type T");
 
-    CRAB_INLINE constexpr explicit RefMut(T* const pointer, const SourceLocation loc = SourceLocation::current()):
+    /// Internal construction from a raw pointer
+    /// @internal
+    CRAB_INLINE constexpr explicit RefMut(
+      CRAB_NONNULL T* const pointer,
+      const SourceLocation loc = SourceLocation::current()
+    ):
         pointer(pointer) {
-      debug_assert_transparent(pointer, loc, "Invalid State: Cannot create a NULL RefMut object");
+      crab_dbg_check_with_location(pointer, loc, "Invalid State: Cannot create a NULL RefMut object");
     }
 
   public:
 
-    CRAB_INLINE constexpr RefMut(T& ref): RefMut(&ref) {}
-
-    [[nodiscard]] CRAB_INLINE constexpr static RefMut from_unchecked(T* const pointer) {
-      return RefMut(pointer);
+    /// Constructs a reference from the given pointer
+    ///
+    /// # Panics
+    /// This will panic if the given pointer is null.
+    [[nodiscard]] CRAB_INLINE constexpr static RefMut from_raw(CRAB_NONNULL T* const pointer) {
+      return RefMut{pointer};
     }
 
+    /// Construction from a const ref
+    ///
+    /// # Panics
+    /// This will panic if the given reference is nullptr, note that this panic may be optimised out by compilers as it
+    /// is *clear undefined behavior* if the reference given is null.
+    ///
+    /// This means that if you try to construct a ref from nullptr
+    CRAB_INLINE constexpr RefMut(T& ref): RefMut(&ref) {}
+
+    /// Implicit conversion from RefMut<T> into a const T&
     [[nodiscard]] CRAB_INLINE constexpr operator T&() const {
       return get_mut_ref();
     };
 
+    /// Iplicit conversion from RefMut<T> into a const T*
     [[nodiscard]] CRAB_INLINE constexpr operator T*() const {
       return as_ptr();
     };
 
+    /// Implicit conversion from RefMut<T> -> Ref<T> as it is always possible to add 'const'-ness, however it is not
+    /// legal to go the other way aroud (other than through const_cast, which is not recommended).
     [[nodiscard]] CRAB_INLINE constexpr operator Ref<T>() const {
       return as_ref();
     };
 
+    /// Derefernces a RefMut will lead into a C++ reference to the inner value
     [[nodiscard]] CRAB_INLINE constexpr T& operator*() const {
       return get_mut_ref();
     }
 
+    /// Arrow operator overload for access to the inner value this is referencing.
     [[nodiscard]] CRAB_INLINE constexpr T* operator->() const {
       return as_ptr();
     }
 
-    /**
-     * Spaceship operator between two refs is the same as the operator between the underlying *pointers*
-     */
+    /// Spaceship operator between two refs is the same as the operator between the underlying *pointers*
     [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const RefMut& other) -> decltype(auto) {
       return as_ptr() <=> other.as_ptr();
     }
 
-    /**
-     * Gets underlying pointer, this pointer is always non null
-     *
-     */
+    /// Gets underlying pointer, this pointer is always non null
     [[nodiscard]] CRAB_RETURNS_NONNULL CRAB_INLINE constexpr T* as_ptr() const {
       return pointer;
     }
 
-    /**
-     * Gets a C++ reference to underlying data
-     */
+    /// Gets a C++ mutable reference to underlying data
     [[nodiscard]] CRAB_INLINE constexpr T& get_mut_ref() const {
       return *pointer;
     }
 
-    /**
-     * Gets a C++ reference to underlying data
-     */
+    /// Gets a C++ reference to underlying data
     [[nodiscard]] CRAB_INLINE constexpr const T& get_ref() const {
       return *pointer;
     }
 
-    /**
-     * Converts RefMut into a immutable reference
-     */
+    /// Converts RefMut into a immutable reference
     [[nodiscard]] CRAB_INLINE constexpr Ref<T> as_ref() const {
       return Ref<T>(get_mut_ref());
     }
 
+    /// Pipe operator to a ostream
     friend CRAB_INLINE constexpr auto operator<<(std::ostream& os, const RefMut& val) -> std::ostream& {
       if constexpr (requires(const T& val) { os << val; }) {
         return os << *val;
@@ -179,24 +231,31 @@ namespace crab::ref {
 
   private:
 
+    /// Underlying pointer
+    /// @internal
     T* pointer;
   };
 }
 
-/**
- * @brief Hash Implementation for Ref<T> is identical for std::hash<T>
- */
+/// Hasher implementation for Ref<T> is identical for std::hash<T*>
+/// @ingroup ref
 template<typename T>
 struct std::hash<::crab::ref::Ref<T>> {
-  [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::ref::Ref<T>& mut) const -> usize {
-    return std::hash<const T*>{}(mut.as_ptr());
+  /// convert a Ref<T> into a hash code
+  /// @internal
+  [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::ref::Ref<T>& var) const -> usize {
+    return crab::hash(var.as_ptr());
   };
 };
 
+/// Hasher implementation for RefMut<T> is identical for std::hash<T*>
+/// @ingroup ref
 template<typename T>
 struct std::hash<::crab::ref::RefMut<T>> {
-  [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::ref::RefMut<T>& mut) const -> usize {
-    return std::hash<const T*>{}(mut.as_ptr());
+  /// convert a Ref<T> into a hash code
+  /// @internal
+  [[nodiscard]] CRAB_INLINE constexpr auto operator()(const ::crab::ref::RefMut<T>& var) const -> usize {
+    return crab::hash(var.as_ptr());
   };
 };
 

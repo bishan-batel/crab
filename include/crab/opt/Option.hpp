@@ -24,18 +24,28 @@
 #include "crab/ty/functor.hpp"
 
 namespace crab::opt {
-  /// @addtogroup opt
-  /// @{
-
   /// Storage selector for Option<T>, this type's public alias 'type' determines the structure
-  /// used as the internal storage for Option<T>
+  /// used as the internal storage for Option<T>.
+  ///
   /// TODO: Document strict requirements for what a type should be able to do
+  ///
+  /// @ingroup opt
+  /// @ingroup opt
   template<typename T>
   struct Storage final {
     /// Alias for the type used as storage for Option<T>
-    /// @internal
-    using type =
-      ty::conditional<ty::is_reference<T>, impl::RefStorage<ty::remove_reference<T>>, impl::GenericStorage<T>>;
+    /// @hideinitializer
+    using type = impl::GenericStorage<T>;
+  };
+
+  /// Niche optimisation for Option's of reference typesj
+  /// @copydoc Storage
+  /// @ingroup opt
+  template<typename T>
+  struct Storage<T&> final {
+    /// Reference specialization storage type
+    /// @hideinitializer
+    using type = impl::RefStorage<T>;
   };
 
   /// Tagged union type between T and unit, alternative to std::optional<T>. For more details, read topic
@@ -43,6 +53,9 @@ namespace crab::opt {
   ///
   /// Note that unlike most types in crab, a moved-from option is valid to be used - as it is guarenteed that an option
   /// that is moved results in an empty option.
+  ///
+  /// @ingroup opt
+  /// @ingroup prelude
   template<typename T>
   class Option final {
   public:
@@ -68,16 +81,19 @@ namespace crab::opt {
     using Storage = typename opt::Storage<T>::type;
 
     /// Is the contained type T a reference type (immutable or mutable)
-    /// @hideinitializer
     inline static constexpr bool is_ref = ty::is_reference<T>;
 
     /// Is the contained type T a immutable reference type
-    /// @hideinitializer
     inline static constexpr bool is_const_ref = is_ref and ty::is_const<T>;
 
     /// Is the contained type T a mutable reference type
-    /// @hideinitializer
     inline static constexpr bool is_mut_ref = is_ref and ty::non_const<T>;
+
+    /// Whether this option allows implicit copies. If this is false you are required to either explicitly called
+    /// Option::copied before using some method (like 'map' or 'filter'), or are required to move the value before
+    /// calling said method. Implicit copies are only allowed if the contained type is trivially copyable, therefore
+    /// explicit moves would not be worth the visual complexity.
+    inline static constexpr bool implicit_copy_allowed = is_ref or std::is_trivially_copyable_v<T>;
 
     // NOLINTBEGIN(*explicit*)
 
@@ -139,21 +155,6 @@ namespace crab::opt {
       storage = none;
       return *this;
     }
-
-    /// Move constructor
-    CRAB_INLINE constexpr Option(Option&& from) = default;
-
-    /// Implicit move assignment
-    CRAB_INLINE constexpr auto operator=(Option&& opt) noexcept -> Option& = default;
-
-    /// Implicit copy constructor
-    CRAB_INLINE constexpr Option(const Option&) = default;
-
-    /// Implicit copy assignment
-    CRAB_INLINE constexpr auto operator=(const Option&) -> Option& = default;
-
-    /// Implicit destructor
-    CRAB_INLINE constexpr ~Option() = default;
 
     /// Whether this option has a contained value or not (None)
     [[nodiscard]] CRAB_INLINE constexpr explicit operator bool() const {
@@ -233,14 +234,14 @@ namespace crab::opt {
 
     /// Is this option has a value, return a copy of that value. if
     /// this opton was none then this returns a default constructed T
-    [[nodiscard]] CRAB_INLINE constexpr auto get_or_default() const -> T requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto get_or_default() const -> T requires implicit_copy_allowed
     {
       return copied().take_or_default();
     }
 
     /// Gets the contained value if exists, else returns a default value
     /// @param default_value
-    [[nodiscard]] CRAB_INLINE constexpr auto get_or(T default_value) const -> T requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto get_or(T default_value) const -> T requires implicit_copy_allowed
     {
       return copied().take_or(mem::forward<T>(default_value));
     }
@@ -249,7 +250,7 @@ namespace crab::opt {
     /// with 'F' and returns
     /// @param default_generator Function to create the default value
     template<ty::provider<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto get_or(F&& default_generator) const -> T requires ty::copy_constructible<T>
+    [[nodiscard]] CRAB_INLINE constexpr auto get_or(F&& default_generator) const -> T requires implicit_copy_allowed
     {
       static_assert(std::is_invocable_r_v<T, F>, "A function with Option<T>::get_or must return T");
       return copied().take_or(mem::forward<F>(default_generator));
@@ -384,13 +385,6 @@ namespace crab::opt {
     ///   .take_unchecked() == "420"
     /// );
     /// ```
-    template<ty::mapper<T> F>
-    requires ty::copy_constructible<T>
-    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& mapper) const& {
-      return copied().map(mem::forward<F>(mapper));
-    }
-
-    /// TODO: docs
     template<typename Into>
     [[nodiscard]] CRAB_INLINE constexpr auto map() && -> Option<Into> {
       static_assert(ty::convertible<T, Into>, "'Option<T>::map<Into>()' can only be done if T is convertible to Into");
@@ -399,8 +393,15 @@ namespace crab::opt {
     }
 
     /// TODO: docs
+    template<ty::mapper<T> F>
+    requires implicit_copy_allowed
+    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& mapper) const& {
+      return copied().map(mem::forward<F>(mapper));
+    }
+
+    /// TODO: docs
     template<typename Into>
-    requires ty::copy_constructible<T>
+    requires implicit_copy_allowed
     [[nodiscard]] CRAB_INLINE constexpr auto map() const& -> Option<Into> {
       return copied().template map<Into>();
     }
@@ -418,10 +419,17 @@ namespace crab::opt {
       return Returned{None{}};
     }
 
-    /// Shorthand for calling .map(...).flatten()
+    /// TODO: doc
     template<ty::mapper<T> F>
-    requires ty::copy_constructible<T>
+    requires implicit_copy_allowed
     [[nodiscard]] CRAB_INLINE constexpr auto flat_map(F&& mapper) const& {
+      return copied().flat_map(mem::forward<F>(mapper));
+    }
+
+    /// TODO: doc
+    template<ty::mapper<T> F>
+    requires implicit_copy_allowed
+    [[nodiscard]] CRAB_INLINE constexpr auto flat_map(F&& mapper) & {
       return copied().flat_map(mem::forward<F>(mapper));
     }
 
@@ -536,15 +544,13 @@ namespace crab::opt {
     /// ````
     template<typename... Vals>
     [[nodiscard]] CRAB_INLINE constexpr auto zip(Option<Vals>... other) && -> Option<Tuple<T, Vals...>> {
-      if (is_none()) {
+      if (is_none() or (... or other.is_none())) {
         return None{};
       }
 
-      if ((... or other.is_none())) {
-        return None{};
-      }
-
-      return Tuple<T, Vals...>{mem::move(*this).unwrap(), mem::move(other).unwrap()...};
+      return {
+        Tuple<T, Vals...>{mem::move(*this).unwrap(), mem::move(other).unwrap()...}
+      };
     }
 
     /// Boolean 'and' operation on two options, this will return none if either of
@@ -757,10 +763,11 @@ namespace crab::opt {
 
   private:
 
+    /// Storage for the contained type, this is not stored directly but instead uses an auxillary struct dependent on
+    /// the contained type to support niche specialisations.
+    /// @internal
     Storage storage;
   };
-
-  /// }@
 }
 
 /// Formatter specialization for Option<T>, this specialization is only valid if the inner type of T is formattable
@@ -784,6 +791,7 @@ struct fmt::formatter<::crab::opt::Option<T>, Char> : fmt::formatter<fmt::string
 };
 
 /// Hasher specialization for Option<T>, this specialisation is only valid of the inner type T is hashable itself.
+/// @ingroup opt
 template<crab::ty::hashable T>
 struct std::hash<::crab::opt::Option<T>> /* NOLINT */ {
   /// Converts the given option 'opt' into a hash

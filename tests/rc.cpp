@@ -51,7 +51,7 @@ TEST_CASE("Rc/RcMut") {
 
       returned = original.downcast<Derived>();
 
-      Rc<Derived> moved{std::move(returned.get_unchecked())};
+      Rc<Derived> moved{std::move(returned.get())};
       REQUIRE(returned.is_none());
       REQUIRE(moved.is_valid());
     }

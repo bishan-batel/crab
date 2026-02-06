@@ -4,6 +4,7 @@
 #pragma once
 
 #include "crab/core.hpp"
+#include "crab/mem/move.hpp"
 #include "crab/result/Result.hpp"
 
 namespace crab {

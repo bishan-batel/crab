@@ -1,4 +1,6 @@
 /// @file crab/any/AnyOf
+/// @ingroup any
+
 #pragma once
 
 #include <type_traits>

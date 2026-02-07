@@ -5,9 +5,6 @@
 #include "crab/assertion/fmt.hpp"
 #include "crab/assertion/panic.hpp"
 
-/// @addtogroup assertion
-/// @{
-
 #define crab_check_with_location(condition, source_location, ...)                                                      \
   if (not static_cast<bool>(condition)) [[unlikely]]                                                                   \
     do {                                                                                                               \
@@ -44,6 +41,7 @@
 
 /// Macro for conditionally calling crab_dbg_check vs crab_check based off of a constexpr bool. If dbg_only is true,
 /// then this will perform a crab_dbg_check, else this will expand to crab_check
+/// @ingroup assertion
 /// @hideinitializer
 #define crab_cond_check(dbg_only, cond, ...)                                                                           \
   if constexpr (dbg_only) {                                                                                            \
@@ -52,5 +50,3 @@
   } else {                                                                                                             \
     crab_check(cond, __VA_ARGS__);                                                                                     \
   }
-
-/// }@

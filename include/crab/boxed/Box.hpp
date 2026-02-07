@@ -26,10 +26,9 @@
 // NOLINTBEGIN(*explicit*)
 
 namespace crab {
-  /// @addtogroup boxed
-  /// @{
 
   /// Storage type specialization for Box<T>
+  /// @ingroup boxed
   template<typename T>
   struct opt::Storage<::crab::boxed::Box<T>> final {
     /// @hideinitializer
@@ -76,7 +75,7 @@ namespace crab {
     /// ```
     ///
     /// @ingroup prelude
-
+    /// @ingroup boxed
     template<typename T>
     class Box {
       T* obj;
@@ -343,13 +342,12 @@ namespace crab {
 
     /// Makes a new instance of type T on the heap with given args
     /// The values passed will be forwarded into the constructor of T
+    /// @ingroup boxed
     template<ty::complete_type T, typename... Args>
     requires std::constructible_from<T, Args...>
     [[nodiscard]] CRAB_INLINE constexpr static auto make_box(Args&&... args) -> Box<T> {
       return Box<T>::from_raw(unsafe, new T(std::forward<Args>(args)...));
     }
-
-    /// }@
   }
 
   using boxed::make_box;

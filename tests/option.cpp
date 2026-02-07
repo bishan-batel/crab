@@ -28,6 +28,10 @@ TEST_CASE("Option", "Tests for all option methods") {
   }
 
   SECTION("Constructors & Move Semantics") {
+    Option<i32> a, b;
+
+    auto c = a and b;
+
     // general construction
     asserts::for_types(asserts::common_types, []<typename T>(asserts::type<T>) {
       constexpr bool copyable{ty::copyable<T>};
@@ -191,13 +195,13 @@ TEST_CASE("Option", "Tests for all option methods") {
       REQUIRE(ref.is_some());
       REQUIRE(ref_mut.is_some());
 
-      REQUIRE(ref.get_unchecked() == "Hello");
-      REQUIRE(ref_mut.get_unchecked() == "Hello");
+      REQUIRE(ref.get() == "Hello");
+      REQUIRE(ref_mut.get() == "Hello");
 
-      name.get_unchecked() += " World";
+      name.get() += " World";
 
-      REQUIRE(ref.get_unchecked() == "Hello World");
-      REQUIRE(ref_mut.get_unchecked() == "Hello World");
+      REQUIRE(ref.get() == "Hello World");
+      REQUIRE(ref_mut.get() == "Hello World");
     }
 
     SECTION("move only") {
@@ -209,13 +213,13 @@ TEST_CASE("Option", "Tests for all option methods") {
       REQUIRE(ref.is_some());
       REQUIRE(ref_mut.is_some());
 
-      REQUIRE(ref.get_unchecked().get_name() == "Hello");
-      REQUIRE(ref_mut.get_unchecked().get_name() == "Hello");
+      REQUIRE(ref.get().get_name() == "Hello");
+      REQUIRE(ref_mut.get().get_name() == "Hello");
 
-      name.get_unchecked().set_name("Hello World");
+      name.get().set_name("Hello World");
 
-      REQUIRE(ref.get_unchecked().get_name() == "Hello World");
-      REQUIRE(ref_mut.get_unchecked().get_name() == "Hello World");
+      REQUIRE(ref.get().get_name() == "Hello World");
+      REQUIRE(ref_mut.get().get_name() == "Hello World");
     }
   }
 
@@ -252,8 +256,8 @@ TEST_CASE("Reference Types", "[option]") {
     a = i;
 
     CHECK(a.is_some());
-    CHECK(a.get_unchecked() == i);
-    CHECK(a.get_unchecked() == 10);
+    CHECK(a.get() == i);
+    CHECK(a.get() == 10);
 
     CHECK(a != crab::none);
     CHECK(a == Option<T>{a});
@@ -266,18 +270,18 @@ TEST_CASE("Reference Types", "[option]") {
   Option<i32&> a;
 
   REQUIRE(a.is_none());
-  CHECK_THROWS(a.get_unchecked());
+  CHECK_THROWS(a.get());
 
   i32 i = 10;
   i32 j = 10;
 
   a = i;
 
-  a.get_unchecked() = 11;
+  a.get() = 11;
 
   REQUIRE(a.is_some());
-  CHECK(a.get_unchecked() == i);
-  CHECK(a.get_unchecked() == 11);
+  CHECK(a.get() == i);
+  CHECK(a.get() == 11);
 
   CHECK(a != crab::none);
   CHECK(a == Option<i32&>{a});

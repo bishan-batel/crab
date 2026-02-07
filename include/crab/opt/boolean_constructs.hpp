@@ -20,6 +20,7 @@ namespace crab::opt {
   /// value = crab::then(false, []() { return 10; });
   /// crab_check(value.is_none());
   /// ```
+  /// @relates Option
   /// @ingroup opt
   template<ty::provider F>
   [[nodiscard]] CRAB_INLINE constexpr auto then(const bool cond, F&& func) {
@@ -45,6 +46,7 @@ namespace crab::opt {
   /// value = crab::unless(true, []() { return 10; });
   /// crab_check(value.is_none());
   /// ```
+  /// @relates Option
   /// @ingroup opt
   template<ty::provider F>
   [[nodiscard]] CRAB_INLINE constexpr auto unless(const bool cond, F&& func) {
@@ -66,6 +68,7 @@ namespace crab::opt {
   /// # Panics
   /// If the given option is none then this will panic.
   ///
+  /// @relates Option
   /// @ingroup opt
   template<typename T>
   [[nodiscard]] CRAB_INLINE constexpr auto unwrap(Option<T>&& from) -> T {

@@ -29,12 +29,12 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_FALSE(result.is_err());
 
     REQUIRE(result.get_unchecked() == 10);
-    REQUIRE(std::move(result).unwrap() == 10);
+    REQUIRE(crab::move(result).unwrap() == 10);
 
     REQUIRE_THROWS(result.get_unchecked());
     REQUIRE_THROWS(result.get_err_unchecked());
-    REQUIRE_THROWS(std::move(result).unwrap());
-    REQUIRE_THROWS(std::move(result).unwrap());
+    REQUIRE_THROWS(crab::move(result).unwrap());
+    REQUIRE_THROWS(crab::move(result).unwrap());
 
     result = Error{};
     REQUIRE(result.is_err());
@@ -44,11 +44,11 @@ TEST_CASE("Result", "[result]") {
 
     Error err;
     REQUIRE_NOTHROW(result.ensure_valid());
-    REQUIRE_NOTHROW(err = crab::unwrap_err(std::move(result)));
+    REQUIRE_NOTHROW(err = crab::move(result).unwrap_err());
 
     REQUIRE_THROWS(result.ensure_valid());
-    REQUIRE_THROWS(crab::unwrap_err(std::move(result)));
-    REQUIRE_THROWS(crab::unwrap(std::move(result)));
+    REQUIRE_THROWS(crab::move(result).unwrap_err());
+    REQUIRE_THROWS(crab::move(result).unwrap());
 
     result = 42_u32;
     REQUIRE_NOTHROW(result.ensure_valid());

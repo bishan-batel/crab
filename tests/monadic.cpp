@@ -27,7 +27,7 @@ TEST_CASE("Monadic Operations (Option)") {
         REQUIRE(val.is_some() == is_even(i));
         REQUIRE(val.is_none() == not is_even(i));
         if (val.is_some()) {
-          REQUIRE_NOTHROW(val.get_unchecked() == i);
+          REQUIRE_NOTHROW(val.get() == i);
         }
       }
 
@@ -43,7 +43,7 @@ TEST_CASE("Monadic Operations (Option)") {
 
         REQUIRE(val.is_some() == is_even(i));
         if (val.is_some()) {
-          REQUIRE_NOTHROW(val.get_unchecked() == i);
+          REQUIRE_NOTHROW(val.get() == i);
         }
       }
     }
@@ -55,7 +55,7 @@ TEST_CASE("Monadic Operations (Option)") {
 
       Option<MoveOnly> moved = std::move(value).filter(not_empty);
       REQUIRE(value.is_none());
-      REQUIRE_NOTHROW(moved.get_unchecked().get_name() == "message");
+      REQUIRE_NOTHROW(moved.get().get_name() == "message");
 
       REQUIRE(std::move(value).filter(crab::fn::constant(true)).is_none());
       REQUIRE(std::move(value).filter(crab::fn::constant(false)).is_none());
@@ -73,7 +73,7 @@ TEST_CASE("Monadic Operations (Option)") {
     SECTION("copyable") {
       Option<i32> number = crab::then(true, []() { return 2; });
 
-      REQUIRE_NOTHROW(number.is_some() and number.get_unchecked() == 2);
+      REQUIRE_NOTHROW(number.is_some() and number.get() == 2);
 
       number = crab::then(false, []() { return 2; });
       REQUIRE(number.is_none());
@@ -82,7 +82,7 @@ TEST_CASE("Monadic Operations (Option)") {
     SECTION("move-only") {
       Option<MoveOnly> number = crab::then(true, []() { return MoveOnly{"test"}; });
 
-      REQUIRE_NOTHROW(number.is_some() and number.get_unchecked().get_name() == "test");
+      REQUIRE_NOTHROW(number.is_some() and number.get().get_name() == "test");
 
       number = crab::then(false, []() { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());
@@ -92,7 +92,7 @@ TEST_CASE("Monadic Operations (Option)") {
   SECTION("crab::unless") {
     SECTION("copyable") {
       Option<i32> number = crab::unless(false, []() { return 2; });
-      REQUIRE_NOTHROW(number.is_some() and number.get_unchecked() == 2);
+      REQUIRE_NOTHROW(number.is_some() and number.get() == 2);
 
       number = crab::unless(true, []() { return 2; });
       REQUIRE(number.is_none());
@@ -101,7 +101,7 @@ TEST_CASE("Monadic Operations (Option)") {
     SECTION("move-only") {
       Option<MoveOnly> number = crab::unless(false, []() { return MoveOnly{"test"}; });
 
-      REQUIRE_NOTHROW(number.is_some() and number.get_unchecked().get_name() == "test");
+      REQUIRE_NOTHROW(number.is_some() and number.get().get_name() == "test");
 
       number = crab::unless(true, []() { return MoveOnly{"test"}; });
       REQUIRE(number.is_none());

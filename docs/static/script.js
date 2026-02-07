@@ -1,5 +1,6 @@
 console.log("Loading Highlightjs hook")
 
+/*
 $(function() {
 	hljs.configure({ useBR: false });
 	$(".fragment").each((i, node) => {
@@ -19,3 +20,4 @@ $(function() {
 		node.insertAdjacentElement('afterend', preCode);
 	});
 });
+*/

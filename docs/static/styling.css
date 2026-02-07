@@ -243,3 +243,17 @@ pre.hljs {
     position: relative;
   }
 }
+
+code {
+  background: var(--fragment-background);
+  color: var(--fragment-foreground);
+}
+
+dl.section {
+
+  &.invariant,
+  &.warning {
+    background: var(--ctp-mantle) !important;
+  }
+
+}

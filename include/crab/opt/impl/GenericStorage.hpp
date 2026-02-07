@@ -1,3 +1,6 @@
+/// @file crab/opt/impl/GenericStorage.hpp
+/// @internal
+
 #pragma once
 
 #include "crab/core.hpp"
@@ -6,9 +9,12 @@
 #include "crab/mem/forward.hpp"
 #include "crab/mem/size_of.hpp"
 #include "crab/opt/none.hpp"
+#include "crab/str/str.hpp"
 #include "crab/ty/construct.hpp"
 
 #include <array>
+#include <concepts>
+#include <vector>
 
 #if CRAB_GCC_VERSION
 #pragma GCC diagnostic push
@@ -16,30 +22,24 @@
 #endif
 
 namespace crab::opt::impl {
-  /**
-   * Generic tagged union storage for Option<T>
-   */
+  /// Generic tagged union storage for Option<T>
+  /// @internal
+  /// @ingroup opt
   template<typename T>
   struct GenericStorage {
 
-    /**
-     * Initialise to Some(value)
-     */
+    /// Initialise to Some(value)
     CRAB_INLINE constexpr explicit GenericStorage(T&& value): in_use_flag{true} {
       std::construct_at<T, T&&>(address(), mem::forward<T>(value));
     }
 
-    /**
-     * Copy initialise to Some(value)
-     */
+    /// Copy initialise to Some(value)
     CRAB_INLINE constexpr explicit GenericStorage(const T& value) requires ty::copy_constructible<T>
         : in_use_flag(true) {
       std::construct_at<T, const T&>(address(), value);
     }
 
-    /**
-     * Default initialises to none
-     */
+    /// Default initialise to none
     CRAB_INLINE constexpr explicit GenericStorage(const None& = {}): in_use_flag{false} {}
 
     constexpr GenericStorage(const GenericStorage& from) requires ty::copy_constructible<T>
@@ -99,9 +99,7 @@ namespace crab::opt::impl {
       }
     }
 
-    /**
-     * Move reassign to Some(value)
-     */
+    /// Move reassign to Some(value)
     constexpr auto operator=(T&& value) noexcept(std::is_nothrow_move_assignable_v<T>) -> GenericStorage& {
       if (in_use_flag) {
         *address() = mem::forward<T>(value);
@@ -112,9 +110,7 @@ namespace crab::opt::impl {
       return *this;
     }
 
-    /**
-     * Copy reassign to Some(value)
-     */
+    /// Copy reassign to Some(value)
     constexpr auto operator=(const T& from) -> GenericStorage& requires ty::copy_assignable<T>
     {
       if (in_use_flag) {
@@ -126,9 +122,7 @@ namespace crab::opt::impl {
       return *this;
     }
 
-    /**
-     * Reassign to None
-     */
+    /// Reassign to None
     constexpr auto operator=(const None&) -> GenericStorage& {
 
       if (in_use_flag) {

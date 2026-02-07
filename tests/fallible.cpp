@@ -26,7 +26,7 @@ TEST_CASE("Fallible (Option)") {
 
         REQUIRE(tuple.is_some());
         if (tuple) {
-          auto& [a, b] = tuple.get_unchecked();
+          auto& [a, b] = tuple.get();
           CHECK(a == 0);
           CHECK(b == 1);
         }
@@ -38,7 +38,7 @@ TEST_CASE("Fallible (Option)") {
 
         REQUIRE(tuple.is_some());
         if (tuple) {
-          auto& [a, b] = tuple.get_unchecked();
+          auto& [a, b] = tuple.get();
           CHECK(a == 0);
           CHECK(b == 1);
         }
@@ -52,7 +52,7 @@ TEST_CASE("Fallible (Option)") {
 
         REQUIRE(tuple);
         {
-          auto& [b, a] = tuple.get_unchecked();
+          auto& [b, a] = tuple.get();
           CHECK(a == 0);
           CHECK(b == 1);
         }
@@ -63,7 +63,7 @@ TEST_CASE("Fallible (Option)") {
         );
 
         REQUIRE(tuple);
-        auto& [b, a] = tuple.get_unchecked();
+        auto& [b, a] = tuple.get();
         CHECK(a == 0);
         CHECK(b == 1);
       }
@@ -77,7 +77,7 @@ TEST_CASE("Fallible (Option)") {
         );
 
         REQUIRE(tuple);
-        auto& [b, a, c, d] = tuple.get_unchecked();
+        auto& [b, a, c, d] = tuple.get();
         CHECK(a == 0);
         CHECK(b == 1);
         CHECK(c == 42);
@@ -89,7 +89,7 @@ TEST_CASE("Fallible (Option)") {
 
         CHECK(tuple);
         if (tuple) {
-          auto& [b, a] = tuple.get_unchecked();
+          auto& [b, a] = tuple.get();
           CHECK(a == 0);
           CHECK(b == 1);
         }

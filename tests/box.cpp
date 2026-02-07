@@ -87,16 +87,17 @@ TEST_CASE("Box Option Niche Optimization") {
   STATIC_CHECK(sizeof(Option<Box<i32>>) == sizeof(Box<i32>));
 
   REQUIRE(opt.is_some());
-  REQUIRE_NOTHROW(opt.get_unchecked());
-  REQUIRE_NOTHROW(*opt.get_unchecked() == 10);
+  REQUIRE_NOTHROW(opt.get());
+  REQUIRE_NOTHROW(*opt.get() == 10);
+  REQUIRE_NOTHROW(opt == Option{10});
 
-  Box<int>& a{opt.get_unchecked()};
+  Box<int>& a{opt.get()};
   REQUIRE_NOTHROW(std::move(a));
 
   Option moved_into{std::move(opt)};
   CHECK(moved_into.is_some());
 
-  CHECK_THROWS(opt.get_unchecked().as_ptr());
+  CHECK_THROWS(opt.get().as_ptr());
   CHECK(opt.is_none());
   CHECK(not opt.is_some());
 

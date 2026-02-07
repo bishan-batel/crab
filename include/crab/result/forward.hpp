@@ -1,3 +1,7 @@
+/// @file crab/result/forward.hpp
+/// @ingroup ref
+///
+/// Forward declarations for some items in @ref result.
 #pragma once
 
 namespace crab::result {

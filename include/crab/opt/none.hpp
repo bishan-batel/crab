@@ -19,8 +19,24 @@ namespace crab::opt {
   };
 
   /// 'None' value type for use with Option<T>.
-  /// This symbol is also explode simply as `crab::none`
+  /// This symbol is also exposed as `crab::none`
+  ///
+  /// # Examples
+  /// ```cppp
+  /// Option<i32> a = {}; // initializes to none
+  /// a = crab::none; // does the same as before in a more explicit fasion.
+  ///
+  /// Option<i32> b{};
+  /// Option<i32> c{crab::none};
+  ///
+  /// crab_check(a.is_none());
+  /// crab_check(b.is_none());
+  /// crab_check(c.is_none());
+  /// ```
+  ///
   /// @ingroup opt
+  /// @related Option
+  /// @related None
   inline static constexpr None none{};
 
 }

@@ -60,13 +60,10 @@ namespace crab::opt {
   /// crab_check(str == "hello");
   /// ```
   ///
+  /// @relates Option
   /// @ingroup opt
   template<typename... F>
   [[nodiscard]] CRAB_INLINE constexpr auto fallible(F&&... functors) {
-    // static_assert(
-    //   (opt::option_type<ty::functor_result<F>> or ...),
-    //   "At least one functor passed to crab::opt::fallible must return a type of the form crab::opt::Option<T>"
-    // );
     return impl::fallible{}(std::tuple{}, mem::forward<F>(functors)...);
   }
 }

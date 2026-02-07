@@ -257,3 +257,8 @@ dl.section {
   }
 
 }
+
+td#projectlogo img {
+  position: relative;
+  width: 3em;
+}

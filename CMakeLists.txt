@@ -54,15 +54,6 @@ CPMAddPackage(
 #===============================================================================
 #                                     Library
 #===============================================================================
-set(CRAB_CONFIG_HEADER "${CMAKE_BINARY_DIR}/${PROJECT_NAME}/config.hpp")
-
-# configuration file containing versioning & platform-specific information
-configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}/config.hpp.in"
-        "${CRAB_CONFIG_HEADER}"
-        @ONLY
-)
-
 
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
@@ -109,12 +100,6 @@ install(
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
         FILES_MATCHING PATTERN "*.hpp"
         PATTERN "*.in" EXCLUDE # exclude the config.hpp.in template
-)
-
-# install the platform/version specific config.hpp
-install(
-        FILES "${CRAB_CONFIG_HEADER}"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}"
 )
 
 

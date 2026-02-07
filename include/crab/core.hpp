@@ -7,8 +7,6 @@
 /// @defgroup core Core
 /// @{
 
-#include "crab/config.hpp"
-
 /// @def CRAB_USE_PRELUDE
 /// Option for whether or not crab should 'using namespace crab::prelude'.
 ///
@@ -296,23 +294,31 @@
 /// Macro to tell the compiler an assumption it can make about the current state.
 
 #if CRAB_MSVC_VERSION && !CRAB_CLANG_VERSION
+
 #define CRAB_ASSUME(condition) __assume(static_cast<bool>(condition))
+
 #elif CRAB_CLANG_VERSION
+
 #define CRAB_ASSUME(condition) __builtin_assume(static_cast<bool>(condition))
+
 #elif CRAB_GCC_VERSION
 
 #if CRAB_HAS_ATTRIBUTE(assume)
+
 #define CRAB_ASSUME(condition)                                                                                         \
   do {                                                                                                                 \
     __attribute__((assume(static_cast<bool>(condition))));                                                             \
   } while (false)
 #else
-#define CRAB_ASSUME(condition)                                                                                         \
-  do {                                                                                                                 \
-    if (not static_cast<bool>(condition)) {                                                                            \
-      __builtin_unreachable();                                                                                         \
-    }                                                                                                                  \
-  } while (false)
+
+#define CRAB_ASSUME(condition)
+
+do {
+  if (not static_cast<bool>(condition)) {
+    __builtin_unreachable();
+  }
+} while (false)
+
 #endif
 
 #else

@@ -1,9 +1,18 @@
+/// @file crab/opt/impl/fallible.hpp
+/// @ingroup opt
+/// @internal
 #pragma once
 
 #include "crab/opt/Option.hpp"
 #include "crab/mem/forward.hpp"
 
 namespace crab::opt::impl {
+  /// implementation for crab::opt::fallible
+  ///
+  /// TODO: rework this, this is the same implementation as a naive Kishan 2 years ago.
+  ///
+  /// @ingroup opt
+  /// @internal
   struct fallible final {
     template<typename... T>
     [[nodiscard]] CRAB_INLINE constexpr auto operator()(Tuple<T...> tuple) const {

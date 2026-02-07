@@ -1,15 +1,22 @@
+/// @file crab/opt/impl/RefStorage.hpp
+/// @ingroup opt
+/// @internal
+
 #pragma once
 
 #include "crab/core.hpp"
 #include "crab/mem/take.hpp"
 #include "crab/opt/none.hpp"
+#include "crab/ty/manipulate.hpp"
 
 namespace crab::opt::impl {
-  /**
-   * @brief Specialized storage for Option<T&> to not require an in_use flag
-   */
-  template<typename T>
+  /// Specialized storage for Option<T&> to not require an in_use flag
+  /// @ingroup opt
+  /// @internal
+  template<typename R>
   struct RefStorage {
+    using T = ty::remove_reference<R>;
+
     CRAB_INLINE constexpr explicit RefStorage(T& value): inner{&value} {}
 
     CRAB_INLINE constexpr explicit RefStorage(const None& = {}): inner{nullptr} {}

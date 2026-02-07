@@ -32,7 +32,6 @@ namespace crab::opt {
   /// TODO: Document strict requirements for what a type should be able to do
   ///
   /// @ingroup opt
-  /// @ingroup opt
   template<typename T>
   struct Storage final {
     /// Alias for the type used as storage for Option<T>
@@ -47,11 +46,11 @@ namespace crab::opt {
   struct Storage<T&> final {
     /// Reference specialization storage type
     /// @hideinitializer
-    using type = impl::RefStorage<T>;
+    using type = impl::RefStorage<T&>;
   };
 
   /// Tagged union type between T and unit, alternative to std::optional<T>. For more details, read topic
-  /// @ref opt.
+  /// [Option](#opt).
   ///
   /// Note that unlike most types in crab, a moved-from option is valid to be used - as it is guarenteed that an option
   /// that is moved results in an empty option.
@@ -81,6 +80,13 @@ namespace crab::opt {
 
     /// Storage type for this data
     using Storage = typename opt::Storage<T>::type;
+
+    /// shallow assertion about validity of the type we use as storage
+    static_assert(
+      is_storage_type<Storage, T>,
+      "Provided storage type for this option is ill-formed for this type T, note this is most likely due to incorrect "
+      "implementation of custom storage types for Option."
+    );
 
     /// Is the contained type T a reference type (immutable or mutable)
     inline static constexpr bool is_ref = ty::is_reference<T>;
@@ -122,11 +128,11 @@ namespace crab::opt {
     CRAB_INLINE constexpr Option(T&& from) noexcept(std::is_nothrow_move_constructible_v<T>):
         storage{mem::forward<T>(from)} {}
 
-    /// Create an empty option
+    /// Create an empty Option
     CRAB_INLINE constexpr Option(None = {}) noexcept: storage{none} {}
 
     /// Conversion constructor for options of the form Option<T&> to be able to
-    /// convert implicitly to Option<RefMut<T>> (mainly for backwards compat)
+    /// convert implicitly to Option<RefMut<T>> (mainly for backwards compatability)
     [[nodiscard]] CRAB_INLINE constexpr operator Option<ref::RefMut<std::remove_cvref_t<T>>>() requires(is_mut_ref)
     {
       return map<ref::RefMut<std::remove_cvref_t<T>>>();
@@ -167,13 +173,13 @@ namespace crab::opt {
 
     /// Reassign option to None,
     /// If this option previously contained Some(K), the previous value is
-    /// discarded and is replaced by Some(T)
+    /// discarded and is replaced by Some(T).
     CRAB_INLINE constexpr auto operator=(None) -> Option& {
       storage = none;
       return *this;
     }
 
-    /// Whether this option has a contained value or not (None)
+    /// Whether this option has a contained value or not, alias to [is_some](#Option::is_some)
     [[nodiscard]] CRAB_INLINE constexpr explicit operator bool() const {
       return is_some();
     }
@@ -190,8 +196,9 @@ namespace crab::opt {
 
     /// Converts a 'const Option<T>&' into a Option<const T&>, to give
     /// optional access to the actual referenced value inside.
+    /// inside. You cannnot call this method on anything but a lvalue.
     ///
-    /// This function returns Option<const T&>
+    /// @returns Option<const T&>
     [[nodiscard]] CRAB_INLINE constexpr auto as_ref() const& -> Option<const T&> requires(not is_ref)
     {
       if (is_none()) {
@@ -203,9 +210,9 @@ namespace crab::opt {
 
     /// Converts a 'Option<T>&' into a
     /// Option<T&>, to give optional access to the actual referenced value
-    /// inside.
+    /// inside. You cannnot call this method on anything mut a mutable lvalue.
     ///
-    /// This function returns Option<T&>
+    /// @returns Option<T&>
     [[nodiscard]] CRAB_INLINE constexpr auto as_mut() & -> Option<T&> requires(not is_ref)
     {
       if (is_none()) {
@@ -213,6 +220,38 @@ namespace crab::opt {
       }
 
       return Option<T&>{get_unchecked(unsafe)};
+    }
+
+    /// Copies this option and returns. This function is the same as calling the copy constructor, but can help to clean
+    /// up code as its a explicit method call. Many methods in Option require that the option be an rvalue (a moved from
+    /// state) to perform in order to prevent costly implicit copies. In these cases, if you do not wish to move the
+    /// underlying option you would simply call this method. However, if the type this option contains is *trivially
+    /// copyable*, then methods that would normally require the option to be in a moved-from state will instead perform
+    /// an implicit copy.
+    ///
+    /// # Examples
+    ///
+    /// ```cpp
+    /// Option<String> msg = "some message";
+    ///
+    /// Option<String> msg_copy = ms.copied();
+    ///
+    /// Option<String> substring{
+    ///   msg
+    ///     .copied()
+    ///     .map([](String s) { return s.substr(3); })
+    /// };
+    ///
+    /// ```
+    [[nodiscard]] CRAB_INLINE constexpr auto copied() const -> Option requires ty::copy_constructible<T>
+    {
+      static_assert(ty::copy_constructible<T>, "Cannot call copied() on an option with a non copy-cosntructible type");
+
+      if (is_some()) {
+        return Option<T>{get_unchecked(unsafe)};
+      }
+
+      return {};
     }
 
     /// Consumes inner value and returns it, if this option was none this
@@ -300,6 +339,8 @@ namespace crab::opt {
       return copied().take_or(mem::forward<F>(default_generator));
     }
 
+    /// @{
+
     /// Takes value out of the option and returns it, will error if option
     /// is none, After this, the value has been 'taken out' of this option, after
     /// this method is called this option is 'None'.
@@ -314,13 +355,15 @@ namespace crab::opt {
     }
 
     /// Implicit copy form of unwrap.
-    ///
-    /// @copydoc Option::unwrap
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap(const SourceLocation& loc = SourceLocation::current()) const& -> T
       requires implicit_copy_allowed
     {
       return copied().unwrap(loc);
     }
+
+    /// }@
+
+    /// @{
 
     /// Moves out the inner value contained in this option, this will panic if this option is none on debug and will
     /// result in undefined behavior in release. It is advised to use Object::unwrap instead unless you need to squeeze
@@ -338,8 +381,6 @@ namespace crab::opt {
     }
 
     /// Trivial / implicit copy form of unwrap_unchecked.
-    ///
-    /// @copydoc Option::unwrap_unchecked
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap_unchecked(
       unsafe_fn,
       const SourceLocation& loc = SourceLocation::current()
@@ -347,6 +388,8 @@ namespace crab::opt {
     {
       return copied().unwrap_unchecked(unsafe, loc);
     }
+
+    /// }@
 
     /// Returns a reference to the contained Some value inside. This only works if not operating on an rvalue, in which
     /// case you should use Option::unwrap
@@ -465,6 +508,9 @@ namespace crab::opt {
         result::Err<E>{std::invoke(error_generator)},
       };
     }
+
+    /// @name Monadic Operations
+    /// @{
 
     /// Transform function to an Option<T> -> Option<K>, if this option is
     /// None it will simply return None, but if it is Some(T), this will take the
@@ -588,19 +634,6 @@ namespace crab::opt {
       return copied().flatten();
     }
 
-    /// Copies this option and returns, use this before map if you do not
-    /// want to consume the option.
-    [[nodiscard]] CRAB_INLINE constexpr auto copied() const -> Option requires ty::copy_constructible<T>
-    {
-      static_assert(ty::copy_constructible<T>, "Cannot call copied() on an option with a non copy-cosntructible type");
-
-      if (is_some()) {
-        return Option<T>{get_unchecked(unsafe)};
-      }
-
-      return {};
-    }
-
     /// Consumes this option, if this is some and passes the predicate it
     /// will return Some, else None
     template<ty::predicate<const T&> F>
@@ -630,18 +663,10 @@ namespace crab::opt {
       return copied().filter(mem::forward<F>(predicate));
     }
 
-    /// Checks if this result contains a value, and if so does it also
-    /// match with the given predicate
-    ///
-    /// `Option<i32>{10}.is_ok_and(crab::fn::even) -> true`
-    /// `Option<i32>{10}.is_ok_and(crab::fn::odd) -> false`
-    template<ty::predicate<const T&> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto is_some_and(F&& functor) const -> bool {
-      return is_some() and static_cast<bool>(std::invoke(mem::forward<F>(functor), get_unchecked(unsafe)));
-    }
-
     /// Combines many Option values into one if they are all Some,
     /// if any of the options are empty, this returns an empty option.
+    ///
+    /// This method does not support implicit copies, if needed manually call Option::copied.
     ///
     /// # Example
     /// ```cpp
@@ -660,11 +685,23 @@ namespace crab::opt {
       };
     }
 
+    /// }@
+
+    /// Checks if this result contains a value, and if so does it also
+    /// match with the given predicate
+    ///
+    /// `Option<i32>{10}.is_ok_and(crab::fn::even) -> true`
+    /// `Option<i32>{10}.is_ok_and(crab::fn::odd) -> false`
+    template<ty::predicate<const T&> F>
+    [[nodiscard]] CRAB_INLINE constexpr auto is_some_and(F&& functor) const -> bool {
+      return is_some() and static_cast<bool>(std::invoke(mem::forward<F>(functor), get_unchecked(unsafe)));
+    }
+
     /// Boolean 'and' operation on two options, this will return none if either of
     /// the two options are none, and if both are some this will return the
     /// contained value of the second
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator and(Option<S> other) && -> Option<S> {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator and(Option<U> other) && -> Option<U> {
       if (is_none()) {
         return None{};
       }
@@ -675,8 +712,8 @@ namespace crab::opt {
     /// Boolean 'and' operation on two options, this will return none if either of
     /// the two options are none, and if both are some this will return the
     /// contained value of the second
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator and(Option<S> other) const& -> Option<S>
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator and(Option<U> other) const& -> Option<U>
       requires implicit_copy_allowed
     {
       return copied() and mem::move(other);
@@ -692,8 +729,7 @@ namespace crab::opt {
       return mem::move(*this);
     }
 
-    /// Boolean or operation, if this option is some it will return that, if the
-    /// other option is some it will return that, else this returns none
+    /// @copydoc Option::operator or
     [[nodiscard]] CRAB_INLINE constexpr auto operator or(Option other) const& -> Option requires implicit_copy_allowed
     {
       return copied() or mem::move(other);
@@ -712,18 +748,17 @@ namespace crab::opt {
       return mem::move(*this);
     }
 
-    /// The same as or but if both options are some then this will be none
-    [[nodiscard]] CRAB_INLINE constexpr auto operator xor(Option other) const& -> Option
-      requires ty::copy_constructible<T>
+    /// @copydoc Option::operator xor
+    [[nodiscard]] CRAB_INLINE constexpr auto operator xor(Option other) const& -> Option requires implicit_copy_allowed
     {
       return copied() xor mem::move(other);
     }
 
     /// TODO: documnet
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator==(const Option<S>& other) const -> bool {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator==(const Option<U>& other) const -> bool {
       static_assert(
-        std::equality_comparable_with<T, S>,
+        std::equality_comparable_with<T, U>,
         "Cannot equate to options if the inner types are not equatable"
       );
       if (is_none() or other.is_none()) {
@@ -733,10 +768,10 @@ namespace crab::opt {
       return static_cast<bool>(get_unchecked(unsafe) == other.get_unchecked(unsafe));
     }
 
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator!=(const Option<S>& other) const -> bool {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator!=(const Option<U>& other) const -> bool {
       static_assert(
-        std::equality_comparable_with<T, S>,
+        std::equality_comparable_with<T, U>,
         "Cannot equate to options if the inner types are not inverse equatable"
       );
 
@@ -747,10 +782,10 @@ namespace crab::opt {
       return static_cast<bool>(get_unchecked(unsafe) != other.get_unchecked(unsafe));
     }
 
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator>(const Option<S>& other) const -> bool {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator>(const Option<U>& other) const -> bool {
       static_assert(
-        requires(const T& a, const S& b) {
+        requires(const T& a, const U& b) {
           { a > b } -> ty::convertible<bool>;
         },
         "Cannot compare to options if the inner types are not comparable with <"
@@ -768,10 +803,10 @@ namespace crab::opt {
     }
 
     /// TODO: documnet
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator>=(const Option<S>& other) const -> bool {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator>=(const Option<U>& other) const -> bool {
       static_assert(
-        requires(const T& a, const S& b) {
+        requires(const T& a, const U& b) {
           { a >= b } -> ty::convertible<bool>;
         },
         "Cannot compare to options if the inner types are not comparable with "
@@ -790,10 +825,10 @@ namespace crab::opt {
     }
 
     /// TODO: documnet
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator<=(const Option<S>& other) const -> bool {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=(const Option<U>& other) const -> bool {
       static_assert(
-        requires(const T& a, const S& b) {
+        requires(const T& a, const U& b) {
           { a <= b } -> ty::convertible<bool>;
         },
         "Cannot compare to options if the inner types are not comparable with "
@@ -812,10 +847,10 @@ namespace crab::opt {
     }
 
     /// TODO: documnet
-    template<typename S>
-    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Option<S>& other) const -> std::partial_ordering {
+    template<typename U = T>
+    [[nodiscard]] CRAB_INLINE constexpr auto operator<=>(const Option<U>& other) const -> std::partial_ordering {
       static_assert(
-        std::three_way_comparable_with<T, S>,
+        std::three_way_comparable_with<T, U>,
         "Cannot compare to options if the inner types are not comparable with "
         "<=>"
       );

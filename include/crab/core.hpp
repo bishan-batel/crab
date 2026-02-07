@@ -1,5 +1,5 @@
 /// @file crab/core.hpp
-/// @brief Crab's core macros used in every other header.
+/// Crab's core macros used in every other header.
 /// This mainly includes compiler-related macros as well as the basis for options (such as CRAB_USE_PRELUDE)
 
 #pragma once
@@ -10,7 +10,7 @@
 #include "crab/config.hpp"
 
 /// @def CRAB_USE_PRELUDE
-/// @brief Option for whether or not crab should 'using namespace crab::prelude'
+/// Option for whether or not crab should 'using namespace crab::prelude'.
 ///
 /// If this macro is defined, then the global namespace will include
 /// symbols from crab::prelude (eg. using namespace crab::prelude).
@@ -23,12 +23,12 @@
 
 /// @def CRAB_DEBUG
 /// @hideinitializer
-/// @brief Defined to be 1 or 0 depending on whether this is a debug build or not
+/// Defined to be 1 or 0 depending on whether this is a debug build or not.
 /// Alias for '!NDEBUG', note that CRAB_DEBUG=1 means that CRAB_RELEASE=0 (and vice versa)
 
 /// @def CRAB_RELEASE
 /// @hideinitializer
-/// @brief Defined to be 1 or 0 depending on whether this is a release build or not
+/// Defined to be 1 or 0 depending on whether this is a release build or not.
 /// Alias for 'NDEBUG', note that CRAB_RELEASE=1 means that CRAB_DEBUG=0 (and vice versa)
 
 #if NDEBUG
@@ -41,7 +41,7 @@
 
 /// @def CRAB_OSX
 /// @hideinitializer
-/// @brief Defined when compiling for apple (mac/ios) targets
+/// Defined when compiling for apple (mac/ios) targets.
 
 #if defined(__APPLE__) && __APPLE__
 #define CRAB_OSX __APPLE__
@@ -51,7 +51,7 @@
 
 /// @def CRAB_WIN32
 /// @hideinitializer
-/// @brief Defined when compiling for Windows targets
+/// Defined when compiling for Windows targets.
 
 #if defined(_WIN32) && _WIN32
 #define CRAB_WIN32 _WIN32
@@ -61,7 +61,7 @@
 
 /// @def CRAB_LINUX
 /// @hideinitializer
-/// @brief Defined when compiling for linux targets
+/// Defined when compiling for linux targets.
 
 #if defined(__linux__) && __linux__
 #define CRAB_LINUX __linux__
@@ -71,7 +71,7 @@
 
 /// @def CRAB_UNIX
 /// @hideinitializer
-/// @brief Defined when compiling for unix-compatible targets (eg. linux OR apple)
+/// Defined when compiling for unix-compatible targets (eg. linux OR apple).
 
 #if CRAB_LINUX || CRAB_OSX
 #define CRAB_UNIX 1
@@ -81,7 +81,7 @@
 
 /// @def CRAB_CLANG_VERSION
 /// @hideinitializer
-/// @brief Numeric representation of the clang version being compiled with (0 if not being compiled with clang)
+/// Numeric representation of the clang version being compiled with (0 if not being compiled with clang).
 
 #if defined(__clang__)
 #define CRAB_CLANG_VERSION (__clang_major__ * 100 + __clang_minor__)
@@ -91,7 +91,7 @@
 
 /// @def CRAB_GCC_VERSION
 /// @hideinitializer
-/// @brief Numeric representation of the GCC version being compiled with (0 if not being compiled with GCC)
+/// Numeric representation of the GCC version being compiled with (0 if not being compiled with GCC).
 
 #if defined(__GNUC__) && !defined(__clang__)
 #define CRAB_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
@@ -101,7 +101,7 @@
 
 /// @def CRAB_MSVC_VERSION
 /// @hideinitializer
-/// @brief Numeric representation of the MSVC version being compiled with (0 if not being compiled with MSVC)
+/// Numeric representation of the MSVC version being compiled with (0 if not being compiled with MSVC).
 
 #ifdef _MSC_VER
 #define CRAB_MSVC_VERSION _MSC_VER
@@ -111,7 +111,7 @@
 
 /// @def CRAB_CPP_VERSION
 /// @hideinitializer
-/// @brief Numeric representation (standardized) of the current C++ version being compiled for
+/// Numeric representation (standardized) of the current C++ version being compiled for.
 
 #ifdef _MSVC_LANG
 #define CRAB_CPP_VERSION _MSVC_LANG
@@ -121,7 +121,7 @@
 
 /// @def CRAB_HAS_FEATURE(feature)
 /// @hideinitializer
-/// @brief Evalutes to whether the current compiler & standard supports a given feature
+/// Evalutes to whether the current compiler & standard supports a given feature.
 /// Alias of __has_feature unless that macro is not valid
 
 #ifdef __has_feature
@@ -132,7 +132,7 @@
 
 /// @def CRAB_HAS_INCLUDE(include_path)
 /// @hideinitializer
-/// @brief Evaluates to whether or not the path given would be a valid include path
+/// Evaluates to whether or not the path given would be a valid include path.
 
 #ifdef __has_include
 #define CRAB_HAS_INCLUDE(include_path) __has_include(include_path)
@@ -142,7 +142,7 @@
 
 /// @def CRAB_HAS_ATTRIBUTE(attr_name)
 /// @hideinitializer
-/// @brief Evaluates to whether or not the given C++ attribute is recognized by the current compiler.
+/// Evaluates to whether or not the given C++ attribute is recognized by the current compiler..
 ///
 /// For example, [[likely]] can be checked to exist by CRAB_HAS_ATTRIBUTE(likely)
 
@@ -355,7 +355,7 @@
 #endif
 
 /// @namespace crab::prelude
-/// @brief Namespace that includes the default things crab puts in the global namespace.
+/// Namespace that includes the default things crab puts in the global namespace.
 ///
 /// This includes things like Option<T>, Box<T>, Rc<T>, etc.
 /// If you want to disable this behavior, explicitly define CRAB_USE_PRELUDE to false.

@@ -1,5 +1,9 @@
 # Crab
 
+<p align="center">
+  <img src="./docs/image/logo.svg" width="500"/>
+</p>
+
 The most concise description for this library would be "Templated library focused on improving specific parts of the
 STL, specifically a prioritization on type invariance, error handling, and readability"
 

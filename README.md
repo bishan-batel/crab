@@ -1,5 +1,3 @@
-# Crab
-
 <p align="center">
   <img src="./docs/image/logo.svg" width="500"/>
 </p>

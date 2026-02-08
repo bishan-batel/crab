@@ -26,8 +26,19 @@ jobs:
 
     - uses: ashutoshvarma/setup-ninja@v1.1
     
-    - name: Install LLVM and Clang
-      uses: KyleMayes/install-llvm-action@v2
+    - name: Set up Clang
+      uses: egor-tensin/setup-clang@v1
+      if: ${{ matrix.os != 'macos-latest' }}
+      with:
+        version: 20
+    
+    - name: Set up Clang (macos)
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        brew install llvm@18 \
+        && echo 'export PATH="/opt/homebrew/opt/llvm@18/bin:$PATH"' >> /Users/runner/.bash_profile \
+        && source /Users/runner/.bash_profile \
+        && which clang++
 
     - name: Configure CMake
       run: cmake -Bbuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCRAB_TESTS=ON -DCMAKE_CXX_COMPILER=${{matrix.c_compiler}}

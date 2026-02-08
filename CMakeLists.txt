@@ -47,8 +47,8 @@ set(FMT_INSTALL ON)
 CPMAddPackage(
         NAME fmt
         GITHUB_REPOSITORY "fmtlib/fmt"
-        GIT_TAG "9.0.0"
-        VERSION_MIN "7.1.3"
+        GIT_TAG "12.1.0"
+        VERSION_MIN "9.0.0"
 )
 
 #===============================================================================

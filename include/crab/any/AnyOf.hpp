@@ -111,7 +111,7 @@ namespace crab::any {
     /// Helper for implementation of AnyOf::IndexOf
     /// @internal
     template<typename T>
-    static consteval auto find_index_of_type() -> usize {
+    static CRAB_CONSTEVAL auto find_index_of_type() -> usize {
       const std::array<bool, NumTypes> state{
         ty::same_as<T, Ts>...,
       };

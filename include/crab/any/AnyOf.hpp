@@ -4,6 +4,7 @@
 #pragma once
 
 #include <type_traits>
+#include "crab/core/unreachable.hpp"
 #include "crab/core/unsafe.hpp"
 #include "crab/assertion/check.hpp"
 #include "crab/core.hpp"
@@ -151,11 +152,22 @@ namespace crab::any {
     template<ty::either<Ts...> T>
     static constexpr usize IndexOf = []() {
       usize i = 0;
-      return ([&i]() {
-        const bool is_index{ty::same_as<T, Ts>};
-        i++;
-        return is_index ? (i - 1) : 0;
-      }() + ...);
+
+      std::array<bool, NumTypes> types{};
+
+      ([&types, &i] {
+        types[i++] = ty::same_as<T, Ts>;
+        return true;
+      }()
+       and ...);
+
+      for (usize i = 0; i < NumTypes; i++) {
+        if (types.at(i)) {
+          return i;
+        }
+      }
+
+      unreachable();
     }();
 
   private:

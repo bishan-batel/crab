@@ -38,7 +38,7 @@ jobs:
         version: 20
 
     - name: Configure CMake
-      run: cmake -Bbuild -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCRAB_TESTS=ON -DCMAKE_CXX_COMPILER=${{matrix.c_compiler}}
+      run: cmake -Bbuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCRAB_TESTS=ON -DCMAKE_CXX_COMPILER=${{matrix.c_compiler}}
 
     - name: Build
       run: cmake --build build

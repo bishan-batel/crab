@@ -164,7 +164,7 @@ namespace crab::any {
     /// language, usage is required to be used with the factory method AnyOf::from.
     /// @internal
     template<usize I>
-    constexpr explicit AnyOf(const std::integral_constant<usize, I>&, NthType<I>&& value): index{I} {
+    constexpr explicit AnyOf(std::integral_constant<usize, I>, NthType<I> value): index{I} {
       Storage<NthType<I>>::construct(buffer, mem::forward<NthType<I>>(value));
     }
 
@@ -190,10 +190,7 @@ namespace crab::any {
     /// @returns a value of AnyOf with the given value wrapped
     template<ty::either<Ts...> T>
     [[nodiscard]] static constexpr auto from(ty::identity<T> value) -> AnyOf {
-      return AnyOf{
-        std::integral_constant<usize, IndexOf<T>>{},
-        mem::forward<T>(value),
-      };
+      return AnyOf(std::integral_constant<usize, IndexOf<T>>{}, mem::forward<T>(value));
     }
 
     /// Factory method for an AnyOf with explicit specification for the type by index (`AnyOf<T0,T1,T2,...>`)
@@ -205,10 +202,7 @@ namespace crab::any {
     [[nodiscard]] static constexpr auto from(NthType<N> value) -> AnyOf {
       static_assert(N < NumTypes, "Invalid type index passed to AnyOf::from<usize>");
 
-      return AnyOf{
-        std::integral_constant<usize, N>{},
-        mem::forward<NthType<N>>(value),
-      };
+      return AnyOf(std::integral_constant<usize, N>{}, mem::forward<NthType<N>>(value));
     }
 
     /// Construct an AnyOf with the given value inside. This value must be compatible with one of the values of this

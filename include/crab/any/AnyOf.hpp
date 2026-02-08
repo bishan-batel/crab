@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <iterator>
 #include <type_traits>
 #include "crab/core/unreachable.hpp"
 #include "crab/core/unsafe.hpp"
@@ -107,6 +108,17 @@ namespace crab::any {
     template<ty::either<Ts...> T>
     using Storage = impl::AnyOfStorage<T>;
 
+    /// Helper for implementation of AnyOf::IndexOf
+    /// @internal
+    template<typename T>
+    static consteval auto find_index_of_type() -> usize {
+      const std::array<bool, NumTypes> state{
+        ty::same_as<T, Ts>...,
+      };
+
+      return std::distance(state.begin(), std::ranges::find(state, true));
+    }
+
   public:
 
     /// self explanatory
@@ -150,25 +162,7 @@ namespace crab::any {
     /// ```
     /// @hideinitializer
     template<ty::either<Ts...> T>
-    static constexpr usize IndexOf = []() {
-      usize i = 0;
-
-      std::array<bool, NumTypes> types{};
-
-      ([&types, &i] {
-        types[i++] = ty::same_as<T, Ts>;
-        return true;
-      }()
-       and ...);
-
-      for (usize i = 0; i < NumTypes; i++) {
-        if (types.at(i)) {
-          return i;
-        }
-      }
-
-      unreachable();
-    }();
+    static constexpr usize IndexOf = find_index_of_type<T>();
 
   private:
 

@@ -3,8 +3,24 @@ name: Tests
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'include/**/*.cpp'
+      - 'include/**/*.hpp'
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - 'VERSION'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
   pull_request:
     branches: [ "main" ]
+    paths:
+      - 'include/**/*.cpp'
+      - 'include/**/*.hpp'
+      - '**/CMakeLists.txt'
+      - '**/*.cmake'
+      - 'VERSION'
+      - 'CMakeLists.txt'
+      - 'CMakePresets.json'
 
 jobs:
   build:

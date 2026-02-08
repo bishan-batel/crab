@@ -5,6 +5,9 @@ name: Build & Upload Doxygen
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - 'include/**/*.hpp'
+      - 'docs/**/*'
   workflow_dispatch:
 
 permissions:

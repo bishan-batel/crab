@@ -49,4 +49,9 @@ else()
     )
 endif()
 
-target_compile_definitions(crab-tests PUBLIC "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>" "CRAB_THROW_ON_DEFAULT_PANIC=1")
+target_compile_definitions(crab-tests PUBLIC 
+    "CATCH_CONFIG_DISABLE_EXCEPTIONS=$<IF:$<CONFIG:Debug>,0,1>" 
+    "CRAB_THROW_ON_DEFAULT_PANIC=1"
+    "_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING=1"
+    "_SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS=1"
+)

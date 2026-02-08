@@ -28,8 +28,6 @@ jobs:
     
     - name: Install LLVM and Clang
       uses: KyleMayes/install-llvm-action@v2
-      with:
-        version: "20.0"
 
     - name: Configure CMake
       run: cmake -Bbuild -GNinja -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCRAB_TESTS=ON -DCMAKE_CXX_COMPILER=${{matrix.c_compiler}}

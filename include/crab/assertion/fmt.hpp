@@ -7,6 +7,9 @@
 #include <concepts>
 #include <sstream>
 
+// solution to fmtlib complaining on windows
+#define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS // NOLINT
+
 #if CRAB_CLANG_VERSION
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-literal-operator"

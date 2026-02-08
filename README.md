@@ -2,6 +2,8 @@
   <img src="./docs/image/logo.svg" width="500"/>
 </p>
 
+[![Tests](https://github.com/bishan-batel/crab/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/bishan-batel/crab/actions/workflows/cmake-multi-platform.yml) [![Build & Upload Doxygen](https://github.com/bishan-batel/crab/actions/workflows/upload-doxygen.yml/badge.svg)](https://github.com/bishan-batel/crab/actions/workflows/upload-doxygen.yml)
+
 The most concise description for this library would be "Templated library focused on improving specific parts of the
 STL, specifically a prioritization on type invariance, error handling, and readability"
 

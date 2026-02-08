@@ -37,7 +37,7 @@ jobs:
         version: 20
     
     - name: Set up MSVC 
-      if: ${{ matrix.os != 'windows-latest' && matrix.c_compiler == "cl" }}
+      if: ${{ matrix.os == 'windows-latest' && matrix.c_compiler == "cl" }}
       uses: ilammy/msvc-dev-cmd@v1
 
     - name: Set up Clang (macos)

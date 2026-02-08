@@ -19,7 +19,7 @@ jobs:
         build_type: [Debug, Release]
         exclude:
           - os: windows-latest
-            c_compiler: g++
+            c_compiler: g++ cl
           - os: ubuntu-latest
             c_compiler: cl
           - os: macos-latest

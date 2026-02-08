@@ -11,9 +11,14 @@
 #include <unistd.h>
 #elif CRAB_WIN32
 #define WIN32_LEAN_AND_MEAN
+
+#ifndef NOMINMAX
 #define NOMINMAX
 #include <windows.h>
 #undef NOMINMAX
+#else
+#include <windows.h>
+#endif
 #endif
 
 namespace crab::term::impl {

@@ -8,7 +8,7 @@
 #include <sstream>
 
 // solution to fmtlib complaining on windows
-#define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS // NOLINT
+#define _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS 1 // NOLINT
 
 #if CRAB_CLANG_VERSION
 #pragma clang diagnostic push

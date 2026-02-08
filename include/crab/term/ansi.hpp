@@ -30,7 +30,7 @@ namespace crab::term {
 
     DWORD mode = 0;
 
-    if (not GetConsoleMode(hOut, &mode)) {
+    if (not GetConsoleMode(handle_out, &mode)) {
       return false;
     }
 

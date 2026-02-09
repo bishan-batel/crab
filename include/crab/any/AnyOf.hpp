@@ -274,6 +274,15 @@ namespace crab::any {
       } or ...);
     }
 
+    /// Destructor
+    ~AnyOf() {
+      if (not is_valid()) {
+        return;
+      }
+
+      destroy();
+    }
+
     /// Copy assignment, only valid of all variants Ts... are copyable.
     auto operator=(const AnyOf& from) -> AnyOf& requires(ty::copyable<Ts> and ...)
     {
@@ -352,96 +361,13 @@ namespace crab::any {
       return *this;
     }
 
-    /// Destructor
-    ~AnyOf() {
-      if (not is_valid()) {
-        return;
-      }
-
-      destroy();
-    }
-
     // NOLINTEND(*explicit*)
 
-    /// Retrieves an optional const reference to the inner value if the current type is the one being asked for
-    template<ty::either<Ts...> T>
-    requires ty::non_reference<T>
-    [[nodiscard]] constexpr auto as() const& -> opt::Option<const T&> {
-      if (get_index() != IndexOf<T>) {
-        return {};
-      }
+    /// @name Assignment
+    /// @{
 
-      // SAFETY: as_unchecked valid, we just validated the index.
-      return opt::Option<const T&>{as_unchecked<T>(unsafe)};
-    }
-
-    /// Retrieves a mutable const reference to the inner value if the current type is the one being asked for
-    template<ty::either<Ts...> T>
-    requires ty::non_reference<T>
-    [[nodiscard]] constexpr auto as() & -> opt::Option<T&> {
-      if (get_index() != IndexOf<T>) {
-        return {};
-      }
-
-      // SAFETY: as_unchecked valid, we just validated the index.
-      return opt::Option<T&>{as_unchecked<T>(unsafe)};
-    }
-
-    /// If the requested type is the one contained, this will return an option with the value moved into, note that
-    /// even if this method returns none the storage inside will be destroyed.
-    template<ty::either<Ts...> T>
-    requires ty::non_reference<T>
-    [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
-      if (get_index() != IndexOf<T>) {
-        destroy();
-        invalidate();
-        return {};
-      }
-
-      // SAFETY: as_unchecked valid, we just validated the index.
-      return opt::Option<T>{mem::move(*this).template as_unchecked<T>(unsafe)};
-    }
-
-    /// Returns the reference type requested if the current value is of that type.
-    template<ty::either<Ts...> T>
-    requires ty::is_reference<T>
-    [[nodiscard]] constexpr auto as() & -> opt::Option<T> {
-      if (get_index() != IndexOf<T>) {
-        return {};
-      }
-
-      // SAFETY: as_unchecked valid, we just validated the index.
-      return opt::Option<T>{as_unchecked<T>(unsafe)};
-    }
-
-    /// Returns the reference type requested if the current value is of that type.
-    template<ty::either<Ts...> T>
-    requires ty::is_reference<T>
-    [[nodiscard]] constexpr auto as() const& -> opt::Option<T> {
-      if (get_index() != IndexOf<T>) {
-        return {};
-      }
-
-      // SAFETY: as_unchecked valid, we just validated the index.
-      return opt::Option<T>{as_unchecked<T>(unsafe)};
-    }
-
-    /// Returns the reference type requested if the current value is of that type.
-    /// note that after this method is called, this AnyOf is left invalid (this is rvalue qualified)
-    template<ty::either<Ts...> T>
-    requires ty::is_reference<T>
-    [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
-      if (get_index() != IndexOf<T>) {
-        destroy();
-        invalidate();
-        return {};
-      }
-
-      // SAFETY: as_unchecked valid, we just validated the index.
-      return opt::Option<T>{mem::move(*this).template as_unchecked<T>(unsafe)};
-    }
-
-    /// Insert an existing value to replace the one stored
+    /// Insert an existing value to replace the one stored, if possible it can be more performant to instead use
+    /// AnyOf::emplace
     ///
     /// This method can be safely called on an moved-from AnyOf, this implementation will always be the same as
     /// operator=(T)
@@ -483,58 +409,10 @@ namespace crab::any {
       index = IndexOf<T>;
     }
 
-    template<ty::either<Ts...> T>
-    requires ty::non_reference<T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) & -> T& {
-      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
-      return Storage<T>::as_ref(buffer);
-    }
+    /// }@
 
-    template<ty::either<Ts...> T>
-    requires ty::non_reference<T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) const& -> const T& {
-      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
-      return Storage<T>::as_ref(buffer);
-    }
-
-    template<ty::either<Ts...> T>
-    requires ty::non_reference<T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) && -> T {
-      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
-
-      T value{mem::forward<T>(Storage<T>::as_ref(buffer))};
-
-      destroy();
-      invalidate();
-
-      return value;
-    }
-
-    template<ty::either<Ts...> T>
-    requires ty::is_reference<T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) & -> T {
-      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
-      return Storage<T>::as_ref(buffer);
-    }
-
-    template<ty::either<Ts...> T>
-    requires ty::is_reference<T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) const& -> T {
-      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
-      return Storage<T>::as_ref(buffer);
-    }
-
-    template<ty::either<Ts...> T>
-    requires ty::is_reference<T>
-    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) && -> T {
-      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
-      T value{Storage<T>::as_ref(buffer)};
-
-      // no destructor required, we know this is a reference
-
-      invalidate();
-      return value;
-    }
+    /// @name Visitor Methods
+    /// @{
 
     template<typename... Fs, typename R = impl::VisitorResultType<crab::cases<Fs...>, const Ts&...>>
     [[nodiscard]] constexpr auto match(Fs&&... functions) const& -> R {
@@ -637,9 +515,8 @@ namespace crab::any {
       }
     }
 
-    /// R-value qualified version of visit. For more information see the other overload's documentation. The major
-    /// difference of this overload is that performing this will leave the AnyOf invalid, as this will move the current
-    /// value into the visitor.
+    /// R-value qualified version of visit. This overload is that performing this will leave the AnyOf invalid, as this
+    /// will move the current value into the visitor.
     template<impl::VisitorForTypes<Ts&&...> Visitor, typename R = impl::VisitorResultType<Visitor, Ts&&...>>
     [[nodiscard]] constexpr CRAB_INLINE auto visit(Visitor&& visitor) && -> R {
 
@@ -673,9 +550,175 @@ namespace crab::any {
       }
     }
 
+    /// }@
+
+    /// @name Getters
+    /// @{
+
+    /// Retrieves an optional const reference to the inner value if the current type is the one being asked for
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr auto as() const& -> opt::Option<const T&> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      // SAFETY: as_unchecked valid, we just validated the index.
+      return opt::Option<const T&>{as_unchecked<T>(unsafe)};
+    }
+
+    /// Retrieves a mutable const reference to the inner value if the current type is the one being asked for
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr auto as() & -> opt::Option<T&> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      // SAFETY: as_unchecked valid, we just validated the index.
+      return opt::Option<T&>{as_unchecked<T>(unsafe)};
+    }
+
+    /// If the requested type is the one contained, this will return an option with the value moved into, note that
+    /// even if this method returns none the storage inside will be destroyed.
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        destroy();
+        invalidate();
+        return {};
+      }
+
+      // SAFETY: as_unchecked valid, we just validated the index.
+      return opt::Option<T>{mem::move(*this).template as_unchecked<T>(unsafe)};
+    }
+
+    /// Returns the reference type requested if the current value is of that type.
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr auto as() & -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      // SAFETY: as_unchecked valid, we just validated the index.
+      return opt::Option<T>{as_unchecked<T>(unsafe)};
+    }
+
+    /// Returns the reference type requested if the current value is of that type.
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr auto as() const& -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        return {};
+      }
+
+      // SAFETY: as_unchecked valid, we just validated the index.
+      return opt::Option<T>{as_unchecked<T>(unsafe)};
+    }
+
+    /// Returns the reference type requested if the current value is of that type.
+    /// note that after this method is called, this AnyOf is left invalid (this is rvalue qualified)
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr auto as() && -> opt::Option<T> {
+      if (get_index() != IndexOf<T>) {
+        destroy();
+        invalidate();
+        return {};
+      }
+
+      // SAFETY: as_unchecked valid, we just validated the index.
+      return opt::Option<T>{mem::move(*this).template as_unchecked<T>(unsafe)};
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) & -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) const& -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::is_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) && -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      T value{Storage<T>::as_ref(buffer)};
+
+      // no destructor required, we know this is a reference
+
+      invalidate();
+      return value;
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) & -> T& {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) const& -> const T& {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+      return Storage<T>::as_ref(buffer);
+    }
+
+    template<ty::either<Ts...> T>
+    requires ty::non_reference<T>
+    [[nodiscard]] constexpr CRAB_INLINE auto as_unchecked(unsafe_fn) && -> T {
+      crab_dbg_check(get_index() == IndexOf<T>, "as_unchecked<T> called on AnyOf that does not contain T");
+
+      T value{mem::forward<T>(Storage<T>::as_ref(buffer))};
+
+      destroy();
+      invalidate();
+
+      return value;
+    }
+
+    /// Returns whether the given AnYOf is containing the given type.
+    ///
+    /// # Panics
+    /// This function will panic if this AnyOf has been moved / 'is empty', which is not allowed. If you wish to elide
+    /// this panic (for example, what we do in the implementation of Result), you can use AnyOf::is_unchecked
+    ///
+    /// # Examples
+    /// ```cpp
+    /// AnyOf<i32, String> value = String{"hello"};
+    ///
+    /// crab_check(value.is<String>());
+    /// crab_check(not value.is<i32>());
+    /// ```
     template<ty::either<Ts...> T>
     [[nodiscard]] constexpr CRAB_INLINE auto is() const -> bool {
       return get_index() == IndexOf<T>;
+    }
+
+    /// Returns whether the given AnYOf is containing the given type.
+    ///
+    /// This function is marked unsafe mainly to imply that you should be using 'is' normally and not typically rely on
+    /// moved-from AnyOf's.
+    ///
+    /// # Examples
+    /// ```cpp
+    /// AnyOf<i32, String> value = String{"hello"};
+    ///
+    /// crab_check(value.is<String>());
+    /// crab_check(not value.is<i32>());
+    /// ```
+    template<ty::either<Ts...> T>
+    [[nodiscard]] constexpr CRAB_INLINE auto is_unchecked(unsafe_fn) const -> bool {
+      return index == IndexOf<T>;
     }
 
     /// Gets the index of the currently held type. This function may not be used on a moved-from AnyOf
@@ -705,6 +748,8 @@ namespace crab::any {
       return index < NumTypes;
     }
 
+    /// @}
+
   private:
 
     /// Destroys interior
@@ -725,7 +770,12 @@ namespace crab::any {
       index = static_cast<u8>(-1);
     }
 
+    /// Interior buffer to store the possible states
+    /// @interior
     impl::Buffer<DataSize, Alignment> buffer;
+
+    /// Interior tag to select what type is being selected
+    /// @interior
     u8 index;
   };
 }

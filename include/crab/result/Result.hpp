@@ -133,6 +133,8 @@ namespace crab::result {
     /// *Explicit* conversion operator between a result and a bool, this is not intended to be used directly and should
     /// normally be replaced with is_ok, this operator exists mainly to support 'if init' syntax.
     ///
+    /// This operator behaves the same as is_ok and inherits its panic states.
+    ///
     /// # Examples
     ///
     /// ```cpp
@@ -274,10 +276,7 @@ namespace crab::result {
       const SourceLocation loc = SourceLocation::current()
     ) const& -> const E& {
       check_dbg_is_err(loc);
-
-      crab_dbg_check_with_location(is_err(), loc, "Called unwrap on Ok value");
-
-      return storage.template as_unchecked<Err>(unsafe).unwrap().get();
+      return storage.template as_unchecked<Err>(unsafe).get();
     }
 
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap(const SourceLocation loc = SourceLocation::current()) && -> T {
@@ -298,6 +297,14 @@ namespace crab::result {
       return mem::move(storage).template as_unchecked<Err>(unsafe).get();
     }
 
+    [[nodiscard]] CRAB_INLINE constexpr auto unwrap_err_unchecked(
+      unsafe_fn,
+      const SourceLocation loc = SourceLocation::current()
+    ) && -> E {
+      check_is_err(loc);
+      return mem::move(storage).template as_unchecked<Err>(unsafe).get();
+    }
+
     friend CRAB_INLINE constexpr auto operator<<(std::ostream& os, const Result& result) -> std::ostream& {
       result.check_unmoved();
 
@@ -314,11 +321,8 @@ namespace crab::result {
     /// # Panics
     /// This will panic if the underlying result has been moved
     [[nodiscard]]
-    CRAB_INLINE constexpr auto copied(const SourceLocation loc = SourceLocation::current()) const -> Result
-      requires is_copyable
+    CRAB_INLINE constexpr auto copied() const -> Result requires is_copyable
     {
-      check_unmoved(loc);
-
       if (is_ok()) {
         return {OkType(get_unchecked(unsafe))};
       }
@@ -326,11 +330,9 @@ namespace crab::result {
       return {ErrType(get_err_unchecked(unsafe))};
     }
 
-    /// @Name Monadic Operations
+    /// @name Monadic Operations
     /// @{
 
-    // ============================ map functions ================================
-    //
     template<typename Into>
     [[nodiscard]] CRAB_INLINE constexpr auto map() && -> Result<Into, E> {
       static_assert(
@@ -363,64 +365,47 @@ namespace crab::result {
       return copied().template map_err<Into>();
     }
 
-    /**
-     * Consumes self and if not Error, maps the Ok value to a new value
-     * @tparam F
-     * @return
-     */
+    /// Consumes self and if not Error, maps the Ok value to a new value
+    /// @tparam F
     template<crab::ty::mapper<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor, const SourceLocation loc = SourceLocation::current()) && {
+    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor) && {
       using R = ty::functor_result<F, T>;
 
-      ensure_valid(loc);
-
       if (is_ok()) {
-        return Result<R, E>{result::Ok<R>{std::invoke(mem::forward<F>(functor), mem::move(*this).unwrap(loc))}};
-      }
-
-      return Result<R, E>{result::Err<E>{mem::move(*this).unwrap_err(loc)}};
-    }
-
-    /**
-     * Consumes self and if not Ok, maps the Error value to a new value
-     * @tparam F
-     * @return
-     */
-    template<crab::ty::mapper<E> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto map_err(
-      F&& functor,
-      const SourceLocation loc = SourceLocation::current()
-    ) && {
-      using R = ty::functor_result<F, E>;
-
-      ensure_valid(loc);
-
-      if (is_err()) {
-        return Result<T, R>{
-          result::Err<R>{std::invoke(functor, mem::move(*this).unwrap_err(loc))},
+        return Result<R, E>{
+          result::Ok<R>{std::invoke(mem::forward<F>(functor), mem::move(*this).unwrap_unchecked(unsafe))}
         };
       }
 
-      return Result<T, R>{result::Ok<T>{mem::move(*this).unwrap(loc)}};
+      return Result<R, E>{result::Err<E>{mem::move(*this).unwrap_err_unchecked(unsafe)}};
     }
 
-    /**
-     * Consumes self and if not Error, maps the Ok value to a new value
-     * @tparam F
-     * @return
-     */
+    /// Consumes self and if not Ok, maps the Error value to a new value
+    /// @tparam F
+    template<crab::ty::mapper<E> F>
+    [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) && {
+      using R = ty::functor_result<F, E>;
+
+      if (is_err()) {
+        return Result<T, R>{
+          result::Err<R>{std::invoke(functor, mem::move(*this).unwrap_err_unchecked(unsafe))},
+        };
+      }
+
+      return Result<T, R>{result::Ok<T>{mem::move(*this).unwrap_unchecked(unsafe)}};
+    }
+
+    /// Consumes self and if not Error, maps the Ok value to a new value
+    /// @tparam F
     template<crab::ty::mapper<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto map(
-      F&& functor,
-      const SourceLocation loc = SourceLocation::current()
-    ) const& {
+    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor) const& {
       static_assert(
         implicit_copy_allowed,
         "Only results with trivial Ok & Err types may be implicitly copied when "
         "using monadic operations, you must call Result::copied() yourself."
       );
 
-      return copied(loc).map(mem::forward<F>(functor), loc);
+      return copied().map(mem::forward<F>(functor));
     }
 
     /**
@@ -429,17 +414,14 @@ namespace crab::result {
      * @return
      */
     template<crab::ty::mapper<E> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto map_err(
-      F&& functor,
-      const SourceLocation loc = SourceLocation::current()
-    ) const& {
+    [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) const& {
       static_assert(
         implicit_copy_allowed,
         "Only results with trivial Ok & Err types may be implicitly copied when "
         "using monadic operations, you must call Result::copied() yourself."
       );
 
-      return copied(loc).map_err(mem::forward<F>(functor), loc);
+      return copied().map_err(mem::forward<F>(functor));
     }
 
     // ========================= flat map functions ==============================
@@ -448,10 +430,7 @@ namespace crab::result {
     /// If result is Ok, run function on the ok value,
     /// If the mapped function is Ok(type M), it returns Result<M, Error>
     template<crab::ty::mapper<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto and_then(
-      F&& functor,
-      const SourceLocation loc = SourceLocation::current()
-    ) && {
+    [[nodiscard]] CRAB_INLINE constexpr auto and_then(F&& functor) && {
       using R = ty::functor_result<F, T>;
 
       static_assert(result_type<R>, "and_then functor parameter must return a Result<T,E> type");
@@ -462,25 +441,20 @@ namespace crab::result {
         "context (must be a mapping from Result<T,E> -> Result<S,E> ) "
       );
 
-      ensure_valid(loc);
-
       if (is_err()) {
-        return R{Err{mem::move(*this).unwrap_err(loc)}};
+        return R{Err{mem::move(*this).unwrap_err_unchecked(unsafe)}};
       }
 
-      return std::invoke(functor, mem::move(*this).unwrap(loc));
+      return std::invoke(functor, mem::move(*this).unwrap_unchecked(unsafe));
     }
 
     /// Mondadic function that copies the inner value. If result is Ok, run
     /// function on the ok value, If the mapped function is Ok(type M), it returns
     /// Result<M, Error>
     template<crab::ty::mapper<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto and_then(
-      F&& functor,
-      const SourceLocation loc = SourceLocation::current()
-    ) const& requires implicit_copy_allowed
+    [[nodiscard]] CRAB_INLINE constexpr auto and_then(F&& functor) const& requires implicit_copy_allowed
     {
-      return copied(loc).and_then(mem::forward<F>(functor));
+      return copied().and_then(mem::forward<F>(functor));
     }
 
     /// Takes Ok value out of this object and returns it, if is Err and not
@@ -488,10 +462,7 @@ namespace crab::result {
     ///
     /// This function is for use when wanting to abstract away any specific error
     /// type to simply 'none'.
-    [[nodiscard]] CRAB_INLINE constexpr auto ok(
-      const SourceLocation loc = SourceLocation::current()
-    ) && -> opt::Option<T> {
-      ensure_valid(loc);
+    [[nodiscard]] CRAB_INLINE constexpr auto into_ok() && -> opt::Option<T> {
 
       if (is_ok()) {
         return {mem::move(*this).unwrap_unchecked(unsafe)};
@@ -504,11 +475,9 @@ namespace crab::result {
     ///
     /// This function is for use when wanting to abstract away any specific error
     /// type to simply 'none'.
-    [[nodiscard]] CRAB_INLINE constexpr auto ok(
-      const SourceLocation loc = SourceLocation::current()
-    ) const& -> opt::Option<T> requires implicit_copy_allowed
+    [[nodiscard]] CRAB_INLINE constexpr auto into_ok() const& -> opt::Option<T> requires implicit_copy_allowed
     {
-      return copied().ok(loc);
+      return copied().into_ok();
     }
 
     /// Takes Err value out of this object and returns it, if is Ok and not
@@ -516,11 +485,7 @@ namespace crab::result {
     ///
     /// This function is for use when wanting to abstract away any specific Ok type
     /// to simply 'none'.
-    [[nodiscard]] CRAB_INLINE constexpr auto err(
-      const SourceLocation loc = SourceLocation::current()
-    ) && -> opt::Option<E> {
-      ensure_valid(loc);
-
+    [[nodiscard]] CRAB_INLINE constexpr auto into_err() && -> opt::Option<E> {
       if (is_err()) {
         return {mem::move(*this).unwrap_err_unchecked(unsafe)};
       }
@@ -533,14 +498,17 @@ namespace crab::result {
     ///
     /// This function is for use when wanting to abstract away any specific Ok type
     /// to simply 'none'.
-    [[nodiscard]] CRAB_INLINE constexpr auto err(
-      const SourceLocation loc = SourceLocation::current()
-    ) const& -> opt::Option<E> requires implicit_copy_allowed
+    [[nodiscard]] CRAB_INLINE constexpr auto into_err() const& -> opt::Option<E> requires implicit_copy_allowed
     {
-      return copied().err(loc);
+      return copied().into_err();
     }
 
-    /// }@ (end subgroup monadic opertions)
+    /// TODO: doc
+    [[nodiscard]] auto is_valid() const -> bool {
+      return storage.is_valid();
+    }
+
+    /// }@
 
   private:
 

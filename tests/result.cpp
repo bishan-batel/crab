@@ -43,15 +43,15 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_NOTHROW(result.get_err());
 
     Error err;
-    REQUIRE_NOTHROW(result.ensure_valid());
+    REQUIRE(result.is_valid());
     REQUIRE_NOTHROW(err = crab::move(result).unwrap_err());
 
-    REQUIRE_THROWS(result.ensure_valid());
+    REQUIRE(not result.is_valid());
     REQUIRE_THROWS(crab::move(result).unwrap_err());
     REQUIRE_THROWS(crab::move(result).unwrap());
 
     result = 42_u32;
-    REQUIRE_NOTHROW(result.ensure_valid());
+    REQUIRE(result.is_valid());
 
     REQUIRE(Result<unit, Error>{unit{}}.is_ok());
   }

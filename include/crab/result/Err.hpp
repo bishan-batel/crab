@@ -29,7 +29,7 @@ namespace crab {
       }
 
       [[nodiscard]] CRAB_INLINE constexpr auto get() && -> E&& {
-        return mem::forward<E>(value);
+        return mem::move(value);
       }
 
     private:

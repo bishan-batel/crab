@@ -408,11 +408,7 @@ namespace crab::result {
       return copied().map(mem::forward<F>(functor));
     }
 
-    /**
-     * Consumes self and if not Ok, maps the Error value to a new value
-     * @tparam F
-     * @return
-     */
+    /// Consumes self and if not Ok, maps the Error value to a new value
     template<crab::ty::mapper<E> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) const& {
       static_assert(

@@ -28,19 +28,19 @@ TEST_CASE("Result", "[result]") {
     REQUIRE(result.is_ok());
     REQUIRE_FALSE(result.is_err());
 
-    REQUIRE(result.get_unchecked() == 10);
+    REQUIRE(result.get() == 10);
     REQUIRE(crab::move(result).unwrap() == 10);
 
-    REQUIRE_THROWS(result.get_unchecked());
-    REQUIRE_THROWS(result.get_err_unchecked());
+    REQUIRE_THROWS(result.get());
+    REQUIRE_THROWS(result.get_err());
     REQUIRE_THROWS(crab::move(result).unwrap());
     REQUIRE_THROWS(crab::move(result).unwrap());
 
     result = Error{};
     REQUIRE(result.is_err());
     REQUIRE_FALSE(result.is_ok());
-    REQUIRE_THROWS(result.get_unchecked());
-    REQUIRE_NOTHROW(result.get_err_unchecked());
+    REQUIRE_THROWS(result.get());
+    REQUIRE_NOTHROW(result.get_err());
 
     Error err;
     REQUIRE_NOTHROW(result.ensure_valid());
@@ -59,11 +59,11 @@ TEST_CASE("Result", "[result]") {
   SECTION("map") {
     Result<i32, Error> huh{10};
     huh = std::move(huh).map([](const i32 a) { return a * 2; });
-    REQUIRE(huh.get_unchecked() == 20);
-    REQUIRE(huh.get_unchecked() == 20);
+    REQUIRE(huh.get() == 20);
+    REQUIRE(huh.get() == 20);
 
     std::ignore = std::move(huh).map([](const i32 a) { return a * 2; });
-    REQUIRE_THROWS(huh.get_unchecked());
+    REQUIRE_THROWS(huh.get());
 
     huh = Error{};
     std::ignore = huh.copied().map([](const i32 a) { return a * 2; });
@@ -98,7 +98,7 @@ TEST_CASE("Result", "[result]") {
       REQUIRE((first and second));
       REQUIRE(a.is_ok());
 
-      auto [num1, num2] = a.get_unchecked();
+      auto [num1, num2] = a.get();
 
       REQUIRE(num1 == 10);
       REQUIRE(num2 == 22);
@@ -109,19 +109,19 @@ TEST_CASE("Result", "[result]") {
       []() -> Result<i32, Error> { return Error{}; },
       []() -> i32 { return 0; }
     );
-    REQUIRE(a.get_err_unchecked() == Error{});
+    REQUIRE(a.get_err() == Error{});
   }
 
   SECTION("and_then") {
     Result<f32, Error> transformed =
       Result<i32, Error>{10}.and_then([](const i32) -> Result<f32, Error> { return 10.f; });
     REQUIRE(transformed.is_ok());
-    REQUIRE(transformed.get_unchecked() == 10.f);
+    REQUIRE(transformed.get() == 10.f);
 
     transformed = Result<i32, Error>{20}.and_then([](const i32) -> Result<f32, Error> { return Error{}; });
 
     REQUIRE(transformed.is_err());
-    REQUIRE(transformed.get_err_unchecked() == Error{});
+    REQUIRE(transformed.get_err() == Error{});
   }
 
   SECTION("String as Errors") {
@@ -135,7 +135,7 @@ TEST_CASE("Result", "[result]") {
 
     REQUIRE(non_zero(10).is_ok());
 
-    REQUIRE(non_zero(0).get_err_unchecked() == String{"Zero."});
+    REQUIRE(non_zero(0).get_err() == String{"Zero."});
   }
 
   SECTION("Result of references") {

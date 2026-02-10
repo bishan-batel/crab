@@ -560,7 +560,7 @@ namespace crab::result {
       check_unmoved();
 
       crab_check_with_location(
-        storage.is_ok(),
+        is_ok(),
         loc,
         "Excepted result to contain an 'Ok' value, instead found error: {}",
         error_to_string(get_err_unchecked(unsafe))
@@ -578,7 +578,7 @@ namespace crab::result {
       check_unmoved();
 
       crab_check_with_location(
-        storage.is_err(),
+        is_err(),
         loc,
         "Excepted result to contain an 'Err' value, instead found an 'Ok' value."
       );

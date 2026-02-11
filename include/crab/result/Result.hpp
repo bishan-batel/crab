@@ -143,6 +143,8 @@ namespace crab::result {
     /// if (Result<i32, ParseError> result = parse_i32("15")) {
     ///   fmt::println("Num: {}", result.get());
     /// }
+    ///
+    /// @copydoc is_ok
     /// ```
     [[nodiscard]] CRAB_INLINE constexpr explicit operator bool() const {
       return is_ok();
@@ -153,6 +155,14 @@ namespace crab::result {
     /// # Panics
     /// This will panic if called on a moved-from result, if you wish to store a possibly empty Result you should use
     /// Option<Result<T>>
+    ///
+    /// ```cpp
+    /// Result<i32, String> x = 10;
+    /// crab::discard(crab::move(x));
+    ///
+    /// x.is_ok(); // ill-formed, will panic!
+    /// crab_check(not x.is_valid()); // valid to perform
+    /// ```
     [[nodiscard]] CRAB_INLINE constexpr auto is_ok() const -> bool {
       check_unmoved();
       return is_ok_unchecked(unsafe);
@@ -165,11 +175,19 @@ namespace crab::result {
       return storage.template is_unchecked<Ok>(unsafe);
     }
 
-    /// Returns true of this option holds an 'Err' value
+    /// Returns true if this result holds an 'Err' value.
     ///
     /// # Panics
     /// This will panic if called on a moved-from result, if you wish to store a possibly empty Result you should use
     /// Option<Result<T>>
+    ///
+    /// ```cpp
+    /// Result<i32, String> x = String{"Hello"};
+    /// crab::discard(crab::move(x));
+    ///
+    /// x.is_err(); // ill-formed, will panic!
+    /// crab_check(not x.is_valid()); // valid to perform
+    /// ```
     [[nodiscard]] CRAB_INLINE constexpr auto is_err() const -> bool {
       check_unmoved();
       return is_err_unchecked(unsafe);
@@ -183,17 +201,17 @@ namespace crab::result {
     }
 
     /// Checks if this result contains an Ok value, and if so does it also
-    /// match with the given predicate.
-    ///
-    ///
+    /// match with the given predicate. Note that the functor is only
+    /// given a *const reference to the inner value* (if any)
+    ///:
     /// # Examples
     ///
     /// ```cpp
+    /// Result<i32,String> val = 10;
     /// auto is_even = [](i32 x) {  return x != 0; };
-    /// Result<i32,String>{10}.is_ok_and(crab::fn::even);
-    /// Result<i32,String>{10}.is_ok_and(crab::fn::odd);
+    /// crab_check(val.is_ok_and(is_even));
     /// ```
-    template<crab::ty::predicate<const T&> F>
+    template<ty::predicate<const T&> F>
     [[nodiscard]] CRAB_INLINE constexpr auto is_ok_and(F&& functor) const -> bool {
       if (not is_ok()) {
         return false;
@@ -203,8 +221,17 @@ namespace crab::result {
     }
 
     /// Checks if this result contains an Err value, and if so does it also
-    /// match with the given predicate
-    template<crab::ty::predicate<const E&> F>
+    /// match with the given predicate. Note that the functor is only
+    /// given a *const reference to the inner error* (if any)
+    ///
+    /// # Examples
+    ///
+    /// ```cpp
+    /// Result<String, i32> val = 10;
+    /// auto is_even = [](i32 x) {  return x != 0; };
+    /// crab_check(val.is_ok_and(is_even));
+    /// ```
+    template<ty::predicate<const E&> F>
     [[nodiscard]] CRAB_INLINE constexpr auto is_err_and(F&& functor) const -> bool {
       if (not is_err()) {
         return false;
@@ -213,7 +240,29 @@ namespace crab::result {
       return std::invoke(std::forward<F>(functor), get_err_unchecked(unsafe));
     }
 
-    /// TODO: doc
+    /// Gets a reference to the inner 'Ok' value. Note that this method should only be called when you can *ensure
+    /// without a doubt that this contains a value*. Calling this on a Result that does not contain an 'Ok' value is
+    /// ill-formed.
+    ///
+    /// @param Option source location that is attached in the case of panic, this should normally be left as default.
+    ///
+    /// # Panics
+    /// This wil always panic if thsi result does not hold an ok value.
+    ///
+    /// # Examples
+    /// ```cpp
+    /// Result<i32, String> val = 10;
+    ///
+    /// if (val.is_ok()) {
+    ///   const i32& x = val.get();
+    ///   crab_check(x == val);
+    /// }
+    ///
+    /// crab::discard(crab::move(val));
+    ///
+    /// i32 y =  val.get(); // ill-formed, will always panic.
+    ///
+    /// ```
     [[nodiscard]] auto get(const SourceLocation loc = SourceLocation::current()) & -> T& {
       check_is_ok(loc);
       return storage.template as_unchecked<Ok>(unsafe).get();
@@ -226,7 +275,29 @@ namespace crab::result {
       return storage.template as_unchecked<Ok>(unsafe).get();
     }
 
-    /// TODO: doc
+    /// Gets a reference to the inner 'Err' value. Note that this method should only be called when you can *ensure
+    /// without a doubt that this contains an error*. Calling this on a Result that does not contain an 'Err' value is
+    /// ill-formed.
+    ///
+    /// @param Option source location that is attached in the case of panic, this should normally be left as default.
+    ///
+    /// # Panics
+    /// This wil always panic if thsi result does not hold an err value.
+    ///
+    /// # Examples
+    /// ```cpp
+    /// Result<i32, String> val = String{"value"};
+    ///
+    /// if (val.is_err()) {
+    ///   const String& x = val.get_err();
+    ///   crab_check(x == val);
+    /// }
+    ///
+    /// val = 10; // reassign
+    ///
+    /// i32 y = val.get_err(); // ill-formed, will always panic.
+    ///
+    /// ```
     [[nodiscard]] auto get_err(const SourceLocation loc = SourceLocation::current()) & -> E& {
       check_is_err(loc);
       return storage.template as_unchecked<Err>(unsafe).get();
@@ -239,8 +310,11 @@ namespace crab::result {
       return storage.template as_unchecked<Err>(unsafe).get();
     }
 
-    /// Gets a reference to the contained inner Ok value, if there is no Ok
-    /// value this will panic and crash.
+    /// Unsafe version of Result::get that will elide the 'is_ok' check in release mode, however *this will still panic
+    /// in debug mode* and should only be used when you know this is being performed on a result containing an Ok value.
+    ///
+    /// # Panic
+    /// This function will panic if the given result does not contain an Ok value.
     [[nodiscard]] CRAB_INLINE constexpr auto get_unchecked(
       unsafe_fn,
       const SourceLocation loc = SourceLocation::current()
@@ -259,8 +333,12 @@ namespace crab::result {
       return storage.template as_unchecked<Ok>(unsafe).get();
     }
 
-    /// Gets a reference to the contained Error value, if there is no Error
-    /// value this will panic and crash.
+    /// Unsafe version of Result::get_err that will elide the 'is_err' check in release mode, however *this will still
+    /// panic in debug mode* and should only be used when you know this is being performed on a result containing an Err
+    /// value.
+    ///
+    /// # Panic
+    /// This function will panic if the given result does not contain an Err value.
     [[nodiscard]] CRAB_INLINE constexpr auto get_err_unchecked(
       unsafe_fn,
       const SourceLocation loc = SourceLocation::current()
@@ -279,6 +357,24 @@ namespace crab::result {
       return storage.template as_unchecked<Err>(unsafe).get();
     }
 
+    /// This method will *assume this result contains an Ok value* and will move out that value for you. Like almost all
+    /// other rvalue qualified methods in crab, **this will leave the result in a state where it is only safe to destroy
+    /// or reassign.
+    ///
+    /// # Panics
+    /// This will panic if the given result is not containing an ok value, you should always be checking before
+    /// unwraping a result.
+    ///
+    /// # Examples
+    /// ```cpp
+    ///
+    /// 
+    /// void parse_funny_number() {
+    ///   
+    ///
+    /// }
+    ///
+    /// ```
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap(const SourceLocation loc = SourceLocation::current()) && -> T {
       check_is_ok(loc);
       return mem::move(storage).template as_unchecked<Ok>(unsafe).get();
@@ -288,7 +384,7 @@ namespace crab::result {
       unsafe_fn,
       const SourceLocation loc = SourceLocation::current()
     ) && -> T {
-      check_is_ok(loc);
+      check_dbg_is_ok(loc);
       return mem::move(storage).template as_unchecked<Ok>(unsafe).get();
     }
 
@@ -301,7 +397,7 @@ namespace crab::result {
       unsafe_fn,
       const SourceLocation loc = SourceLocation::current()
     ) && -> E {
-      check_is_err(loc);
+      check_dbg_is_err(loc);
       return mem::move(storage).template as_unchecked<Err>(unsafe).get();
     }
 
@@ -336,7 +432,7 @@ namespace crab::result {
     template<typename Into>
     [[nodiscard]] CRAB_INLINE constexpr auto map() && -> Result<Into, E> {
       static_assert(
-        crab::ty::convertible<T, Into>,
+        ty::convertible<T, Into>,
         "'Result<T, E>::map<Into>()' can only be done if T is convertible to Into"
       );
 
@@ -352,7 +448,7 @@ namespace crab::result {
     template<typename Into>
     [[nodiscard]] CRAB_INLINE constexpr auto map_err() && -> Result<T, Into> {
       static_assert(
-        crab::ty::convertible<E, Into>,
+        ty::convertible<E, Into>,
         "'Result<T, E>::map<Into>()' can only be done if E is convertible to Into"
       );
 
@@ -367,7 +463,7 @@ namespace crab::result {
 
     /// Consumes self and if not Error, maps the Ok value to a new value
     /// @tparam F
-    template<crab::ty::mapper<T> F>
+    template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor) && {
       using R = ty::functor_result<F, T>;
 
@@ -382,7 +478,7 @@ namespace crab::result {
 
     /// Consumes self and if not Ok, maps the Error value to a new value
     /// @tparam F
-    template<crab::ty::mapper<E> F>
+    template<ty::mapper<E> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) && {
       using R = ty::functor_result<F, E>;
 
@@ -397,7 +493,7 @@ namespace crab::result {
 
     /// Consumes self and if not Error, maps the Ok value to a new value
     /// @tparam F
-    template<crab::ty::mapper<T> F>
+    template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor) const& {
       static_assert(
         implicit_copy_allowed,
@@ -409,7 +505,7 @@ namespace crab::result {
     }
 
     /// Consumes self and if not Ok, maps the Error value to a new value
-    template<crab::ty::mapper<E> F>
+    template<ty::mapper<E> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) const& {
       static_assert(
         implicit_copy_allowed,
@@ -425,7 +521,7 @@ namespace crab::result {
     /// Monadic function that consumes / moves the value in this option.
     /// If result is Ok, run function on the ok value,
     /// If the mapped function is Ok(type M), it returns Result<M, Error>
-    template<crab::ty::mapper<T> F>
+    template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto and_then(F&& functor) && {
       using R = ty::functor_result<F, T>;
 
@@ -447,7 +543,7 @@ namespace crab::result {
     /// Mondadic function that copies the inner value. If result is Ok, run
     /// function on the ok value, If the mapped function is Ok(type M), it returns
     /// Result<M, Error>
-    template<crab::ty::mapper<T> F>
+    template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto and_then(F&& functor) const& requires implicit_copy_allowed
     {
       return copied().and_then(mem::forward<F>(functor));

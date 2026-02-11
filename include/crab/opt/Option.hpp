@@ -19,7 +19,7 @@
 
 #include "crab/hash/hash.hpp"
 #include "crab/opt/concepts.hpp"
-#include "crab/ref/forward.hpp"
+#include "crab/ref/ref.hpp"
 #include "crab/ref/implicit_cast.hpp"
 #include "crab/result/forward.hpp"
 #include "crab/ty/crab_ref_decay.hpp"

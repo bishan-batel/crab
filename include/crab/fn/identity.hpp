@@ -5,15 +5,13 @@
 #include <concepts>
 
 #include "crab/mem/forward.hpp"
+#include "crab/mem/move.hpp"
 #include "crab/ty/construct.hpp"
 
 namespace crab::fn {
   /// Identity Function, f(x)=x forall x
   constexpr auto identity{
-    []<typename T>(T&& x) {
-      static_assert(std::move_constructible<T>, "Cannot create an identity function for a type that cannot be moved.");
-      return mem::forward<T>(x);
-    },
+    []<typename T>(T&& x) { return mem::forward<T>(x); },
   };
 
   /// Takes in some value x and returns a function that maps any input (and any
@@ -22,7 +20,7 @@ namespace crab::fn {
   /// @param x Any integer value to check
   constexpr auto constant{
     []<ty::copy_constructible T>(T x) {
-      return [x = mem::forward<T>(x)]<typename... Args>(Args&&...) -> T { return x; };
+      return [x = mem::move(x)]<typename... Args>(Args&&...) -> T { return T(x); };
     },
   };
 

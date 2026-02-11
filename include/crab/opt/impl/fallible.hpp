@@ -16,7 +16,7 @@ namespace crab::opt::impl {
   struct fallible final {
     template<typename... T>
     [[nodiscard]] CRAB_INLINE constexpr auto operator()(Tuple<T...> tuple) const {
-      return Option<Tuple<T...>>{mem::forward<Tuple<T...>>(tuple)};
+      return Option<Tuple<T...>>{mem::move(tuple)};
     }
 
     template<typename PrevResults, ty::provider F, typename... Rest>
@@ -26,7 +26,7 @@ namespace crab::opt::impl {
       F&& function,
       Rest&&... other_functions
     ) const {
-      return std::invoke(function).flat_map([&]<typename R>(R&& result) {
+      return std::invoke(mem::forward<F>(function)).flat_map([&]<typename R>(R&& result) {
         return operator()(
           std::tuple_cat(mem::move(tuple), Tuple<R>(mem::forward<R>(result))),
           mem::forward<Rest>(other_functions)...
@@ -42,7 +42,7 @@ namespace crab::opt::impl {
       Rest&&... other_functions
     ) const {
       return operator()(
-        std::tuple_cat(mem::move(tuple), Tuple<ty::functor_result<F>>(std::invoke(function))),
+        std::tuple_cat(mem::move(tuple), Tuple<ty::functor_result<F>>(std::invoke(mem::forward<F>(function)))),
         mem::forward<Rest>(other_functions)...
       );
     }

@@ -1,9 +1,6 @@
 /// @file crab/result/Result.hpp
 /// @ingroup result
 
-// Created by bishan_ on 4/23/24.
-//
-
 // ReSharper disable CppNonExplicitConvertingConstructor
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
@@ -200,6 +197,11 @@ namespace crab::result {
       return storage.template is_unchecked<Err>(unsafe);
     }
 
+    /// TODO: doc
+    [[nodiscard]] auto is_valid() const -> bool {
+      return storage.is_valid();
+    }
+
     /// Checks if this result contains an Ok value, and if so does it also
     /// match with the given predicate. Note that the functor is only
     /// given a *const reference to the inner value* (if any)
@@ -357,9 +359,9 @@ namespace crab::result {
       return storage.template as_unchecked<Err>(unsafe).get();
     }
 
-    /// This method will *assume this result contains an Ok value* and will move out that value for you. Like almost all
-    /// other rvalue qualified methods in crab, **this will leave the result in a state where it is only safe to destroy
-    /// or reassign.
+    /// This method will *assume this result contains an **Ok** value* and will move out that value for you. Like almost
+    /// all other rvalue qualified methods in crab, **this will leave the result in a state where it is only safe to
+    /// destroy or reassign.
     ///
     /// # Panics
     /// This will panic if the given result is not containing an ok value, you should always be checking before
@@ -368,10 +370,41 @@ namespace crab::result {
     /// # Examples
     /// ```cpp
     ///
-    /// 
-    /// void parse_funny_number() {
-    ///   
+    /// enum class ParseError { Empty, NotFunny };
     ///
+    /// void parse_funny_number(StringView num) -> Result<i32, ParseError> {
+    ///   if (num.empty()) {
+    ///     return ParseError::Empty;
+    ///   }
+    ///
+    ///   if (num != "42") {
+    ///     retur ParseError::NotFunny;
+    ///   }
+    ///
+    ///   return 42;
+    /// }
+    ///
+    /// void test() {
+    ///
+    ///   Result<i32, ParseError> result = parse_funny_number("42");
+    ///
+    ///   crab_check(result.is_valid());
+    ///   crab_check(result.is_ok());
+    ///
+    ///   i32 v = crab::move(result).unwrap();
+    ///
+    ///   // result has now been unwrapped and its value moved out into 'v', this result now is only safe to destroy or
+    ///   reassign
+    ///
+    ///   crab_check(v == 42);
+    ///
+    ///   // note that is_valid (and assignment operators) are the only valid methods to call on a moved-from result.
+    ///   // Do not rely on the possibility of storing moved-from results however, if you need to model a result that
+    ///   // could've been moved then you should be using Option<Result<T,E>>
+    ///   crab_check(not result.is_valid());
+    ///
+    ///   // a method like this would crash / panic!
+    ///   crab::discard(crab.is_ok());
     /// }
     ///
     /// ```
@@ -380,6 +413,10 @@ namespace crab::result {
       return mem::move(storage).template as_unchecked<Ok>(unsafe).get();
     }
 
+    /// Uncheckced version of unwrap that will elide the runtime panic when compiling on release, this function is
+    /// unsafe as if you use this incorrectly it can be very difficult to track down in release mode as instead of a
+    /// crash there will be undefined behavior.
+    /// @copypdoc unwrap
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap_unchecked(
       unsafe_fn,
       const SourceLocation loc = SourceLocation::current()
@@ -388,11 +425,63 @@ namespace crab::result {
       return mem::move(storage).template as_unchecked<Ok>(unsafe).get();
     }
 
+    /// This method will *assume this result contains an **Err** value* and will move out that value for you. Like
+    /// almost all other rvalue qualified methods in crab, **this will leave the result in a state where it is only safe
+    /// to destroy or reassign.
+    ///
+    /// # Panics
+    /// This will panic if the given result is not containing an err value, you should always be checking before
+    /// unwraping a result.
+    ///
+    /// # Examples
+    /// ```cpp
+    ///
+    /// enum class ParseError { Empty, NotFunny };
+    ///
+    /// auto parse_funny_number(StringView num) -> Result<i32, ParseError> {
+    ///   if (num.empty()) {
+    ///     return ParseError::Empty;
+    ///   }
+    ///
+    ///   if (num != "42") {
+    ///     retur ParseError::NotFunny;
+    ///   }
+    ///
+    ///   return 42;
+    /// }
+    ///
+    /// auto test() -> void {
+    ///
+    ///   Result<i32, ParseError> result = parse_funny_number("2");
+    ///
+    ///   crab_check(result.is_valid());
+    ///   crab_check(result.is_err());
+    ///
+    ///   ParseResult v = crab::move(result).unwrap_err();
+    ///   // result has now been unwrapped and its value moved out into 'v', this result now is only safe to destroy or
+    ///   reassign
+    ///
+    ///   crab_check(v == ParseResult::NotFunny);
+    ///
+    ///   // note that is_valid (and assignment operators) are the only valid methods to call on a moved-from result.
+    ///   // Do not rely on the possibility of storing moved-from results however, if you need to model a result that
+    ///   // could've been moved then you should be using Option<Result<T,E>>
+    ///   crab_check(not result.is_valid());
+    ///
+    ///   // a method like this would crash / panic!
+    ///   crab::discard(crab.is_err());
+    /// }
+    ///
+    /// ```
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap_err(const SourceLocation loc = SourceLocation::current()) && -> E {
       check_is_err(loc);
       return mem::move(storage).template as_unchecked<Err>(unsafe).get();
     }
 
+    /// Uncheckced version of unwrap_err that will elide the runtime panic when compiling on release, this function is
+    /// unsafe as if you use this incorrectly it can be very difficult to track down in release mode as instead of a
+    /// crash there will be undefined behavior.
+    /// @copypdoc unwrap_err
     [[nodiscard]] CRAB_INLINE constexpr auto unwrap_err_unchecked(
       unsafe_fn,
       const SourceLocation loc = SourceLocation::current()
@@ -416,6 +505,19 @@ namespace crab::result {
     ///
     /// # Panics
     /// This will panic if the underlying result has been moved
+    ///
+    /// # Examples
+    ///
+    /// ```cpp
+    /// Result<String, i32> val = String{"hello"};
+    ///
+    /// Result<String, i32> val2 = val.copied();
+    ///
+    /// // this is the same as doing
+    /// val2 = val; // (copy assignment / constructor)
+    ///
+    /// crab_check(val == val2);
+    /// ```
     [[nodiscard]]
     CRAB_INLINE constexpr auto copied() const -> Result requires is_copyable
     {
@@ -439,12 +541,7 @@ namespace crab::result {
       return mem::move(*this).map([](T&& value) -> Into { return static_cast<Into>(mem::forward<T>(value)); });
     }
 
-    template<typename Into>
-    requires is_copyable
-    [[nodiscard]] CRAB_INLINE constexpr auto map() const& -> Result<Into, E> {
-      return copied().template map<Into>();
-    }
-
+    /// TODO: doc
     template<typename Into>
     [[nodiscard]] CRAB_INLINE constexpr auto map_err() && -> Result<T, Into> {
       static_assert(
@@ -455,14 +552,21 @@ namespace crab::result {
       return mem::move(*this).map_err([](E&& value) -> Into { return static_cast<Into>(mem::forward<E>(value)); });
     }
 
-    template<typename Into>
-    requires is_copyable
-    [[nodiscard]] CRAB_INLINE constexpr auto map_err() const& -> Result<T, E> {
-      return copied().template map_err<Into>();
-    }
-
     /// Consumes self and if not Error, maps the Ok value to a new value
-    /// @tparam F
+    ///
+    /// # Examples
+    /// ```cpp
+    ///
+    /// Result<StringView, i32> val = value;
+    ///
+    /// // we can convert this into a Result<String, i32> with a map
+    ///
+    /// Result<String, i32> val2 = crab::move(val).map([[](StringView str) {
+    ///     return String{str};
+    /// });
+    ///
+    ///
+    /// ```
     template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor) && {
       using R = ty::functor_result<F, T>;
@@ -476,8 +580,9 @@ namespace crab::result {
       return Result<R, E>{result::Err<E>{mem::move(*this).unwrap_err_unchecked(unsafe)}};
     }
 
-    /// Consumes self and if not Ok, maps the Error value to a new value
-    /// @tparam F
+    /// Version of Result::map(F) that operates on the error, this works the exact same.
+    ///
+    /// @copydoc Result::map(F)
     template<ty::mapper<E> F>
     [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) && {
       using R = ty::functor_result<F, E>;
@@ -491,36 +596,17 @@ namespace crab::result {
       return Result<T, R>{result::Ok<T>{mem::move(*this).unwrap_unchecked(unsafe)}};
     }
 
-    /// Consumes self and if not Error, maps the Ok value to a new value
-    /// @tparam F
-    template<ty::mapper<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto map(F&& functor) const& {
-      static_assert(
-        implicit_copy_allowed,
-        "Only results with trivial Ok & Err types may be implicitly copied when "
-        "using monadic operations, you must call Result::copied() yourself."
-      );
-
-      return copied().map(mem::forward<F>(functor));
-    }
-
-    /// Consumes self and if not Ok, maps the Error value to a new value
-    template<ty::mapper<E> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto map_err(F&& functor) const& {
-      static_assert(
-        implicit_copy_allowed,
-        "Only results with trivial Ok & Err types may be implicitly copied when "
-        "using monadic operations, you must call Result::copied() yourself."
-      );
-
-      return copied().map_err(mem::forward<F>(functor));
-    }
-
-    // ========================= flat map functions ==============================
-
     /// Monadic function that consumes / moves the value in this option.
     /// If result is Ok, run function on the ok value,
     /// If the mapped function is Ok(type M), it returns Result<M, Error>
+    ///
+    /// # Examples
+    /// ```
+    ///
+    /// auto parse_number(StringView num) -> Result<>;
+    ///
+    ///
+    /// ```
     template<ty::mapper<T> F>
     [[nodiscard]] CRAB_INLINE constexpr auto and_then(F&& functor) && {
       using R = ty::functor_result<F, T>;
@@ -540,15 +626,6 @@ namespace crab::result {
       return std::invoke(functor, mem::move(*this).unwrap_unchecked(unsafe));
     }
 
-    /// Mondadic function that copies the inner value. If result is Ok, run
-    /// function on the ok value, If the mapped function is Ok(type M), it returns
-    /// Result<M, Error>
-    template<ty::mapper<T> F>
-    [[nodiscard]] CRAB_INLINE constexpr auto and_then(F&& functor) const& requires implicit_copy_allowed
-    {
-      return copied().and_then(mem::forward<F>(functor));
-    }
-
     /// Takes Ok value out of this object and returns it, if is Err and not
     /// Ok, an empty option will be returned instead.
     ///
@@ -562,16 +639,6 @@ namespace crab::result {
       return {};
     }
 
-    /// Takes Ok value out of this object and returns it, if is Err and not
-    /// Ok, an empty option will be returned instead.
-    ///
-    /// This function is for use when wanting to abstract away any specific error
-    /// type to simply 'none'.
-    [[nodiscard]] CRAB_INLINE constexpr auto into_ok() const& -> opt::Option<T> requires implicit_copy_allowed
-    {
-      return copied().into_ok();
-    }
-
     /// Takes Err value out of this object and returns it, if is Ok and not
     /// Err, an empty option will be returned instead.
     ///
@@ -583,21 +650,6 @@ namespace crab::result {
       }
 
       return {};
-    }
-
-    /// Takes Err value out of this object and returns it, if is Ok and not
-    /// Err, an empty option will be returned instead.
-    ///
-    /// This function is for use when wanting to abstract away any specific Ok type
-    /// to simply 'none'.
-    [[nodiscard]] CRAB_INLINE constexpr auto into_err() const& -> opt::Option<E> requires implicit_copy_allowed
-    {
-      return copied().into_err();
-    }
-
-    /// TODO: doc
-    [[nodiscard]] auto is_valid() const -> bool {
-      return storage.is_valid();
     }
 
     /// }@

@@ -39,7 +39,7 @@ namespace crab::result {
   }
 
   /// @relates IError
-  [[nodiscard]] auto error_reason(const IError& error) -> String {
+  [[nodiscard]] CRAB_INLINE auto error_reason(const IError& error) -> String {
     return error.what();
   }
 

@@ -1,69 +1,75 @@
 #pragma once
 
 #include <stdexcept>
+#include "crab/boxed/forward.hpp"
+#include "crab/rc/Rc.hpp"
 #include "crab/result/concepts.hpp"
 #include "crab/assertion/fmt.hpp"
 #include "crab/str/str.hpp"
 
-namespace crab {
-  namespace result {
-    /**
-     * @brief Base error type for use with Result<T, E>
-     */
-    class Error {
-    public:
+namespace crab::result {
+  /// @addtogroup result
+  /// @{
 
-      Error() = default;
+  /// Base error type for use with Result<T, E>
+  /// @relates IError
+  class IError {
+  public:
 
-      Error(const Error&) = default;
+    IError() = default;
 
-      Error(Error&&) noexcept = default;
+    IError(const IError&) = default;
 
-      Error& operator=(const Error&) = default;
+    IError(IError&&) noexcept = default;
 
-      Error& operator=(Error&&) noexcept = default;
+    IError& operator=(const IError&) = default;
 
-      virtual ~Error() = default;
+    IError& operator=(IError&&) noexcept = default;
 
-      /**
-       * @brief Converts this crab Error into a runtime exception that can be
-       * thrown, if needed when dealing with certain API's
-       *
-       * @return
-       */
-      [[nodiscard]] auto as_exception() const -> std::runtime_error {
-        return std::runtime_error{what()};
-      }
+    virtual ~IError() = default;
 
-      /**
-       * @brief Stringified error message for logging purposes
-       */
-      [[nodiscard]] virtual auto what() const -> String = 0;
-    };
+    /// Stringified error message for logging purposes
+    [[nodiscard]] virtual auto what() const -> String = 0;
+  };
 
-    /**
-     * @brief Converts a given error to its stringified representation.
-     */
-    template<error_type E>
-    [[nodiscard]] constexpr auto error_to_string(const E& err) {
-      if constexpr (requires {
-                      { err.what() } -> crab::ty::convertible<String>;
-                    }) {
-        return err.what();
-      }
-
-      else if constexpr (requires {
-                           { err->what() } -> crab::ty::convertible<String>;
-                         }) {
-        return err->what();
-      }
-
-      else {
-        return crab::to_string(err);
-      }
-    }
-
+  /// @relates IError
+  template<typename E>
+  [[nodiscard]] auto error_reason(const E& error) -> String {
+    return crab::to_string(error);
   }
 
-  using result::Error;
+  /// @relates IError
+  [[nodiscard]] CRAB_INLINE auto error_reason(const IError& error) -> String {
+    return error.what();
+  }
+
+  /// @relates IError
+  template<std::derived_from<IError> E>
+  [[nodiscard]] constexpr auto error_reason(const E& error) -> String {
+    return error.what();
+  }
+
+  /// @relates IError
+  template<typename E>
+  [[nodiscard]] constexpr auto error_reason(const boxed::Box<E>& error) -> String {
+    return error_reason(*error);
+  }
+
+  /// @relates IError
+  template<typename E>
+  [[nodiscard]] constexpr auto error_reason(const rc::Rc<E>& error) -> String {
+    return error_reason(*error);
+  }
+
+  /// @relates IError
+  template<typename E>
+  [[nodiscard]] constexpr auto error_reason(const rc::RcMut<E>& error) -> String {
+    return error_reason(*error);
+  }
+
+  /// }@
+}
+
+namespace crab {
+  using result::IError;
 }

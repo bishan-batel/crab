@@ -494,7 +494,7 @@ namespace crab::result {
       result.check_unmoved();
 
       if (result.is_err()) {
-        return os << "Err(" << error_to_string(result.get_err_unchecked(unsafe)) << ")";
+        return os << "Err(" << error_reason(result.get_err_unchecked(unsafe)) << ")";
       }
 
       return os << "Ok(" << result.get_unchecked(unsafe) << ")";
@@ -675,7 +675,7 @@ namespace crab::result {
         is_ok(),
         loc,
         "Excepted result to contain an 'Ok' value, instead found error: {}",
-        error_to_string(get_err_unchecked(unsafe))
+        error_reason(get_err_unchecked(unsafe))
       );
     }
 

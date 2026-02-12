@@ -9,7 +9,7 @@
 #include "crab/result/fallible.hpp"
 #include "crab/result/Result.hpp"
 
-class Error final : public crab::Error {
+class Error final : public crab::IError {
 public:
 
   [[nodiscard]] auto operator==(const Error&) const -> bool {

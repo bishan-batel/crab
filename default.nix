@@ -9,29 +9,25 @@
   ...
 }:
 
-
 stdenv.mkDerivation {
   pname = "crab";
   version = builtins.readFile ./VERSION;
   src = ./.;
 
-  nativeBuildInputs =
-    [
-      cmake
-      fmt
-    ]
-    ++ lib.optional doCheck catch2_3;
+  nativeBuildInputs = [
+    cmake
+    fmt
+  ] ++ lib.optional doCheck catch2_3;
 
-  buildInputs =
-    [
-    ]
-    ++ lib.optional doCheck catch2_3;
+  buildInputs = [
+  ] ++ lib.optional doCheck catch2_3;
 
   checkTarget = "crab-tests";
 
   cmakeFlags = [
     "-DCRAB_TESTS=${if doCheck then "ON" else "OFF"}"
     "-DCMAKE_INSTALL_LIBDIR=lib"
+    "-DCPM_USE_LOCAL_PACKAGES=ON"
   ];
 
   checkPhase = ''

@@ -1,5 +1,8 @@
+/// @file crab/result/Error.hpp
+/// @ingroup result
 #pragma once
 
+#include <concepts>
 #include <stdexcept>
 #include "crab/boxed/forward.hpp"
 #include "crab/rc/Rc.hpp"
@@ -8,11 +11,9 @@
 #include "crab/str/str.hpp"
 
 namespace crab::result {
-  /// @addtogroup result
-  /// @{
-
   /// Base error type for use with Result<T, E>
   /// @relates IError
+  /// @ingroup result
   class IError {
   public:
 
@@ -31,49 +32,16 @@ namespace crab::result {
     /// Stringified error message for logging purposes
     [[nodiscard]] virtual auto what() const -> String = 0;
   };
-
-  /// Specialization for fmtlib to format any IError
-  [[nodiscard]] auto format_as(const IError& error) -> String {
-    return error.what();
-  }
-
-  /// @relates IError
-  template<typename E>
-  [[nodiscard]] auto error_reason(const E& error) -> String {
-    return crab::to_string(error);
-  }
-
-  /// @relates IError
-  [[nodiscard]] CRAB_INLINE auto error_reason(const IError& error) -> String {
-    return error.what();
-  }
-
-  /// @relates IError
-  template<std::derived_from<IError> E>
-  [[nodiscard]] constexpr auto error_reason(const E& error) -> String {
-    return error.what();
-  }
-
-  /// @relates IError
-  template<typename E>
-  [[nodiscard]] constexpr auto error_reason(const boxed::Box<E>& error) -> String {
-    return error_reason(*error);
-  }
-
-  /// @relates IError
-  template<typename E>
-  [[nodiscard]] constexpr auto error_reason(const rc::Rc<E>& error) -> String {
-    return error_reason(*error);
-  }
-
-  /// @relates IError
-  template<typename E>
-  [[nodiscard]] constexpr auto error_reason(const rc::RcMut<E>& error) -> String {
-    return error_reason(*error);
-  }
-
-  /// }@
 }
+
+/// Specialization to support formatting any type derived from IError
+/// @ingroup result
+template<std::derived_from<crab::result::IError> T, typename Char>
+struct fmt::formatter<T, Char> : fmt::formatter<String> {
+  constexpr auto format(const crab::result::IError& error, format_context& ctx) const {
+    return formatter<String>::format(error.what(), ctx);
+  }
+};
 
 namespace crab {
   using result::IError;

@@ -32,6 +32,11 @@ namespace crab::result {
     [[nodiscard]] virtual auto what() const -> String = 0;
   };
 
+  /// Specialization for fmtlib to format any IError
+  [[nodiscard]] auto format_as(const IError& error) -> String {
+    return error.what();
+  }
+
   /// @relates IError
   template<typename E>
   [[nodiscard]] auto error_reason(const E& error) -> String {

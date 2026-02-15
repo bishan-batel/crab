@@ -58,17 +58,18 @@ CPMAddPackage(
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
 
-file(GLOB_RECURSE CRAB_SOURCES "include/*.hpp")
-add_library(${PROJECT_NAME} INTERFACE ${CRAB_SOURCES})
+add_library(${PROJECT_NAME} INTERFACE
+        $<BUILD_INTERFACE:${crab_sources}>
+        $<INSTALL_INTERFACE:${crab_sources}>
+)
 
 # crab only supports C++20 and above
 # target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE fmt)
+target_link_libraries(${PROJECT_NAME} INTERFACE fmt::fmt-header-only)
 
 target_include_directories(${PROJECT_NAME} INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
@@ -85,7 +86,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
 
 # cmake target information (currently only one)
-install(TARGETS "${PROJECT_NAME}" EXPORT "${PROJECT_NAME}Targets")
+install(TARGETS "${PROJECT_NAME}" EXPORT "${PROJECT_NAME}Targets" DESTINATION lib)
 
 install(
         EXPORT "${PROJECT_NAME}Targets"

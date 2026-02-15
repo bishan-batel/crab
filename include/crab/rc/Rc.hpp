@@ -264,12 +264,27 @@ namespace crab::rc {
     using Base::downcast;
   };
 
+  /// Specialization for fmt to be able to format a Rc<T> if T is formattable.
+  template<typename T>
+  [[nodiscard]] auto format_as(const Rc<T>& rc) -> const T& {
+    return rc.as_ref();
+  }
+
+  /// Specialization for fmt to be able to format a RcMut<T> if T is formattable.
+  template<typename T>
+  [[nodiscard]] auto format_as(const RcMut<T>& rc) -> const T& {
+    return rc.as_ref();
+  }
+
+  // Constructs the type T from the given arguments and creates an Rc around it. Note unlike RcMut, an Rc can never be
+  // converted into mutable safely.
   template<ty::non_const T, typename... Args>
   [[nodiscard]] constexpr auto make_rc(Args&&... args) -> Rc<T> {
     static_assert(std::constructible_from<T, Args...>, "Cannot construct type from the given arguments");
     return Rc<T>::from_owned_unchecked(new T(std::forward<Args>(args)...));
   }
 
+  // Constructs the type T from the given arguments and creates an RcMut around it
   template<ty::non_const T, typename... Args>
   requires std::constructible_from<T, Args...>
   [[nodiscard]] constexpr auto make_rc_mut(Args&&... args) -> RcMut<T> {

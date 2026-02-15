@@ -22,8 +22,10 @@
 #include "crab/ref/ref.hpp"
 #include "crab/ref/implicit_cast.hpp"
 #include "crab/result/forward.hpp"
+#include "crab/str/str.hpp"
 #include "crab/ty/crab_ref_decay.hpp"
 #include "crab/ty/functor.hpp"
+#include "fmt/base.h"
 
 namespace crab::opt {
   /// Storage selector for Option<T>, this type's public alias 'type' determines the structure
@@ -914,20 +916,39 @@ namespace crab::opt {
 /// Formatter specialization for Option<T>, this specialization is only valid if the inner type of T is formattable
 /// itself.
 /// @ingroup opt
-template<typename T, typename Char>
-struct fmt::formatter<::crab::opt::Option<T>, Char> : fmt::formatter<fmt::string_view> {
+template<fmt::formattable T, typename Char>
+struct fmt::formatter<crab::opt::Option<T>, Char> {
+private:
 
-  /// Formats option into context
-  /// @internal
+  inline static constexpr StringView some{"Some("};
+  inline static constexpr StringView none{"None"};
+
+  formatter<std::remove_cv_t<T>, Char> underlying;
+
+public:
+
+  constexpr auto parse(parse_context<Char>& ctx) {
+    detail::maybe_set_debug_format(underlying, true);
+    return underlying.parse(ctx);
+  }
+
   template<typename FormatContext>
-  auto format(const crab::opt::Option<T>& opt, FormatContext& ctx) const -> decltype(ctx.out()) {
-    formatter<T, Char> underlying{};
-
-    if (opt.is_some()) {
-      return fmt::format_to(ctx.out(), "Some({})", opt.get_unchecked(unsafe));
-    } else {
-      return fmt::format_to(ctx.out(), "None");
+  constexpr auto format(const crab::opt::Option<T>& opt, FormatContext& ctx) const -> decltype(ctx.out()) {
+    if (opt.is_none()) {
+      return detail::write<Char>(ctx.out(), none);
     }
+
+    auto out = ctx.out();
+
+    // write some(
+    out = detail::write<Char>(out, some);
+
+    ctx.advance_to(out);
+
+    out = underlying.format(opt.get_unchecked(unsafe), ctx);
+
+    // write trailing )
+    return detail::write(out, ')');
   }
 };
 
@@ -943,7 +964,7 @@ struct std::hash<::crab::opt::Option<T>> /* NOLINT */ {
       return crab::hash(false);
     }
 
-    return crab::hash_together(true, opt.get_unchecked(unsafe));
+    return crab::hash_code_mix(true, opt.get_unchecked(unsafe));
   }
 };
 

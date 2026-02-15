@@ -340,6 +340,12 @@ namespace crab {
       }
     };
 
+    /// Specialization for fmt to be able to format a Box<T> if T is formattable.
+    template<typename T>
+    [[nodiscard]] auto format_as(const Box<T>& box) -> const T& {
+      return box.as_ref();
+    }
+
     /// Makes a new instance of type T on the heap with given args
     /// The values passed will be forwarded into the constructor of T
     /// @ingroup boxed

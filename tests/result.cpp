@@ -23,7 +23,10 @@ public:
 
 TEST_CASE("Result", "[result]") {
   SECTION("Ok Values") {
+
     Result<u32, Error> result{10};
+
+    CHECK(fmt::format("{}", result) == "Ok(10)");
 
     REQUIRE(result.is_ok());
     REQUIRE_FALSE(result.is_err());
@@ -41,6 +44,8 @@ TEST_CASE("Result", "[result]") {
     REQUIRE_FALSE(result.is_ok());
     REQUIRE_THROWS(result.get());
     REQUIRE_NOTHROW(result.get_err());
+
+    CHECK(fmt::format("{}", result) == "Err(huh)");
 
     Error err;
     REQUIRE(result.is_valid());

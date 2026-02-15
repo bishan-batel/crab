@@ -8,6 +8,7 @@
 #include "crab/assertion/check.hpp"
 #include "crab/ty/classify.hpp"
 #include "crab/hash/hash.hpp"
+#include "fmt/base.h"
 
 // ReSharper disable CppNonExplicitConversionOperator
 // ReSharper disable CppNonExplicitConvertingConstructor
@@ -235,6 +236,17 @@ namespace crab::ref {
     /// @internal
     T* pointer;
   };
+
+  /// Specialisation for Ref<T> to be formattable if T is formattable
+  template<fmt::formattable T>
+  [[nodiscard]] auto format_as(Ref<T> ref) -> const T& {
+    return *ref;
+  }
+
+  template<fmt::formattable T>
+  [[nodiscard]] auto format_as(RefMut<T> ref) -> T& {
+    return *ref;
+  }
 }
 
 /// Hasher implementation for Ref<T> is identical for std::hash<T*>

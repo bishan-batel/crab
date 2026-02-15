@@ -5,6 +5,7 @@
 // ReSharper disable CppNonExplicitConversionOperator
 #pragma once
 #include <concepts>
+#include <fmt/base.h>
 #include <type_traits>
 
 #include "crab/any/AnyOf.hpp"
@@ -490,16 +491,6 @@ namespace crab::result {
       return mem::move(storage).template as_unchecked<Err>(unsafe).get();
     }
 
-    friend CRAB_INLINE constexpr auto operator<<(std::ostream& os, const Result& result) -> std::ostream& {
-      result.check_unmoved();
-
-      if (result.is_err()) {
-        return os << "Err(" << error_reason(result.get_err_unchecked(unsafe)) << ")";
-      }
-
-      return os << "Ok(" << result.get_unchecked(unsafe) << ")";
-    }
-
     /// Copies this option, this is an alias for simply calling the copy constructor. It suggested to use this explicit
     /// copy when possible as it can make the intention clearer.
     ///
@@ -675,7 +666,7 @@ namespace crab::result {
         is_ok(),
         loc,
         "Excepted result to contain an 'Ok' value, instead found error: {}",
-        error_reason(get_err_unchecked(unsafe))
+        get_err_unchecked(unsafe)
       );
     }
 
@@ -711,6 +702,47 @@ namespace crab::result {
   // NOLINTEND(*explicit*)
 
 } // namespace crab::result
+
+template<typename T, typename E, typename Char>
+struct fmt::formatter<crab::result::Result<T, E>, Char> {
+private:
+
+  inline static constexpr StringView ok{"Ok("};
+  inline static constexpr StringView err{"Err("};
+
+  formatter<std::remove_cv_t<T>, Char> ok_formatter;
+  formatter<std::remove_cv_t<E>, Char> err_formatter;
+
+public:
+
+  constexpr auto parse(parse_context<Char>& ctx) {
+    return ctx.begin();
+  }
+
+  template<typename FormatContext>
+  constexpr auto format(const crab::result::Result<T, E>& result, FormatContext& ctx) const -> decltype(ctx.out()) {
+    detail::maybe_set_debug_format(ok_formatter, true);
+
+    auto out = ctx.out();
+
+    if (result.is_ok()) {
+      detail::maybe_set_debug_format(ok_formatter, true);
+      out = detail::write<Char>(out, ok);
+      ctx.advance_to(out);
+      out = ok_formatter.format(result.get_unchecked(unsafe), ctx);
+    } else {
+      detail::maybe_set_debug_format(err_formatter, true);
+      out = detail::write<Char>(out, err);
+      ctx.advance_to(out);
+      out = err_formatter.format(result.get_err_unchecked(unsafe), ctx);
+    }
+
+    // write some(
+
+    // write trailing )
+    return detail::write(out, ')');
+  }
+};
 
 namespace crab::prelude {
   using result::Result;

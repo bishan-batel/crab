@@ -23,6 +23,7 @@ option(CRAB_TESTS "Whether to compile / include crab tests, " OFF)
 option(CPM_USE_LOCAL_PACKAGES "Should CPM try to find local packages" ON)
 option(CPM_SOURCE_CACHE_DEFAULT "Should CPM cache the source for dependencies?" ON)
 option(CRAB_DOCS "Whether to include crab documentation" OFF)
+option(CRAB_INSTALL "Should crab be installed" OFF)
 
 if (CRAB_USE_STD_FORMAT AND CRAB_USE_FMT)
         message(FATAL_ERROR "CRAB_USE_STD_FORMAT and CRAB_USE_FMT are mutually exclusive, choose whether crab should use std::format vs fmt::format")
@@ -85,45 +86,47 @@ set_target_properties(crab PROPERTIES
 
 set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/crab")
 
-# cmake target information (currently only one)
-install(TARGETS crab EXPORT "crabTargets")
+if (CRAB_INSTALL)
+        # cmake target information (currently only one)
+        install(TARGETS crab EXPORT "crabTargets")
 
-install(
-        EXPORT "crabTargets"
-        FILE "crabTargets.cmake"
-        NAMESPACE "crab::"
-        DESTINATION "${conf_install_dir}"
-)
+        install(
+                EXPORT "crabTargets"
+                FILE "crabTargets.cmake"
+                NAMESPACE "crab::"
+                DESTINATION "${conf_install_dir}"
+        )
 
-# install the library headers
-install(
-        DIRECTORY "${CRAB_INCLUDE_DIR}"
-        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-        FILES_MATCHING PATTERN "*.hpp"
-        PATTERN "*.in" EXCLUDE # exclude the config.hpp.in template
-)
+        # install the library headers
+        install(
+                DIRECTORY "${CRAB_INCLUDE_DIR}"
+                DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+                FILES_MATCHING PATTERN "*.hpp"
+                PATTERN "*.in" EXCLUDE # exclude the config.hpp.in template
+        )
 
 
-# Package Config files for use with find_package
+        # Package Config files for use with find_package
 
-configure_package_config_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/crabConfig.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/crabConfig.cmake"
-        INSTALL_DESTINATION "${conf_install_dir}"
-)
+        configure_package_config_file(
+                "${CMAKE_CURRENT_SOURCE_DIR}/cmake/crabConfig.cmake.in"
+                "${CMAKE_CURRENT_BINARY_DIR}/crabConfig.cmake"
+                INSTALL_DESTINATION "${conf_install_dir}"
+        )
 
-write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/crabConfigVersion.cmake"
-         VERSION ${PROJECT_VERSION}
-         COMPATIBILITY SameMajorVersion
-)
+        write_basic_package_version_file(
+                "${CMAKE_CURRENT_BINARY_DIR}/crabConfigVersion.cmake"
+                 VERSION ${PROJECT_VERSION}
+                 COMPATIBILITY SameMajorVersion
+        )
 
-install(
-        FILES   "${PROJECT_BINARY_DIR}/crabConfig.cmake"
-                "${PROJECT_BINARY_DIR}/crabConfigVersion.cmake"
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/crab/cmake
-        DESTINATION "${conf_install_dir}"
-)
+        install(
+                FILES   "${PROJECT_BINARY_DIR}/crabConfig.cmake"
+                        "${PROJECT_BINARY_DIR}/crabConfigVersion.cmake"
+                DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/crab/cmake
+                DESTINATION "${conf_install_dir}"
+        )
+endif()
 
 # Docs 
 if (CRAB_DOCS)

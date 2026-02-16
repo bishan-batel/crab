@@ -26,7 +26,7 @@ stdenv.mkDerivation {
 
   cmakeFlags = [
     "-DCRAB_TESTS=${if doCheck then "ON" else "OFF"}"
-    "-DCRAB_INSTAL=ON"
+    "-DCRAB_INSTALL=ON"
     "-DCMAKE_INSTALL_LIBDIR=lib"
     "-DCPM_USE_LOCAL_PACKAGES=ON"
   ];

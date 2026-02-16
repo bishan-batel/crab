@@ -42,7 +42,7 @@ include(CMakePackageConfigHelpers)
 
 # fmtlib is optional
 message(STATUS "Adding fmtlib")
-set(FMT_INSTALL ON)
+set(FMT_INSTALL OFF)
 
 CPMAddPackage(
         NAME fmt
@@ -50,6 +50,8 @@ CPMAddPackage(
         GIT_TAG "12.1.0"
         VERSION_MIN "9.0.0"
 )
+
+find_package(fmt CONFIG REQUIRED)
 
 #===============================================================================
 #                                     Library

@@ -79,9 +79,9 @@ namespace crab::assertion {
       stream << msg.location.file_name();
       stream << ":";
       stream << msg.location.line();
-      stream << ": in ";
+      stream << ":";
       stream << msg.location.column();
-      stream << " Inside function '";
+      stream << " in function '";
       stream << msg.location.function_name();
       stream << "'\n";
 

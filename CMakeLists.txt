@@ -58,7 +58,7 @@ CPMAddPackage(
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/crab")
 
-add_library(crab INTERFACE ALIAS crab::crab)
+add_library(crab::crab INTERFACE ALIAS crab)
 
 
 # crab only supports C++20 and above

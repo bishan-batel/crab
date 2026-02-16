@@ -84,7 +84,7 @@ set_target_properties(crab PROPERTIES
 set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/crab")
 
 # cmake target information (currently only one)
-install(TARGETS "crab" EXPORT "crab_Targets")
+install(TARGETS "crab" EXPORT "crabTargets")
 
 install(
         EXPORT "crabTargets"

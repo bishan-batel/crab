@@ -58,8 +58,8 @@ CPMAddPackage(
 # interface library
 set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/crab")
 
-add_library(crab::crab INTERFACE ALIAS crab)
-
+add_library(crab INTERFACE)
+add_library(crab::crab ALIAS crab)
 
 # crab only supports C++20 and above
 # target_compile_features(crab INTERFACE cxx_std_20)
@@ -84,7 +84,7 @@ set_target_properties(crab PROPERTIES
 set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/crab")
 
 # cmake target information (currently only one)
-install(TARGETS "crab" EXPORT "crabTargets")
+install(TARGETS crab EXPORT "crabTargets")
 
 install(
         EXPORT "crabTargets"

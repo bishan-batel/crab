@@ -56,106 +56,17 @@ CPMAddPackage(
 #===============================================================================
 
 # interface library
-set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME}")
+set(CRAB_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include/crab")
 
-add_library(${PROJECT_NAME} INTERFACE 
-        include/crab/any/AnyOf.hpp
-        include/crab/any/any.hpp
-        include/crab/any/forward.hpp
-        include/crab/assertion/assert.hpp
-        include/crab/assertion/check.hpp
-        include/crab/assertion/fmt.hpp
-        include/crab/assertion/forward.hpp
-        include/crab/assertion/panic.hpp
-        include/crab/assertion/todo.hpp
-        include/crab/boxed/Box.hpp
-        include/crab/boxed/boxed.hpp
-        include/crab/boxed/forward.hpp
-        include/crab/collections/Dictionary.hpp
-        include/crab/collections/Set.hpp
-        include/crab/collections/Tuple.hpp
-        include/crab/collections/Vec.hpp
-        include/crab/convert/From.hpp
-        include/crab/core/SourceLocation.hpp
-        include/crab/core/cases.hpp
-        include/crab/core/discard.hpp
-        include/crab/core/unit.hpp
-        include/crab/core/unreachable.hpp
-        include/crab/core/unsafe.hpp
-        include/crab/core.hpp
-        include/crab/env/env.hpp
-        include/crab/fn/Func.hpp
-        include/crab/fn/cast.hpp
-        include/crab/fn/fn.hpp
-        include/crab/fn/identity.hpp
-        include/crab/hash/hash.hpp
-        include/crab/mem/address_of.hpp
-        include/crab/mem/copy.hpp
-        include/crab/mem/forward.hpp
-        include/crab/mem/mem.hpp
-        include/crab/mem/move.hpp
-        include/crab/mem/replace.hpp
-        include/crab/mem/size_of.hpp
-        include/crab/mem/swap.hpp
-        include/crab/mem/take.hpp
-        include/crab/num/floating.hpp
-        include/crab/num/integer.hpp
-        include/crab/num/num.hpp
-        include/crab/num/range.hpp
-        include/crab/num/suffixes.hpp
-        include/crab/ops/Add.hpp
-        include/crab/ops/Div.hpp
-        include/crab/ops/Mul.hpp
-        include/crab/ops/Rem.hpp
-        include/crab/ops/Sub.hpp
-        include/crab/ops/ops.hpp
-        include/crab/opt/Option.hpp
-        include/crab/opt/boolean_constructs.hpp
-        include/crab/opt/concepts.hpp
-        include/crab/opt/fallible.hpp
-        include/crab/opt/forward.hpp
-        include/crab/opt/none.hpp
-        include/crab/opt/opt.hpp
-        include/crab/opt/some.hpp
-        include/crab/preamble.hpp
-        include/crab/rc/Rc.hpp
-        include/crab/ref/casts.hpp
-        include/crab/ref/forward.hpp
-        include/crab/ref/from_ptr.hpp
-        include/crab/ref/implicit_cast.hpp
-        include/crab/ref/is.hpp
-        include/crab/ref/is_exact.hpp
-        include/crab/ref/ref.hpp
-        include/crab/result/Err.hpp
-        include/crab/result/Error.hpp
-        include/crab/result/Ok.hpp
-        include/crab/result/Result.hpp
-        include/crab/result/concepts.hpp
-        include/crab/result/fallible.hpp
-        include/crab/result/forward.hpp
-        include/crab/result/unwrap.hpp
-        include/crab/str/str.hpp
-        include/crab/term/Handle.hpp
-        include/crab/term/ansi.hpp
-        include/crab/term/forward.hpp
-        include/crab/term/term.hpp
-        include/crab/ty/bool_types.hpp
-        include/crab/ty/classify.hpp
-        include/crab/ty/compare.hpp
-        include/crab/ty/construct.hpp
-        include/crab/ty/crab_ref_decay.hpp
-        include/crab/ty/functor.hpp
-        include/crab/ty/identity.hpp
-        include/crab/ty/manipulate.hpp
-        include/crab/ty/ty.hpp
-)
+add_library(crab INTERFACE)
+
 
 # crab only supports C++20 and above
-# target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_20)
+# target_compile_features(crab INTERFACE cxx_std_20)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE fmt::fmt-header-only)
+target_link_libraries(crab INTERFACE fmt::fmt-header-only)
 
-target_include_directories(${PROJECT_NAME} INTERFACE
+target_include_directories(crab INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
@@ -164,21 +75,21 @@ target_include_directories(${PROJECT_NAME} INTERFACE
 #                           Public API / Installation
 #===============================================================================
 
-set_target_properties(${PROJECT_NAME} PROPERTIES
+set_target_properties(crab PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR}
         LINKER_LANGUAGE CXX
 )
 
-set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}")
+set(conf_install_dir "${CMAKE_INSTALL_LIBDIR}/cmake/crab")
 
 # cmake target information (currently only one)
-install(TARGETS "${PROJECT_NAME}" EXPORT "${PROJECT_NAME}Targets" DESTINATION lib)
+install(TARGETS "crab" EXPORT "crab_Targets")
 
 install(
-        EXPORT "${PROJECT_NAME}Targets"
-        FILE "${PROJECT_NAME}Targets.cmake"
-        NAMESPACE "${PROJECT_NAME}::"
+        EXPORT "crabTargets"
+        FILE "crabTargets.cmake"
+        NAMESPACE "crab::"
         DESTINATION "${conf_install_dir}"
 )
 
@@ -194,21 +105,21 @@ install(
 # Package Config files for use with find_package
 
 configure_package_config_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/${PROJECT_NAME}Config.cmake.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/crabConfig.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/crabConfig.cmake"
         INSTALL_DESTINATION "${conf_install_dir}"
 )
 
 write_basic_package_version_file(
-        "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/crabConfigVersion.cmake"
          VERSION ${PROJECT_VERSION}
          COMPATIBILITY SameMajorVersion
 )
 
 install(
-        FILES   "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
-                "${PROJECT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake"
-        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}/cmake
+        FILES   "${PROJECT_BINARY_DIR}/crabConfig.cmake"
+                "${PROJECT_BINARY_DIR}/crabConfigVersion.cmake"
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/crab/cmake
         DESTINATION "${conf_install_dir}"
 )
 

@@ -2,7 +2,7 @@
 
 #include <array>
 #include <cstdlib>
-#include <fmt/format.h>
+#include <fmt/base.h>
 #include <iomanip>
 #include <iostream>
 #include <span>
@@ -17,6 +17,10 @@
 #include "crab/mem/move.hpp"
 #include "crab/str/str.hpp"
 #include "crab/term/ansi.hpp"
+
+#include <fmt/format.h>
+#include <fmt/ostream.h>
+#include <fmt/std.h>
 
 namespace crab::assertion {
 
@@ -63,34 +67,25 @@ namespace crab::assertion {
         }
       }};
 
-      stream << '\n';
       ansii(ansii_red_bold);
 
-      stream << "Panic:      ";
+      fmt::print(stream, "\nPanic:      ");
 
       ansii(ansii_green);
 
-      stream << msg.message << '\n';
+      fmt::println(stream, "{}", msg.message);
 
       // ansii(ansii_white_bold);
       ansii(ansii_blue);
-      stream << "Ocurred at: ";
+      fmt::println(stream, "Ocurred at: {}", msg.location);
 
-      stream << msg.location.file_name();
-      stream << ":";
-      stream << msg.location.line();
-      stream << ":";
-      stream << msg.location.column();
-      stream << " in function '";
-      stream << msg.location.function_name();
-      stream << "'\n";
+      const char* const should_do_backtrace = std::getenv("CRAB_BACKTRACE");
+      if (should_do_backtrace == StringView{"1"}) {
 
-      if (StringView{"1"} == std::getenv("CRAB_BACKTRACE")) {
 #if CRAB_UNIX
         ansii(ansii_white_bold);
 
-        stream << std::setw(15);
-        stream << "Backtrace: " << '\n';
+        fmt::println(stream, "Backtrace: ");
 
         std::array<void*, MAX_BACKTRACE_STACKFRAMES> buffer{};
 
@@ -114,15 +109,17 @@ namespace crab::assertion {
               break;
             }
 
-            stream << "\t " << symbol << '\n';
+            fmt::println(stream, "\t {}", symbol);
           }
 
-          free(symbols.data());
+          if (symbols.data() != nullptr) {
+            free(symbols.data());
+          }
         } else {
-          stream << "\t Failed to get backtrace" << '\n';
+          fmt::println(stream, "\t Failed to get backtrace");
         }
 #else
-        stream << "\t Failed to get backtrace" << '\n';
+        fmt::println("\t Backtrace Unavailable");
 #endif
       }
 
@@ -134,14 +131,7 @@ namespace crab::assertion {
 
 #if CRAB_THROW_ON_DEFAULT_PANIC
       throw std::runtime_error{
-        fmt::format(
-          "{} at function {} ({}:{}@{})",
-          info.message,
-          info.location.function_name(),
-          info.location.line(),
-          info.location.column(),
-          info.location.file_name()
-        ),
+        fmt::format("{} at {}", info.message, info.location),
       };
 #else
       log_panic_to_stream(std::cerr, term::try_enable_ansi(term::Handle::Error), info);
@@ -158,12 +148,10 @@ namespace crab::assertion {
   }
 
   [[noreturn]] inline auto panic(String msg, SourceLocation loc) -> void {
-    panic(
-      PanicInfo{
-        mem::move(msg),
-        loc,
-      }
-    );
+    panic(PanicInfo{
+      mem::move(msg),
+      loc,
+    });
   }
 }
 

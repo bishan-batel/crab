@@ -114,14 +114,16 @@ namespace crab::result {
 
     /// Reassigns this given option the the ok value, this method is not available if this result's error & result
     /// fundamental types are the same, in which case you should use Result::operator=(Ok) instead.
-    CRAB_INLINE constexpr auto operator=(T&& from) -> Result& requires(not is_same) {
+    CRAB_INLINE constexpr auto operator=(T&& from) -> Result& requires(not is_same)
+    {
       storage.template emplace<Ok>(mem::forward<T>(from));
       return *this;
     }
 
     /// Reassigns this given option the the err value, this method is not available if this result's error & result
     /// fundamental types are the same, in which case you should use Result::operator=(Err) instead.
-    CRAB_INLINE constexpr auto operator=(E&& from) -> Result& requires(not is_same) {
+    CRAB_INLINE constexpr auto operator=(E&& from) -> Result& requires(not is_same)
+    {
       storage.template emplace<Err>(mem::forward<E>(from));
       return *this;
     }
@@ -663,7 +665,7 @@ namespace crab::result {
 
     /// Assertion that this result holds an Ok value
     /// @internal
-    CRAB_INLINE constexpr auto check_is_ok(const SourceLocation loc = SourceLocation::current()) const -> void {
+    constexpr auto check_is_ok(const SourceLocation loc = SourceLocation::current()) const -> void {
       check_unmoved();
 
       crab_check_with_location(
@@ -677,7 +679,7 @@ namespace crab::result {
     /// Debug only check.
     /// @copydoc check_is_ok
     /// @internal
-    CRAB_INLINE constexpr auto check_dbg_is_ok(const SourceLocation loc = SourceLocation::current()) const -> void {
+    constexpr auto check_dbg_is_ok(const SourceLocation loc = SourceLocation::current()) const -> void {
       discard(loc);
 #if CRAB_DEBUG
       check_is_ok(loc);
@@ -686,7 +688,7 @@ namespace crab::result {
 
     /// Checks that this result contains an error value.
     /// @internal
-    CRAB_INLINE constexpr auto check_is_err(const SourceLocation loc = SourceLocation::current()) const -> void {
+    constexpr auto check_is_err(const SourceLocation loc = SourceLocation::current()) const -> void {
       check_unmoved();
 
       if constexpr (fmt::formattable<T>) {
@@ -708,7 +710,7 @@ namespace crab::result {
     /// Debug only check.
     /// @copydoc check_is_err
     /// @internal
-    CRAB_INLINE constexpr auto check_dbg_is_err(const SourceLocation loc = SourceLocation::current()) const -> void {
+    constexpr auto check_dbg_is_err(const SourceLocation loc = SourceLocation::current()) const -> void {
       discard(loc);
 #if CRAB_DEBUG
       check_is_err(loc);

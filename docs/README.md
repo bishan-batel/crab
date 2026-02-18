@@ -5,7 +5,9 @@ NOT a rust fanfic (ok kinda)
 
 Example of `Option<T>`
 
-```c
+```cpp
+#include <crab/preamble.hpp> 
+
 void main() {
   Option<i32> a = crab::some(a);
 

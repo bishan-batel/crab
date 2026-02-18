@@ -42,7 +42,7 @@ jobs:
     - name: Build Doxygen
       run: 
         cmake --build . --target docs
-        mv docs/html docs/api
+
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:

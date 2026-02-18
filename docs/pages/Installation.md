@@ -30,6 +30,8 @@ target_link_libraries(my_app PUBLIC crab::crab)
 ```
 
 #### **find_package / NixOS**
+
+flake.nix:
 ```nix
 {
   inputs = {
@@ -65,4 +67,16 @@ target_link_libraries(my_app PUBLIC crab::crab)
 }
 ```
 
+Then in your cmake file,
+```cmake 
+find_package(fmt REQUIRED)
+find_package(crab CONFIG REQUIRED)
+
+add_executable(my_app ./main.cpp)
+target_link_libraries(my_app PUBLIC crab::crab)
+```
+
 <!-- tabs:end -->
+
+## MSBuild 
+Currently I have not tested how to get crab working in a native msbuild project, however the latest version of crab does work with versions of the MSVC compiler. It is probally possible to add crab through msbuild, I just haven't done it myself. 

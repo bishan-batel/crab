@@ -38,6 +38,10 @@
     color: #f9e2af;
   }
 
+  .token.attribute {
+    color: #fab387;
+  }
+
   .token.namespace {
     color: #f9e2af;
     opacity: 0.9;
@@ -169,7 +173,22 @@
             }
           },
           'crab-type': {
-            pattern: /\b(?:String|StringView|Option|AnyOf|Result|Ref|RefMut|Rc|RcMut|Box|None|Ok|Err|Vec|Dictionary|Set|Pair|Span)\b/
+            // pattern: /\b(?:String|StringView|Option|AnyOf|Result|Ref|RefMut|Rc|RcMut|Box|None|Ok|Err|Vec|Dictionary|Set|Pair|Span)\b/
+            pattern: /[A-Z][\w]+/
+          },
+          'attribute': {
+            pattern: /\[\[\w+\]\]/
+          },
+          'none': {
+            pattern: /crab::(none|cases|unit::val)/,
+            inside: {
+              'namespace': /(crab|mem)/,
+              'operator': /::/,
+              'crab-type': /(unit|cases|move|forward)/,
+              'builtin': {
+                pattern: /(none|val)/
+              }
+            }
           },
           'gen-namespace': {
             pattern: /[A-Za-z][\w_]*\:\:/,
@@ -180,7 +199,7 @@
                 alias: 'punctuation'
               }
             }
-          }
+          },
         });
 
         Prism.languages.insertBefore('cpp', 'operator', {

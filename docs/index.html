@@ -6,8 +6,33 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <meta name="description" content="Description">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://docsify.catppuccin.com/mocha/mauve.css"
+  />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/win-tm/docsify-display-colors@main/docsify-display-colors.min.css">
+
+  <!-- <link href="https://prismjs.catppuccin.com/mocha.css" rel="stylesheet" /> -->
 </head>
+  <style>
+    @import url("https://fonts.googleapis.com/css?family=JetBrains Mono");
+    :root {
+      --base-font-family: 'JetBrains Mono', 'Consolas', monospace;
+    }
+    .color-swatch {
+      height: 1em;
+      aspect-ratio: 1;
+      margin: 0px 0.15em -0.15em;
+      display: inline-block;
+      box-sizing: border-box;
+      border-radius: 2px;
+      border: 1.5px solid #FFFFFF;
+    }
+  </style>
 <body>
   <div id="app"></div>
   <script>
@@ -30,5 +55,11 @@
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
+  <script src="https://unpkg.com/docsify-copy-code@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+  <script src="//unpkg.com/@rakutentech/docsify-code-inline/dist/index.min.js" ></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-latex@0"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/gh/win-tm/docsify-display-colors@main/docsify-display-colors.min.js"></script> -->
 </body>
 </html>

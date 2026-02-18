@@ -101,8 +101,8 @@ Option<usize> linear_search(const i32* array, usize length, i32 target_value) {
 ```
 
 
-
-## Bells and Whistles
+## API
+The following in some high level overview of the different operations you can use with `Option`, if you wish for more detailed descriptiosn then refer to the doxygen API docs.
 
 ### Monadic Operations
 

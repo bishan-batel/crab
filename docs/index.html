@@ -1,31 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/svg" href="/image/logo.svg">
-    <title>Crab Documentation</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-    <meta name="description" content="Description">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://docsify.catppuccin.com/mocha/mauve.css"
-    />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/win-tm/docsify-display-colors@main/docsify-display-colors.min.css">
 
-    <link href="https://prismjs.catppuccin.com/mocha.css" rel="stylesheet" />
-  </head>
-  <style>
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg" href="/image/logo.svg">
+  <title>Crab Documentation</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="description" content="Description">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css" />
+  <link rel="stylesheet" href="https://docsify.catppuccin.com/mocha/mauve.css" />
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/win-tm/docsify-display-colors@main/docsify-display-colors.min.css">
+
+  <link href="https://prismjs.catppuccin.com/mocha.css" rel="stylesheet" />
+</head>
+<style>
   @import url("https://fonts.googleapis.com/css?family=JetBrains Mono");
+
   :root {
     --base-font-family: 'JetBrains Mono', 'Consolas', monospace;
-    
+
     --docsifytabs-tab-background: #181825;
   }
+
   .color-swatch {
     height: 1em;
     aspect-ratio: 1;
@@ -35,10 +33,20 @@
     border-radius: 2px;
     border: 1.5px solid #FFFFFF;
   }
-  </style>
-  <body>
-    <div id="app"></div>
-    <script>
+
+  .token.crab-type {
+    color: #f9e2af;
+  }
+
+  .token.namespace {
+    color: #f9e2af;
+    opacity: 0.9;
+  }
+</style>
+
+<body>
+  <div id="app"></div>
+  <script>
     window.$docsify = {
       name: 'crab',
       repo: 'bishan-batel/crab',
@@ -65,37 +73,38 @@
         style: 'flat'
       }
     }
-    </script>
+  </script>
 
-    <!-- Docsify v4 -->
-    <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  <!-- Docsify v4 -->
+  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
 
-    <!-- Plugins -->
-    <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
-    <!-- <script src="https://unpkg.com/docsify-copy-code@2"></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
-    <script src="//unpkg.com/@rakutentech/docsify-code-inline/dist/index.min.js" ></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-latex@0"></script>
-    <script src="https://cdn.jsdelivr.net/gh/win-tm/docsify-display-colors@main/docsify-display-colors.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts@1.2.0/dist/docsify-plugin-flexible-alerts.min.js"></script>
+  <!-- Plugins -->
+  <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
+  <!-- <script src="https://unpkg.com/docsify-copy-code@2"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+  <script src="//unpkg.com/@rakutentech/docsify-code-inline/dist/index.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-latex@0"></script>
+  <script src="https://cdn.jsdelivr.net/gh/win-tm/docsify-display-colors@main/docsify-display-colors.min.js"></script>
+  <script
+    src="//cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts@1.2.0/dist/docsify-plugin-flexible-alerts.min.js"></script>
 
 
-    <!-- Prism Languages -->
-    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-nix.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-cmake.min.js"></script>
-    <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-c.min.js"></script>
-    <!-- <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-cpp.min.js"></script> -->
-    <script>
+  <!-- Prism Languages -->
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-nix.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-cmake.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-c.min.js"></script>
+  <!-- <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-cpp.min.js"></script> -->
+  <script>
       (function (Prism) {
 
         var keyword = /\b(?:alignas|alignof|asm|auto|bool|break|case|catch|char|char16_t|char32_t|char8_t|class|co_await|co_return|co_yield|compl|concept|const|const_cast|consteval|constexpr|constinit|continue|decltype|default|delete|do|double|dynamic_cast|else|enum|explicit|export|extern|final|float|for|friend|goto|if|import|inline|int|int16_t|int32_t|int64_t|int8_t|long|module|mutable|namespace|new|noexcept|nullptr|operator|override|private|protected|public|register|reinterpret_cast|requires|return|short|signed|sizeof|static|static_assert|static_cast|struct|switch|template|this|thread_local|throw|try|typedef|typeid|typename|uint16_t|uint32_t|uint64_t|uint8_t|union|unsigned|using|virtual|void|volatile|wchar_t|while|u8|u16|u32|u64|usize|i8|i32|i64|isize|f32|f64|crab_check)\b/;
-        var modName = /\b(?!<keyword>)\w+(?:\s*\.\s*\w+)*\b/.source.replace(/<keyword>/g, function () { return keyword.source; });
+        var modName = /\b(?!<keyword>)\w+(?:\s*\.\s*\w+)*\b/.source.replace(/<keyword>/g, function () {return keyword.source;});
 
         Prism.languages.cpp = Prism.languages.extend('c', {
           'class-name': [
             {
               pattern: RegExp(/(\b(?:class|concept|enum|struct|typename)\s+)(?!<keyword>)\w+/.source
-                .replace(/<keyword>/g, function () { return keyword.source; })),
+                .replace(/<keyword>/g, function () {return keyword.source;})),
               lookbehind: true
             },
             // This is intended to capture the class name of method implementations like:
@@ -124,13 +133,13 @@
             // https://en.cppreference.com/w/cpp/language/modules
             pattern: RegExp(
               /(\b(?:import|module)\s+)/.source +
-                '(?:' +
-                // header-name
-                /"(?:\\(?:\r\n|[\s\S])|[^"\\\r\n])*"|<[^<>\r\n]*>/.source +
-                '|' +
-                // module name or partition or both
-                /<mod-name>(?:\s*:\s*<mod-name>)?|:\s*<mod-name>/.source.replace(/<mod-name>/g, function () { return modName; }) +
-                ')'
+              '(?:' +
+              // header-name
+              /"(?:\\(?:\r\n|[\s\S])|[^"\\\r\n])*"|<[^<>\r\n]*>/.source +
+              '|' +
+              // module name or partition or both
+              /<mod-name>(?:\s*:\s*<mod-name>)?|:\s*<mod-name>/.source.replace(/<mod-name>/g, function () {return modName;}) +
+              ')'
             ),
             lookbehind: true,
             greedy: true,
@@ -156,6 +165,19 @@
                 pattern: /<[\s\S]+/,
                 alias: 'class-name',
                 inside: Prism.languages.cpp
+              }
+            }
+          },
+          'crab-type': {
+            pattern: /\b(?:String|StringView|Option|AnyOf|Result|Ref|RefMut|Rc|RcMut|Box|None|Ok|Err|Vec|Dictionary|Set|Pair|Span)\b/
+          },
+          'gen-namespace': {
+            pattern: /[A-Za-z][\w_]*\:\:/,
+            inside: {
+              'namespace': /[A-Za-z][\w_]*/,
+              'generic': {
+                pattern: /::/,
+                alias: 'punctuation'
               }
             }
           }
@@ -186,5 +208,6 @@
 
       }(Prism));
   </script>
-  </body>
+</body>
+
 </html>

@@ -11,3 +11,5 @@
 /.idea/
 /.vs/
 .DS_Store
+node_modules
+docs/api/

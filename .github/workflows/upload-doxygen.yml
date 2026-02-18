@@ -42,11 +42,11 @@ jobs:
     - name: Build Doxygen
       run: 
         cmake --build . --target docs
+        mv docs/html docs/api
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        # Upload entire repository
-        path: './docs/html'
+        path: './docs/'
     - name: Deploy artifact
       id: deployment
       uses: actions/deploy-pages@v4

@@ -1,3 +1,3 @@
 * [Home](/)
 * [Crab](pages/main)
-* [Doxygen](/doxygen/README.md)
+* [Doxygen](//api/index.html)

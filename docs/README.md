@@ -1,20 +1,5 @@
 # Crab
 
-NOT a rust fanfic (ok kinda)
+A template library for C++ focusing on error handling and type invariance.
 
-
-Example of `Option<T>`
-
-```cpp
-#include <crab/preamble.hpp> 
-
-void main() {
-  Option<i32> a = crab::some(a);
-
-  fmt::println("{}", a);
-
-  crab_check(a.is_some());
-
-  i32 x = crab::move(a).unwrap();
-}
-```
+This documentation refers to guides and references to crab as a whole, however there is a [detailed API Docs (made using doxygen)](https://bishan-batel.github.io/crab/api/topics.html).

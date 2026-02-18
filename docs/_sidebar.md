@@ -1,2 +1,2 @@
 * [Home](/)
-* [Doxygen](/api/index.html ':ignore')
+* [Doxygen](/api)

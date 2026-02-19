@@ -2,6 +2,12 @@
 
 The primary use of option is to avoid using sentinal values, which are values that denote some 'empty' state. A common example would be something like an implementation of linear search.
 
+```sh
+$ php 
+$ php -v 
+$ hello
+```
+
 A traditional C style function to find the index with a given value in an array would look something like:
 ```cpp
 i32 linear_search(const i32* array, usize length, i32 target_value) {

@@ -3,8 +3,9 @@
   - [API Docs](https://bishan-batel.github.io/crab/api/topics.html)
   - [Goals](/pages/Goals.md)
 * Reference
-  - ~~[Assertions](/pages/reference/assert/)~~
-    - ~~[Panic](/pages/reference/assert/Panic.md)~~
+  <!-- - [Assertions](/pages/reference/assert/) -->
+  - Assertions
+    - [Panic](/pages/reference/assert/Panic.md)
     - ~~[Checks](/pages/reference/assert/Check.md)~~
   - ~~[Understanding Invariance](/pages/reference/invariance/)~~
     - ~~[Move Semantics](/pages/reference/invariance/MoveSemantics.md)~~

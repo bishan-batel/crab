@@ -11,9 +11,9 @@
     - ~~[Unsafe](/pages/reference/invariance/Unsafe.md)~~
   - [Option](/pages/reference/option/)
     - [Introduction](/pages/reference/option/Introduction.md)
-    - ~~[Extracting the value](/pages/reference/option/Extraction.md)~~
-    - ~~[When to use?](/pages/reference/option/Motivation.md)~~
-    - [Queries](/pages/reference/option/Queries.md)
+    - [Extracting the value](/pages/reference/option/Extraction.md)
+    - [When to use?](/pages/reference/option/Motivation.md)
+    - ~~[Queries](/pages/reference/option/Queries.md)~~
     - ~~[Predicates](/pages/reference/option/Predicates.md)~~
     - ~~[Transformations](/pages/reference/option/Monadic.md)~~
     - ~~[Formatting](/pages/reference/option/Formatting.md)~~

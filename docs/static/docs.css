@@ -1,0 +1,38 @@
+/* Styling for the crab documentation website */
+
+@import url("https://fonts.googleapis.com/css?family=JetBrains Mono");
+
+:root {
+  --base-font-family: 'JetBrains Mono', 'Consolas', monospace;
+
+  --docsifytabs-tab-background: #181825;
+}
+
+del {
+  color: #f38ba8;
+  text-decoration: 2px line-through;
+  opacity: 0.8;
+}
+
+.color-swatch {
+  height: 1em;
+  aspect-ratio: 1;
+  margin: 0px 0.15em -0.15em;
+  display: inline-block;
+  box-sizing: border-box;
+  border-radius: 2px;
+  border: 1.5px solid #FFFFFF;
+}
+
+.token.crab-type {
+  color: #f9e2af;
+}
+
+.token.attribute {
+  color: #fab387;
+}
+
+.token.namespace {
+  color: #f9e2af;
+  opacity: 0.9;
+}

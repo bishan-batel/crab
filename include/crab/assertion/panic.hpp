@@ -7,9 +7,12 @@
 #include <iostream>
 #include <span>
 #include <stdexcept>
+#include "crab/core/discard.hpp"
 
 #if CRAB_UNIX
 #include <execinfo.h>
+#elif CRAB_WIN32
+#include <intrin.h>
 #endif
 
 #include "crab/core/SourceLocation.hpp"
@@ -130,14 +133,33 @@ namespace crab::assertion {
     inline static auto trivial_handler(PanicInfo info) -> void {
 
 #if CRAB_THROW_ON_DEFAULT_PANIC
+      exception_handler(crab::move(info));
+#else
+      abort_handler(crab::move(info));
+#endif
+    }
+
+  public:
+
+    /// Panic handler that throws a std::runtime_error
+    [[noreturn]] CRAB_INLINE static auto exception_handler(PanicInfo info) -> void {
       throw std::runtime_error{
         fmt::format("{} at {}", info.message, info.location),
       };
-#else
+    }
+
+    /// Panic handler that logs the panic to cerr and then aborts
+    [[noreturn]] CRAB_INLINE static auto abort_handler(PanicInfo info) -> void {
       log_panic_to_stream(std::cerr, term::try_enable_ansi(term::Handle::Error), info);
-      std::abort();
+
+#if CRAB_CLANG_VERSION || CRAB_GCC_VERSION
+      __builtin_trap();
+#else
+      __debug_break();
 #endif
     }
+
+  private:
 
     inline static PanicHook handler{trivial_handler};
   };
@@ -148,10 +170,12 @@ namespace crab::assertion {
   }
 
   [[noreturn]] inline auto panic(String msg, SourceLocation loc) -> void {
-    panic(PanicInfo{
-      mem::move(msg),
-      loc,
-    });
+    panic(
+      PanicInfo{
+        mem::move(msg),
+        loc,
+      }
+    );
   }
 }
 

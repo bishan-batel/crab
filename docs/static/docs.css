@@ -7,6 +7,7 @@
 
   --docsifytabs-tab-background: #181825;
   --blockquote-background: var(--base);
+  --sidebar-nav-strong-text-transform: none;
 }
 
 
@@ -25,6 +26,18 @@ del {
   strong,
   b {
     color: var(--red) !important;
+  }
+}
+
+div.sidebar-nav {
+  span.chapter {
+    color: var(--text);
+    display: normal;
+    border: none;
+  }
+
+  &>ul>li {
+    margin-left: 1em;
   }
 }
 

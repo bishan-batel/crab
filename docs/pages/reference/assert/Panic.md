@@ -19,10 +19,6 @@ The default behavior of panic is to log the message to `std::cerr` and abort the
 > [!WARNING]
 > Note that this is **highly discouraged**, as like assertion failures - ignoring a panic and continuing program execution *may lead to undefined behavior*. One valid use case however is for unit tests where you want to assert that a given function will panic.
 
-> [!note]
-> hi
-
-
 ### User-Defined Panic Handlers
 
 You can modify the global panic handler by calling `crab::assertion::panic_handler::set`, which will take in a `std::function<void(PanicInfo)>`, where `PanicInfo` is a struct containing details about the panic.

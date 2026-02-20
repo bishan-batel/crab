@@ -39,7 +39,7 @@ auto divide(i32 a, i32 b) -> i32 {
 
 When a check fails, the output will look something like this:
 
-?> ![Message when a check fails](./ex_check_failure.png)
+> ![Message when a check fails](./ex_check_failure.png)
 
 
 If you wish to include more information in your check, the message provided can be used as a `fmt` / `std::format` format string.
@@ -61,7 +61,7 @@ auto divide(i32 a, i32 b) -> i32 {
 
 The output will look like this:
 
-?> ![Check failure with format string](./ex_check_format.png)
+> ![Check failure with format string](./ex_check_format.png)
 
 
 Something to note is everything after the first condition for `crab_check` *is only evaluated if the check failed*, so you can put more expensive string functions as format parameters and not worry about them being called everytime.

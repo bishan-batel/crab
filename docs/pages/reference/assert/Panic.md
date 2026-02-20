@@ -6,7 +6,6 @@ Normally you would not call panic yourself, most times you interact with panics 
 If you wish to call panic yourself, all you need is some `StringView` for a message and a `SourceLocation` (`std::source_location`) for the panic to display *where* this ocurred for easier debugging.
 
 ```cpp 
-
 crab::assertion::panic("Test Vaue", SourceLocation::current());
 ```
 
@@ -37,6 +36,4 @@ crab::assertion::panic_handler::set([](const crab::assertion::PanicInfo& info) {
 crab::assertion::panic("Panic", SourceLocation::current());
 
 // code below is valid because we did not exit the program in the handler
-
-
 ```

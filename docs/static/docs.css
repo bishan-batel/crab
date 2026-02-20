@@ -10,13 +10,13 @@
 }
 
 
-.markdown-section {
-  del {
-    color: #f38ba8;
-    text-decoration: 2px line-through;
-    opacity: 0.8;
-  }
+del {
+  color: var(--red);
+  text-decoration: 2px line-through;
+  opacity: 0.9;
+}
 
+.markdown-section {
   em {
     font-style: italic;
     color: var(--green) !important;

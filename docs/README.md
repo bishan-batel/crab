@@ -1,4 +1,5 @@
 # Crab
+[![Tests](https://github.com/bishan-batel/crab/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/bishan-batel/crab/actions/workflows/cmake-multi-platform.yml) [![Build & Upload Doxygen](https://github.com/bishan-batel/crab/actions/workflows/upload-doxygen.yml/badge.svg)](https://github.com/bishan-batel/crab/actions/workflows/upload-doxygen.yml)
 
 A template library for C++ focusing on error handling and type invariance.
 

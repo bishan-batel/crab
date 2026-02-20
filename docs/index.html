@@ -44,18 +44,9 @@
         tabHeadings: true
       },
       'flexible-alerts': {
-        style: 'flat'
+        style: 'callout crab crab2'
       },
-      plugins: [
-        function (hook, vm) {
-          hook.beforeEach(content => beforeEach(content));
-          hook.doneEach(() => {
-            setupTermynal();
-            showRandomAnnouncement('announce-left', 5000);
-            showRandomAnnouncement('announce-right', 10000);
-          });
-        }
-      ]
+      plugins: [ ]
     }
   </script>
 
@@ -68,8 +59,7 @@
   <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
   <script src="//unpkg.com/@rakutentech/docsify-code-inline/dist/index.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-latex@0"></script>
-  <script
-    src="//cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts@1.2.0/dist/docsify-plugin-flexible-alerts.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/docsify-plugin-flexible-alerts@1.2.0/dist/docsify-plugin-flexible-alerts.min.js"></script>
 
 
   <!-- Prism Languages -->

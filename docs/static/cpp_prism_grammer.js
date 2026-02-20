@@ -60,6 +60,13 @@
 	});
 
 	Prism.languages.insertBefore('cpp', 'keyword', {
+		'macro': {
+			pattern: /CRAB_[A-Z_]+/
+		},
+		'preproc': {
+			pattern: /#[a-z]+/,
+			alias: "keyword"
+		},
 		'generic-function': {
 			pattern: /\b(?!operator\b)[a-z_]\w*\s*<(?:[^<>]|<[^<>]*>)*>(?=\s*\()/i,
 			inside: {

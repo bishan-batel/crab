@@ -1,30 +1,25 @@
 [Home](/)
+- Getting Started
   - [Installation](/pages/Installation.md)
   - [API Docs](https://bishan-batel.github.io/crab/api/topics.html)
-  - [Goals](/pages/Goals.md)
-  <!-- - [Assertions](/pages/reference/assert/) -->
-
-*Guide*
-----
-
-- Assertions
+- [Assertions](/pages/reference/assert/README.me)
   - [Panic](/pages/reference/assert/Panic.md)
   - [Checks](/pages/reference/assert/Check.md)
-- Invariance & Crab
+- [Invariance & Crab](/pages/reference/invariance/README.md)
   - ~~[Move Semantics](/pages/reference/invariance/MoveSemantics.md)~~
   - ~~[Unsafe](/pages/reference/invariance/Unsafe.md)~~
-- Option
+- [Option](/pages/reference/option/README.md)
   - [Introduction](/pages/reference/option/Introduction.md)
   - [Extracting the value](/pages/reference/option/Extraction.md)
   - [When to use?](/pages/reference/option/Motivation.md)
   - ~~[Queries](/pages/reference/option/Queries.md)~~
-  - ~~[Predicates](/pages/reference/option/Predicates.md)~~
-  - [Transformations](/pages/reference/option/Monadic.md)
+  - ~~[Option with References](/pages/reference/option/References.md)~~
   - ~~[Formatting](/pages/reference/option/Formatting.md)~~
+  - [Transformations](/pages/reference/option/Monadic.md)
   - ~~[Representation](/pages/reference/option/Representation.md)~~
-    - ~~[Making your own Niche Optimisation](/pages/reference/option/CustomNiche.md)~~
-- ~~Box~~
-- ~~Rc/RcMut~~
-- ~~Result~~
-- ~~AnyOf~~
-- ~~Ref/RefMut~~
+  - ~~[Making your own Niche Optimisation](/pages/reference/option/CustomNiche.md)~~
+- ~~[Ref/RefMut](/pages/reference/option/ref/README.md)~~
+- ~~[Box](/pages/reference/box/README.md)~~
+- ~~[Rc & RcMut](/pages/reference/rc/README.md)~~
+- ~~[Result](/pages/reference/result/README.md)~~
+- ~~[AnyOf](/pages/reference/any/README.md)~~

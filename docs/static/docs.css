@@ -8,14 +8,10 @@
   --docsifytabs-tab-background: #181825;
   --blockquote-background: var(--base);
   --sidebar-nav-strong-text-transform: none;
+  --sidebar-width: 25rem;
 }
 
 
-del {
-  color: var(--red);
-  text-decoration: 2px line-through;
-  opacity: 0.9;
-}
 
 .markdown-section {
   em {
@@ -30,15 +26,59 @@ del {
 }
 
 div.sidebar-nav {
-  span.chapter {
-    color: var(--text);
-    display: normal;
-    border: none;
+  /* margin-left: 0em; */
+
+  color: var(--text);
+
+  del {
+    color: var(--red);
+    text-decoration: 2px line-through;
+    opacity: 0.9;
   }
 
-  &>ul>li {
-    margin-left: 1em;
+  ul {
+    /* font-size: 0.8rem; */
+
+    counter-reset: item;
+
+    .section-link {
+      font-style: italic;
+      color: var(--subtext0) !important;
+    }
+
+    li {
+      display: block;
+      /* margin-left: - 0.5em; */
+
+      a {
+        color: var(--blue);
+        display: inline;
+      }
+
+      del {
+        display: inline;
+      }
+
+
+      &:before {
+        content: counters(item, ".") ". ";
+        font-weight: bold;
+        color: var(--subtext1);
+        counter-increment: item;
+      }
+    }
+
+
+    &.app-sub-sidebar {
+      font-size: 0.92rem;
+
+      li:before {
+        padding: 0 0 0 0;
+        display: none;
+      }
+    }
   }
+
 }
 
 .color-swatch {

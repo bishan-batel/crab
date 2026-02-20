@@ -16,7 +16,11 @@ The default behavior of panic is to log the message to `std::cerr` and abort the
 #define CRAB_THROW_ON_DEFAULT_PANIC 1
 ```
 
-!> Note that this is highly discouraged, as like assertion failures - ignoring a panic and continuing program execution may lead to undefined behavior. One valid use case however is for unit tests where you want to assert that a given function *will* panic.
+> [!WARNING]
+> Note that this is **highly discouraged**, as like assertion failures - ignoring a panic and continuing program execution *may lead to undefined behavior*. One valid use case however is for unit tests where you want to assert that a given function will panic.
+
+> [!note]
+> hi
 
 
 ### User-Defined Panic Handlers

@@ -60,6 +60,7 @@ auto divide(i32 a, i32 b) -> i32 {
 ```
 
 The output will look like this:
+
 ?> ![Check failure with format string](./ex_check_format.png)
 
 

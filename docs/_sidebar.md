@@ -6,7 +6,7 @@
   <!-- - [Assertions](/pages/reference/assert/) -->
   - Assertions
     - [Panic](/pages/reference/assert/Panic.md)
-    - ~~[Checks](/pages/reference/assert/Check.md)~~
+    - [Checks](/pages/reference/assert/Check.md)
   - ~~[Understanding Invariance](/pages/reference/invariance/)~~
     - ~~[Move Semantics](/pages/reference/invariance/MoveSemantics.md)~~
     - ~~[Unsafe](/pages/reference/invariance/Unsafe.md)~~

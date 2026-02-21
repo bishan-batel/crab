@@ -23,7 +23,6 @@ get will return a const reference. If the option is mutable, get returns a mutab
 >const String& ref = Option<String>{"Message"}.get(); 
 >```
 
-?>If you are trying to wring out as much performance as possible in a place where you know the option will not be `None`, then you can use the [unsafe](/pages/reference/Unsafe) version `get_unchecked` which *only panic when compiling in debug mode*.
 
 The way to fully extract (move) the value out of an option is by calling `unwrap`. Note that `unwrap` is *rvalue qualified* meaning you can only use in on an option that has been moved.
 
@@ -37,3 +36,8 @@ crab_check(name.is_none());
 ```
 
 Similar to `get`, `unwrap` will panic if the option does not contain a value, hence you should *always check*.
+
+Unwrap will be used very often as many methods of crab assume the option is being moved. Note if your type is trivially copyable then crab will not require you to move the option for some methods. 
+
+> [!WARNING]
+>If you are trying to wring out as much performance as possible in a place where you know the option will not be `None`, then you can use the [unsafe](/pages/reference/Unsafe) version `get_unchecked` or `unwrap_unchecked` which *only panic when compiling in debug mode*.

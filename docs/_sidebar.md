@@ -5,7 +5,7 @@
 - [Assertions](/pages/reference/assert/README.me)
   - [Panic](/pages/reference/assert/Panic.md)
   - [Checks](/pages/reference/assert/Check.md)
-- [Invariance & Crab](/pages/reference/invariance/README.md)
+- ~~[Invariance & Crab](/pages/reference/invariance/README.md)~~
   - ~~[Move Semantics](/pages/reference/invariance/MoveSemantics.md)~~
   - ~~[Unsafe](/pages/reference/invariance/Unsafe.md)~~
 - [Option](/pages/reference/option/README.md)

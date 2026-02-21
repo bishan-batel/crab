@@ -14,7 +14,7 @@
   - [When to use?](/pages/reference/option/Motivation.md)
   - ~~[Queries](/pages/reference/option/Queries.md)~~
   - ~~[Option with References](/pages/reference/option/References.md)~~
-  - ~~[Formatting](/pages/reference/option/Formatting.md)~~
+  - [Formatting](/pages/reference/option/Formatting.md)
   - [Transformations](/pages/reference/option/Monadic.md)
   - ~~[Representation](/pages/reference/option/Representation.md)~~
   - ~~[Making your own Niche Optimisation](/pages/reference/option/CustomNiche.md)~~

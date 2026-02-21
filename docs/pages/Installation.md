@@ -9,9 +9,9 @@ Crab supports being installed on a system level, however this library is not ava
 <!-- tabs:start -->
 
 #### **FetchContent**
-You can use crab with the classic cmake FetchContent, this method will also take care of installing [fmt](https://fmt.dev) if it is not present. Note that this will prioritize a local installation of fmtlib over downloading it with FetchContent (using CPM).
+You can use crab with the classic CMake FetchContent, this method will also take care of installing [fmt](https://fmt.dev) if it is not present. Note that this will prioritize a local installation of fmtlib over downloading it with FetchContent (using CPM).
 
-```cmake 
+```CMake 
 include(FetchContent)
 FetchContent_Declare(
   crab
@@ -67,8 +67,8 @@ flake.nix:
 }
 ```
 
-Then in your cmake file,
-```cmake 
+Then in your CMake file,
+```CMake 
 find_package(fmt REQUIRED)
 find_package(crab CONFIG REQUIRED)
 
@@ -79,4 +79,4 @@ target_link_libraries(my_app PUBLIC crab::crab)
 <!-- tabs:end -->
 
 ## MSBuild 
-Currently I have not tested how to get crab working in a native msbuild project, however the latest version of crab does work with versions of the MSVC compiler. It is probally possible to add crab through msbuild, I just haven't done it myself. 
+Currently I have not tested how to get crab working in a native MSBuild project, however the latest version of crab does work with versions of the MSVC compiler. It is probaly possible to add crab through MSBuild, I just haven't done it myself. 

@@ -11,6 +11,10 @@
   --sidebar-width: 25rem;
 }
 
+html {
+  background: var(--base) !important;
+}
+
 
 
 .markdown-section {

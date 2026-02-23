@@ -2,7 +2,7 @@
 - Getting Started
   - [Installation](/pages/Installation.md)
   - [API Docs](https://bishan-batel.github.io/crab/api/topics.html)
-- [Assertions](/pages/reference/assert/README.me)
+- [Assertions](/pages/reference/assert/README.md)
   - [Panic](/pages/reference/assert/Panic.md)
   - [Checks](/pages/reference/assert/Check.md)
 - ~~[Invariance & Crab](/pages/reference/invariance/README.md)~~

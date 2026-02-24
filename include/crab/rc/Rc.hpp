@@ -50,7 +50,7 @@ namespace crab::rc {
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr RcMut(RcMut<Derived>&& derived): RcMut{mem::move(derived).template upcast<T>()} {}
 
-    CRAB_INLINE constexpr RcMut(boxed::Box<T> from): RcMut{boxed::Box<T>::unwrap(std::move(from)), new Base::Counter} {}
+    CRAB_INLINE constexpr RcMut(boxed::Box<T> from): RcMut{std::move(from).into_raw(), new Base::Counter} {}
 
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr auto operator=(const RcMut<Derived>& derived) -> RcMut& {
@@ -153,7 +153,7 @@ namespace crab::rc {
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr Rc(RcMut<Derived>&& derived): Rc{mem::move(derived).template upcast<T>()} {}
 
-    CRAB_INLINE constexpr Rc(boxed::Box<T> from): Rc{boxed::Box<T>::unwrap(std::move(from)), new Base::Counter} {}
+    CRAB_INLINE constexpr Rc(boxed::Box<T> from): Rc{std::move(from).into_raw(), new Base::Counter} {}
 
     template<std::derived_from<T> Derived>
     CRAB_INLINE constexpr auto operator=(const RcMut<Derived>& derived) -> Rc& {

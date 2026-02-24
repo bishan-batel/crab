@@ -133,7 +133,7 @@ namespace crab {
       /// Conversion constructor of Box<Derived> to downcast to Box<Base>
       template<std::derived_from<T> Derived>
       CRAB_INLINE constexpr Box(Box<Derived> from, const SourceLocation loc = SourceLocation::current()):
-          Box{Box<Derived>::unwrap(std::move(from))} {
+          Box{mem::move(from).into_raw()} {
         crab_check_with_location(obj != nullptr, loc, "Invalid Box, moved from invalid box.");
       }
 
@@ -204,13 +204,13 @@ namespace crab {
 
       /// Move assignment from a Box of a derived type, this will perform the required upcast
       template<std::derived_from<T> Derived>
-      CRAB_INLINE constexpr auto operator=(Box<Derived>&& rhs) noexcept -> Box& {
+      CRAB_INLINE constexpr auto operator=(Box<Derived> rhs) noexcept -> Box& {
         if (obj == ref::implicit_cast<T*>(rhs.as_ptr())) {
           return *this;
         }
 
         drop();
-        obj = ref::implicit_cast<T*>(Box<Derived>::unwrap(std::forward<Box<Derived>>(rhs)));
+        obj = ref::implicit_cast<T*>(mem::move<Box<Derived>>(rhs).into_raw());
 
         return *this;
       }

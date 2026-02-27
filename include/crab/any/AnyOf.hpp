@@ -246,7 +246,8 @@ namespace crab::any {
 
         Storage<Ts>::move(from.buffer, buffer);
         return true;
-      } or ...);
+      }()
+       or ...);
 
       from.destroy();
       from.invalidate();
@@ -271,7 +272,8 @@ namespace crab::any {
 
         Storage<Ts>::copy(from.buffer, buffer);
         return true;
-      } or ...);
+      }()
+       or ...);
     }
 
     /// Destructor
@@ -284,8 +286,7 @@ namespace crab::any {
     }
 
     /// Copy assignment, only valid of all variants Ts... are copyable.
-    auto operator=(const AnyOf& from) -> AnyOf& requires(ty::copyable<Ts> and ...)
-    {
+    auto operator=(const AnyOf& from) -> AnyOf& requires(ty::copyable<Ts>and...) {
       if (mem::address_of(from) == this) [[unlikely]] {
         return *this;
       }

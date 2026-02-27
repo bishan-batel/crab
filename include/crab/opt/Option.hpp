@@ -8,6 +8,7 @@
 #pragma once
 
 #include <concepts>
+#include <type_traits>
 
 #include "crab/assertion/check.hpp"
 #include "crab/collections/Tuple.hpp"
@@ -25,6 +26,7 @@
 #include "crab/str/str.hpp"
 #include "crab/ty/crab_ref_decay.hpp"
 #include "crab/ty/functor.hpp"
+#include "crab/ty/manipulate.hpp"
 #include "fmt/base.h"
 
 namespace crab::opt {
@@ -167,8 +169,7 @@ namespace crab::opt {
     /// Reassign option to Some(T),
     /// If this option previously contained Some(K), the previous value is
     /// discarded and is replaced by Some(T)
-    CRAB_INLINE constexpr auto operator=(T&& from) -> Option& requires(not is_ref)
-    {
+    CRAB_INLINE constexpr auto operator=(T&& from) -> Option& requires(not is_ref) {
       storage = mem::forward<T>(from);
       return *this;
     }
@@ -208,6 +209,18 @@ namespace crab::opt {
       }
 
       return Option<const T&>{get_unchecked(unsafe)};
+    }
+
+    /// Converts an Option<T&> or Option<const T&> into an Option<T>.
+    /// If this option is none, this returns none. If this option has a value - then it will create a copy from that
+    /// value.
+    [[nodiscard]] CRAB_INLINE constexpr auto deref() const -> Option<std::remove_cvref_t<T>> requires(is_ref)
+    {
+      if (is_none()) {
+        return {};
+      }
+
+      return {std::remove_cvref_t<T>()};
     }
 
     /// Converts a 'Option<T>&' into a
@@ -408,9 +421,8 @@ namespace crab::opt {
     }
 
     /// @copydoc Option::get
-    [[nodiscard]] CRAB_INLINE constexpr auto get(
-      const SourceLocation& loc = SourceLocation::current()
-    ) const& -> const T& {
+    [[nodiscard]] CRAB_INLINE constexpr auto get(const SourceLocation& loc = SourceLocation::current())
+      const& -> const T& {
       crab_check_with_location(is_some(), loc, "Cannot 'get' a none option");
 
       return storage.value();

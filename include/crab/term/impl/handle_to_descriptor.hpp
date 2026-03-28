@@ -9,16 +9,6 @@
 
 #if CRAB_UNIX
 #include <unistd.h>
-#elif CRAB_WIN32
-#define WIN32_LEAN_AND_MEAN
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#include <windows.h>
-#undef NOMINMAX
-#else
-#include <windows.h>
-#endif
 #endif
 
 namespace crab::term::impl {
@@ -34,9 +24,7 @@ namespace crab::term::impl {
       case Handle::Error: return STDERR_FILENO;
       case Handle::Input: return STDIN_FILENO;
 #else
-      case Handle::Out: return STD_OUTPUT_HANDLE;
-      case Handle::Error: return STD_ERROR_HANDLE;
-      case Handle::Input: return STD_INPUT_HANDLE;
+      default: return 0;
 #endif
     }
 

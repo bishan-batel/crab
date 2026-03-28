@@ -11,8 +11,6 @@
 
 #if CRAB_UNIX
 #include <execinfo.h>
-#elif CRAB_WIN32
-#include <intrin.h>
 #endif
 
 #include "crab/core/SourceLocation.hpp"

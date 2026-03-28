@@ -23,6 +23,7 @@ namespace crab::term {
     return isatty(static_cast<int>(handle));
 #else
     // TODO: better way to make this work on windows
+    discard(handle);
     return false;
     // HANDLE handle_out{GetStdHandle(static_cast<DWORD>(handle))};
     //

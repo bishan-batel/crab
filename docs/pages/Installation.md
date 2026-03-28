@@ -16,7 +16,7 @@ include(FetchContent)
 FetchContent_Declare(
   crab
   GIT_REPOSITORY https://github.com/bishan-batel/crab.git
-  GIT_TAG "v2.3.1" # Git version tag to use, see the crab releases page for other versions
+  GIT_TAG "v2.3.5" # Git version tag to use, see the crab releases page for other versions
 )
 
 # this will make the 'crab::crab' target available to link to

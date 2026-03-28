@@ -16,7 +16,7 @@
   - ~~[Option with References](/pages/reference/option/References.md)~~
   - [Formatting](/pages/reference/option/Formatting.md)
   - [Transformations](/pages/reference/option/Monadic.md)
-  - ~~[Representation](/pages/reference/option/Representation.md)~~
+  - [Representation](/pages/reference/option/Representation.md)
   - ~~[Making your own Niche Optimisation](/pages/reference/option/CustomNiche.md)~~
 - ~~[Ref/RefMut](/pages/reference/option/ref/README.md)~~
 - ~~[Box](/pages/reference/box/README.md)~~

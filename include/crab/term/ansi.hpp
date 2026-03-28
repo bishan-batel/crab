@@ -22,21 +22,23 @@ namespace crab::term {
 #if CRAB_UNIX
     return isatty(static_cast<int>(handle));
 #else
-    HANDLE handle_out{GetStdHandle(static_cast<DWORD>(handle))};
-
-    if (handle_out == INVALID_HANDLE_VALUE) {
-      return false;
-    }
-
-    DWORD mode = 0;
-
-    if (not GetConsoleMode(handle_out, &mode)) {
-      return false;
-    }
-
-    mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
-
-    return SetConsoleMode(handle_out, mode);
+    // TODO: better way to make this work on windows
+    return false;
+    // HANDLE handle_out{GetStdHandle(static_cast<DWORD>(handle))};
+    //
+    // if (handle_out == INVALID_HANDLE_VALUE) {
+    //   return false;
+    // }
+    //
+    // DWORD mode = 0;
+    //
+    // if (not GetConsoleMode(handle_out, &mode)) {
+    //   return false;
+    // }
+    //
+    // mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    //
+    // return SetConsoleMode(handle_out, mode);
 #endif
   }
 

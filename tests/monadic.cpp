@@ -6,17 +6,30 @@
 #include "crab/opt/some.hpp"
 #include "test_types.hpp"
 
-consteval auto consteval_test() -> void {
+consteval auto consteval_test() -> bool {
   Option<i32> number = crab::unless(false, []() { return 2; });
-  number = crab::unless(true, []() { return 2; });
+  if (not number.is_some() or number.get() != 2) {
+    return false;
+  }
 
-  std::ignore = number.filter([](i32 x) { return x % 2 == 0; });
+  number = crab::unless(true, []() { return 2; });
+  if (not number.is_none()) {
+    return false;
+  }
+
+  if (not number.filter([](i32 x) { return x % 2 == 0; }).is_none()) {
+    return false;
+  }
 
   Option<MoveOnly> moved{MoveOnly{"value"}};
-  std::ignore = std::move(moved).filter(crab::fn::constant(true));
+  Option<MoveOnly> filtered = std::move(moved).filter(crab::fn::constant(true));
+  return moved.is_none() and filtered.is_some() and filtered.get().get_name() == "value";
 }
 
 TEST_CASE("Monadic Operations (Option)") {
+  // things that should be compile time compatible
+  STATIC_REQUIRE(consteval_test());
+
   SECTION("filter") {
     constexpr auto is_even = [](auto x) { return x % 2 == 0; };
 

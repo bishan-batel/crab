@@ -45,7 +45,7 @@ TEST_CASE("AnyOf::NumTypes", "[anyof]") {
 }
 
 TEST_CASE("AnyOf<Ts...>::DataSize", "[anyof]") {
-  STATIC_CHECK(AnyOf<u32>::DataSize == sizeof(i32));
+  STATIC_CHECK(AnyOf<u32>::DataSize == sizeof(u32));
   STATIC_CHECK(AnyOf<i64>::DataSize == sizeof(i64));
   STATIC_CHECK(AnyOf<u32, i64>::DataSize == sizeof(i64));
   STATIC_CHECK(AnyOf<u8, i64>::DataSize == sizeof(i64));

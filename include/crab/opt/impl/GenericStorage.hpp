@@ -12,8 +12,8 @@
 #include "crab/str/str.hpp"
 #include "crab/ty/construct.hpp"
 
-#include <array>
 #include <concepts>
+#include <memory>
 #include <vector>
 
 #if CRAB_GCC_VERSION
@@ -134,15 +134,15 @@ namespace crab::opt::impl {
     }
 
     [[nodiscard]] CRAB_INLINE constexpr auto value() const& -> const T& {
-      return reinterpret_cast<const T&>(bytes);
+      return storage.value;
     }
 
     [[nodiscard]] CRAB_INLINE constexpr auto value() & -> T& {
-      return reinterpret_cast<T&>(bytes);
+      return storage.value;
     }
 
     [[nodiscard]] CRAB_INLINE constexpr auto value() && -> T {
-      T moved{mem::move(reinterpret_cast<T&>(bytes))};
+      T moved{mem::move(storage.value)};
 
       std::destroy_at<T>(address());
       in_use_flag = false;
@@ -156,14 +156,22 @@ namespace crab::opt::impl {
   private:
 
     [[nodiscard]] CRAB_INLINE CRAB_RETURNS_NONNULL constexpr auto address() -> T* {
-      return reinterpret_cast<T*>(bytes.data());
+      return std::addressof(storage.value);
     }
 
     [[nodiscard]] CRAB_INLINE CRAB_RETURNS_NONNULL constexpr auto address() const -> const T* {
-      return reinterpret_cast<const T*>(bytes.data());
+      return std::addressof(storage.value);
     }
 
-    alignas(T) std::array<std::byte, mem::size_of<T>()> bytes;
+    union Storage {
+      std::byte empty;
+      T value;
+
+      constexpr Storage(): empty{} {}
+
+      constexpr ~Storage() {}
+    } storage;
+
     bool in_use_flag;
   };
 }
